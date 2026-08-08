@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-gold: #D4AF37;
+    --color-gold-light: #F4E0A5;
+    --color-gold-dark: #8C7321;
+    --color-bg-dark: #090909;
+    --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #090909;
+    color: #FFFFFF;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, .font-serif-luxury {
+    font-family: 'Cormorant Garamond', serif;
+  }
+}
+
+/* Custom Luxury Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090909;
+}
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D4AF37;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(18, 18, 18, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.glass-panel-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 12px 40px -10px rgba(212, 175, 55, 0.18);
+}
+
+/* Gold Gradient Text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F4E0A5 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gold-solid {
+  color: #D4AF37;
+}
+
+/* Gold Luxury Link Underline Effect */
+.hover-underline-luxury {
+  position: relative;
+}
+.hover-underline-luxury::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: linear-gradient(90deg, #D4AF37, #F4E0A5);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-underline-luxury:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Luxury Card Hover Lift */
+.luxury-card-hover {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.luxury-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 20px -5px rgba(212, 175, 55, 0.12);
+}
+
+/* Gold Button Style */
+.btn-gold-luxury {
+  position: relative;
+  background-color: #090909;
+  color: #FFFFFF;
+  border: 1px solid #D4AF37;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.btn-gold-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.25), transparent);
+  transition: all 0.6s ease;
+}
+
+.btn-gold-luxury:hover::before {
+  left: 100%;
+}
+
+.btn-gold-luxury:hover {
+  border-color: #F4E0A5;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.35);
+  color: #F4E0A5;
+  transform: translateY(-2px);
+}
+
+/* Gold Filled Button */
+.btn-gold-fill {
+  background: linear-gradient(135deg, #D4AF37 0%, #AA820A 100%);
+  color: #000000;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+}
+
+.btn-gold-fill:hover {
+  background: linear-gradient(135deg, #F4E0A5 0%, #D4AF37 100%);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Keyframes for Marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: 200%;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Shimmer Skeleton Loader Effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

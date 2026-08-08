@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 100" fill="none" aria-label="Zenvia Official Logo">
+  <defs>
+    <linearGradient id="zenviaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3E0A2" />
+      <stop offset="35%" stop-color="#D4AF37" />
+      <stop offset="70%" stop-color="#AA7C11" />
+      <stop offset="100%" stop-color="#E5C158" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Emblem Circle -->
+  <circle cx="140" cy="38" r="24" stroke="url(#zenviaGold)" stroke-width="2.2" fill="none" />
+
+  <!-- Stylized Calligraphic Z with Leaf Motif -->
+  <g fill="url(#zenviaGold)">
+    <!-- Top Bar of Z -->
+    <path d="M 126 27 C 129 25, 137 25, 148 26 C 151 24, 154 21, 156 18 C 158 21, 156 25, 152 27.5 M 148 26 C 142 27, 132 27.5, 128 30 Z" />
+    <!-- Leaf at Top Right -->
+    <path d="M 148 25.5 C 152 22, 157 18, 160 17.5 C 160.5 19.5, 158 24, 152 27 Z" />
+    <path d="M 151 24 Q 155 21.5 158 19" stroke="#111" stroke-width="0.8" fill="none" />
+    <!-- Diagonal Body of Z -->
+    <path d="M 148 26.5 L 129 48 C 134 48, 146 47.5, 152 48 C 154 48.5, 152 50.5, 147 50.5 L 126 50.5 C 124 50.5, 123 49.2, 124.5 48 C 127 45, 143 28, 148 26.5 Z" />
+  </g>
+
+  <!-- Brand Name Typography: ZENVIA -->
+  <text x="140" y="86" text-anchor="middle" fill="url(#zenviaGold)" font-family="'Cinzel', 'Playfair Display', 'Didot', 'Georgia', serif" font-size="22" font-weight="700" letter-spacing="0.32em">ZENVIA</text>
+</svg>
