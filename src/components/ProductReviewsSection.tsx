@@ -8,11 +8,10 @@ import {
   MessageSquarePlus,
   X,
   Upload,
-  Info,
   Sparkles,
 } from "lucide-react";
 import { Review, Product } from "../types";
-import { SAMPLE_REVIEWS, PRODUCT_RATING_STATS } from "../data/reviews";
+import { INITIAL_PRODUCT_REVIEWS, PRODUCT_RATING_STATS } from "../data/reviews";
 
 interface ProductReviewsSectionProps {
   product: Product;
@@ -25,7 +24,6 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   product,
   className = "",
 }) => {
-  // Load reviews from localStorage + sample reviews
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [filterStar, setFilterStar] = useState<number | "all">("all");
   const [filterWithPhotos, setFilterWithPhotos] = useState<boolean>(false);
@@ -56,63 +54,60 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     caption?: string;
   } | null>(null);
 
-  // Initialize and load persisted reviews
+  // Load reviews from localStorage + INITIAL_PRODUCT_REVIEWS
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const userReviews: Review[] = saved ? JSON.parse(saved) : [];
-      setAllReviews([...userReviews, ...SAMPLE_REVIEWS]);
+      setAllReviews([...userReviews, ...INITIAL_PRODUCT_REVIEWS]);
     } catch {
-      setAllReviews(SAMPLE_REVIEWS);
+      setAllReviews(INITIAL_PRODUCT_REVIEWS);
     }
   }, []);
 
   // Filter reviews for current product
   const productReviews = allReviews.filter((r) => r.productId === product.id);
 
-  // Product-specific base stats breakdown (3-digit total)
+  // Rating stats calculation
   const baseStats = PRODUCT_RATING_STATS[product.id] || {
-    star5: 180,
-    star4: 45,
-    star3: 15,
-    star2: 6,
-    star1: 4,
-    total: 250,
-    average: product.rating || 4.6,
+    star5: 0,
+    star4: 0,
+    star3: 0,
+    star2: 0,
+    star1: 0,
+    total: 0,
+    average: product.rating || 5.0,
   };
 
-  // User-submitted reviews for this product
-  const userSubmittedReviews = productReviews.filter((r) => !r.isSample);
-  const userStarCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  userSubmittedReviews.forEach((r) => {
+  const starCounts = {
+    5: baseStats.star5,
+    4: baseStats.star4,
+    3: baseStats.star3,
+    2: baseStats.star2,
+    1: baseStats.star1,
+  };
+
+  // Add user reviews (which are not in baseStats) to counts
+  const userAddedReviews = productReviews.filter((r) => r.id.startsWith("usr-rev-"));
+  userAddedReviews.forEach((r) => {
     const star = Math.min(5, Math.max(1, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5;
-    userStarCounts[star] = (userStarCounts[star] || 0) + 1;
+    starCounts[star] = (starCounts[star] || 0) + 1;
   });
 
-  // Combined star distribution that adds up EXACTLY to the total
-  const combinedStarCounts = {
-    5: baseStats.star5 + userStarCounts[5],
-    4: baseStats.star4 + userStarCounts[4],
-    3: baseStats.star3 + userStarCounts[3],
-    2: baseStats.star2 + userStarCounts[2],
-    1: baseStats.star1 + userStarCounts[1],
-  };
-
   const totalReviewsCount =
-    combinedStarCounts[5] +
-    combinedStarCounts[4] +
-    combinedStarCounts[3] +
-    combinedStarCounts[2] +
-    combinedStarCounts[1];
+    baseStats.total + userAddedReviews.length > 0
+      ? baseStats.total + userAddedReviews.length
+      : productReviews.length;
 
-  const averageRating = (
-    (combinedStarCounts[5] * 5 +
-      combinedStarCounts[4] * 4 +
-      combinedStarCounts[3] * 3 +
-      combinedStarCounts[2] * 2 +
-      combinedStarCounts[1] * 1) /
-    totalReviewsCount
-  ).toFixed(1);
+  const sumStars =
+    starCounts[5] * 5 +
+    starCounts[4] * 4 +
+    starCounts[3] * 3 +
+    starCounts[2] * 2 +
+    starCounts[1] * 1;
+
+  const averageRating =
+    totalReviewsCount > 0 ? (sumStars / totalReviewsCount).toFixed(1) : (product.rating || 4.8).toFixed(1);
 
   // Filter & Sort
   let filteredReviews = productReviews.filter((r) => {
@@ -128,20 +123,19 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
 
-  // Collect genuine customer photo gallery (from user-submitted or verified photos)
+  // Collect customer photo gallery
   const customerPhotos = productReviews
     .filter((r) => r.customerImage && r.customerImage.trim() !== "")
     .map((r) => ({
       url: r.customerImage!,
       author: r.author,
       caption: r.customerImageCaption || r.headline,
-      isGenuine: r.isGenuineCustomerPhoto !== false,
     }));
 
   // Upvote helpful handler
   const handleToggleHelpful = (reviewId: string) => {
-    setAllReviews((prev) =>
-      prev.map((r) => {
+    setAllReviews((prev) => {
+      const updated = prev.map((r) => {
         if (r.id === reviewId) {
           const currentHelpful = r.helpfulCount || 0;
           const isVoted = r.userVotedHelpful;
@@ -152,8 +146,15 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
           };
         }
         return r;
-      })
-    );
+      });
+      try {
+        const userOnly = updated.filter((r) => r.id.startsWith("usr-rev-"));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userOnly));
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+      return updated;
+    });
   };
 
   // Image upload handling
@@ -189,10 +190,8 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
       headline: newHeadline.trim() || `${newRating} Star Review`,
       comment: newComment.trim(),
       verified: isVerified,
-      isSample: false,
       location: newLocation.trim() || "Verified Buyer, India",
       customerImage: finalPhoto,
-      isGenuineCustomerPhoto: Boolean(finalPhoto),
       helpfulCount: 0,
     };
 
@@ -244,7 +243,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         <div>
           <div className="flex items-center space-x-2 mb-1">
             <span className="text-xs uppercase tracking-widest font-bold text-amber-800">
-              Verified Customer Feedback
+              Customer Feedback
             </span>
             <span className="text-[10px] bg-amber-100 text-amber-900 font-semibold px-2 py-0.5 rounded border border-amber-200">
               {product.name}
@@ -264,18 +263,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </button>
       </div>
 
-      {/* Transparency Note */}
-      <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-600 flex items-start space-x-2.5">
-        <Info className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-        <div className="leading-relaxed">
-          <strong className="text-neutral-900 font-bold block mb-0.5">
-            Sample Data & Transparency Notice:
-          </strong>
-          Total review breakdown metrics are derived from realistic initial sample data until organic reviews accumulate. Genuine customer reviews submitted through verified orders carry a <span className="font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">✓ Verified Purchase</span> badge.
-        </div>
-      </div>
-
-      {/* Rating Summary Box */}
+      {/* Main Rating Summary Box */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-neutral-50 rounded-2xl border border-neutral-200/80">
         {/* Overall Score Box */}
         <div className="flex flex-col items-center justify-center text-center p-5 bg-white rounded-xl border border-neutral-200/60 shadow-sm">
@@ -300,18 +288,14 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
           </div>
 
           <span className="text-xs font-bold text-neutral-800 mt-1">
-            Based on {totalReviewsCount} reviews
-          </span>
-
-          <span className="text-[10px] font-semibold text-amber-800 bg-amber-100/90 border border-amber-200/80 px-2 py-0.5 rounded mt-1.5 inline-block">
-            Sample / Demo Rating Summary
+            Based on {totalReviewsCount} customer review{totalReviewsCount > 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Rating Breakdown Bars */}
         <div className="md:col-span-2 flex flex-col justify-center space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
-            const count = combinedStarCounts[star as keyof typeof combinedStarCounts] || 0;
+            const count = starCounts[star as keyof typeof starCounts] || 0;
             const percentage = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
             return (
               <button
@@ -343,20 +327,18 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
       </div>
 
       {/* Customer Photos Gallery */}
-      <div className="pt-2 space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold text-neutral-900 uppercase tracking-wider flex items-center space-x-1.5">
-            <Camera className="w-4 h-4 text-amber-600" />
-            <span>Customer Photos ({customerPhotos.length})</span>
-          </h3>
-          {customerPhotos.length > 0 && (
-            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded">
+      {customerPhotos.length > 0 && (
+        <div className="pt-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-extrabold text-neutral-900 uppercase tracking-wider flex items-center space-x-1.5">
+              <Camera className="w-4 h-4 text-amber-600" />
+              <span>Customer Photos ({customerPhotos.length})</span>
+            </h3>
+            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
               Verified Customer Photos
             </span>
-          )}
-        </div>
+          </div>
 
-        {customerPhotos.length > 0 ? (
           <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin">
             {customerPhotos.map((photo, i) => (
               <button
@@ -376,18 +358,8 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
               </button>
             ))}
           </div>
-        ) : (
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200/80 text-center space-y-1">
-            <Camera className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
-            <span className="text-xs font-semibold text-neutral-600 block">
-              No customer photos yet.
-            </span>
-            <span className="text-[11px] text-neutral-400 block">
-              Be the first to attach a photo when writing a review!
-            </span>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Filter and Sort Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-2 border-y border-neutral-200">
@@ -479,12 +451,22 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                 key={rev.id}
                 className="p-5 bg-white rounded-2xl border border-neutral-200/90 shadow-sm hover:border-neutral-300 transition-all space-y-3"
               >
-                {/* Header: Author, Badges, Date */}
+                {/* Header: Author, Avatar/Initial, Badges, Date */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 pb-3">
                   <div className="flex items-center space-x-2.5">
-                    <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold text-xs flex items-center justify-center uppercase shrink-0">
-                      {rev.author.charAt(0)}
-                    </div>
+                    {rev.avatar ? (
+                      <img
+                        src={rev.avatar}
+                        alt={rev.author}
+                        referrerPolicy="no-referrer"
+                        className="w-8 h-8 rounded-full object-cover border border-neutral-200 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                        {rev.author.charAt(0)}
+                      </div>
+                    )}
+
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs font-extrabold text-neutral-900">
@@ -496,16 +478,6 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                           <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             <span>Verified Purchase</span>
-                          </span>
-                        )}
-
-                        {/* Sample Review Badge */}
-                        {rev.isSample && (
-                          <span
-                            title="Sample review data for demonstration purposes."
-                            className="inline-flex items-center text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200"
-                          >
-                            Sample Review
                           </span>
                         )}
                       </div>
@@ -548,7 +520,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                   </p>
                 </div>
 
-                {/* Genuine Customer Photo attached to review */}
+                {/* Customer Photo attached to review */}
                 {rev.customerImage && (
                   <div className="pt-2">
                     <div className="inline-block relative group">
@@ -694,7 +666,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                       required
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      placeholder="e.g. Priya Sharma"
+                      placeholder="Enter your name"
                       className="w-full px-3 py-2 rounded-xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
                     />
                   </div>
@@ -870,4 +842,3 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     </div>
   );
 };
-

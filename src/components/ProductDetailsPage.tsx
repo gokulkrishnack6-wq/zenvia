@@ -20,6 +20,9 @@ import {
   Sparkles,
   CheckCircle2,
   Info,
+  Copy,
+  ExternalLink,
+  MessageCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, Currency, CategoryType } from "../types";
@@ -81,7 +84,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   // Lightbox / Image Zoom modal state
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // Share feedback state
+  // Share modal & feedback state
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Sticky bottom bar visibility trigger when scrolling past main buy action
@@ -149,16 +153,30 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   };
 
   const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.clipboard) {
+    const slug = getProductSlug(product);
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in";
+    const shareUrl = `${origin}/product/${slug}`;
+    const shareTitle = `${product.name} | Zenvia`;
+    const shareText = `Check out ${product.name} on Zenvia - ${product.tagline || product.description.slice(0, 80)}`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.clipboard.writeText(url);
-        setCopiedLink(true);
-        setTimeout(() => setCopiedLink(false), 2500);
-      } catch (e) {
-        console.log("Clipboard write failed:", e);
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.log("Web Share API failed, using share modal fallback:", err);
+        } else {
+          return;
+        }
       }
     }
+
+    setIsShareModalOpen(true);
   };
 
   // Filter Related Products (same category or bestsellers, excluding current product)
@@ -481,18 +499,28 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </button>
                   </div>
 
-                  {/* Wishlist button */}
-                  <button
-                    onClick={() => onToggleWishlist(product)}
-                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-                      isWishlisted
-                        ? "bg-rose-50 border-rose-300 text-rose-700"
-                        : "bg-white border-neutral-200 hover:border-neutral-300 text-neutral-700 hover:bg-neutral-50"
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 ${isWishlisted ? "fill-rose-600 text-rose-600" : ""}`} />
-                    <span>{isWishlisted ? "In Wishlist (Saved)" : "Save to Wishlist"}</span>
-                  </button>
+                  {/* Secondary Actions: Wishlist & Share */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => onToggleWishlist(product)}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                        isWishlisted
+                          ? "bg-rose-50 border-rose-300 text-rose-700"
+                          : "bg-white border-neutral-200 hover:border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isWishlisted ? "fill-rose-600 text-rose-600" : ""}`} />
+                      <span>{isWishlisted ? "In Wishlist" : "Save to Wishlist"}</span>
+                    </button>
+
+                    <button
+                      onClick={handleShare}
+                      className="py-2.5 px-3 rounded-xl border border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-800 text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-sm"
+                    >
+                      <Share2 className="w-4 h-4 text-amber-600" />
+                      <span>Share Product</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -820,6 +848,164 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      {/* ========================================================
+          SHARE PRODUCT MODAL / DESKTOP FALLBACK
+      ======================================================== */}
+      <AnimatePresence>
+        {isShareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-md bg-white rounded-2xl border border-neutral-200 shadow-2xl p-6 overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-neutral-900">Share Product</h3>
+                    <p className="text-[11px] text-neutral-500 font-medium">Spread the word or save for later</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Product Preview Snippet */}
+              <div className="my-4 p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center space-x-3">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs font-bold text-neutral-900 truncate">{product.name}</h4>
+                  <p className="text-[11px] font-semibold text-amber-700">{formattedPrice}</p>
+                </div>
+              </div>
+
+              {/* Copy Direct URL Bar */}
+              <div className="mb-5 space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-600 block">
+                  Product Link
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`}
+                    className="flex-1 px-3 py-2 bg-neutral-100 border border-neutral-300 rounded-xl text-xs font-mono text-neutral-800 focus:outline-none select-all"
+                  />
+                  <button
+                    onClick={async () => {
+                      const shareUrl = `${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`;
+                      if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(shareUrl);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2500);
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 shrink-0 ${
+                      copiedLink
+                        ? "bg-emerald-600 text-white"
+                        : "bg-neutral-900 hover:bg-black text-white shadow-sm"
+                    }`}
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Social Share Channel Grid */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-600 block">
+                  Share via Social
+                </label>
+
+                <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                  {/* WhatsApp */}
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product.name} on Zenvia: ${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <span>WhatsApp</span>
+                  </a>
+
+                  {/* Facebook */}
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <ExternalLink className="w-4 h-4 text-blue-600" />
+                    <span>Facebook</span>
+                  </a>
+
+                  {/* X / Twitter */}
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`)}&text=${encodeURIComponent(`Check out ${product.name} on Zenvia`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-800 hover:bg-neutral-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4 text-neutral-700" />
+                    <span>X / Twitter</span>
+                  </a>
+
+                  {/* Instagram / Copy Link */}
+                  <button
+                    onClick={async () => {
+                      const shareUrl = `${typeof window !== "undefined" ? window.location.origin : "https://zenviaco.in"}/product/${getProductSlug(product)}`;
+                      if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(shareUrl);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2500);
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border border-pink-200 bg-pink-50 text-pink-800 hover:bg-pink-100 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <Copy className="w-4 h-4 text-pink-600" />
+                    <span>Instagram Link</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Close Button Footer */}
+              <div className="mt-6 pt-3 border-t border-neutral-100 text-center">
+                <button
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="w-full py-2.5 text-xs font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -109,20 +109,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState<FormState>({
-    fullName: "Priya Sharma",
-    phone: "98200 98200",
-    email: "priya.sharma@example.com",
-    houseNo: "Flat 402, Sunshine Apartments",
-    street: "Link Road, Andheri West",
-    landmark: "Near Infiniti Mall",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400053",
+  // Initial empty form state
+  const initialFormState: FormState = {
+    fullName: "",
+    phone: "",
+    email: "",
+    houseNo: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
     paymentMethod: "razorpay",
     shippingMethod: "concierge",
-  });
+  };
+
+  // Form state
+  const [formData, setFormData] = useState<FormState>(initialFormState);
 
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
 
@@ -154,6 +157,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setFormData(initialFormState);
       setOrderConfirmation(null);
       setIsProcessing(false);
       setPaymentError(null);
@@ -164,6 +168,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleCloseModal = () => {
     if (isProcessing) return;
     setStep(1);
+    setFormData(initialFormState);
     setOrderConfirmation(null);
     setIsProcessing(false);
     setPaymentError(null);
@@ -238,58 +243,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (fieldErrors[key as keyof ValidationErrors]) {
       setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
     }
-  };
-
-  // Quick Autofill helpers
-  const handleAutofillMumbai = () => {
-    setFormData((prev) => ({
-      ...prev,
-      fullName: "Priya Sharma",
-      phone: "9820098200",
-      email: "priya.sharma@example.com",
-      houseNo: "Flat 402, Sunshine Apartments",
-      street: "Link Road, Andheri West",
-      landmark: "Near Infiniti Mall",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400053",
-    }));
-    setFieldErrors({});
-    setPaymentError(null);
-  };
-
-  const handleAutofillDelhi = () => {
-    setFormData((prev) => ({
-      ...prev,
-      fullName: "Rohan Verma",
-      phone: "9811122334",
-      email: "rohan.verma@example.com",
-      houseNo: "House 12, Block C",
-      street: "Greater Kailash 1",
-      landmark: "Near M-Block Market",
-      city: "New Delhi",
-      state: "Delhi NCR",
-      pincode: "110048",
-    }));
-    setFieldErrors({});
-    setPaymentError(null);
-  };
-
-  const handleAutofillBengaluru = () => {
-    setFormData((prev) => ({
-      ...prev,
-      fullName: "Ananya Rao",
-      phone: "9900012345",
-      email: "ananya.rao@example.com",
-      houseNo: "Villa 24, Green Glen Layout",
-      street: "Outer Ring Road, Bellandur",
-      landmark: "Near EcoSpace Tech Park",
-      city: "Bengaluru",
-      state: "Karnataka",
-      pincode: "560103",
-    }));
-    setFieldErrors({});
-    setPaymentError(null);
   };
 
   // Proceed from Step 1 -> Step 2
@@ -776,37 +729,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {/* STEP 1: CUSTOMER DETAILS & DELIVERY ADDRESS FORM */}
           {step === 1 && (
             <div className="space-y-6 max-w-2xl mx-auto">
-              {/* Header & Autofill */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-3 gap-2">
-                <div>
-                  <h3 className="text-xl font-extrabold text-neutral-900">Customer & Delivery Details</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">Enter your contact and shipping details to proceed to payment.</p>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 text-xs shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleAutofillMumbai}
-                    className="text-amber-800 hover:underline flex items-center space-x-1 font-medium bg-amber-50 px-2 py-1 rounded border border-amber-200 cursor-pointer text-[11px]"
-                  >
-                    <Sparkles className="w-3 h-3 text-amber-600" />
-                    <span>Autofill Mumbai</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleAutofillDelhi}
-                    className="text-neutral-600 hover:text-neutral-900 hover:underline bg-neutral-100 px-2 py-1 rounded cursor-pointer text-[11px]"
-                  >
-                    <span>Autofill Delhi</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleAutofillBengaluru}
-                    className="text-neutral-600 hover:text-neutral-900 hover:underline bg-neutral-100 px-2 py-1 rounded cursor-pointer text-[11px]"
-                  >
-                    <span>Autofill Bengaluru</span>
-                  </button>
-                </div>
+              {/* Header */}
+              <div className="border-b border-neutral-200 pb-3">
+                <h3 className="text-xl font-extrabold text-neutral-900">Customer & Delivery Details</h3>
+                <p className="text-xs text-neutral-500 mt-0.5">Enter your contact and shipping details to proceed to payment.</p>
               </div>
 
               {/* Form Grid */}
@@ -831,7 +757,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.fullName ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
-                        placeholder="e.g. Priya Sharma"
+                        placeholder="Enter your full name"
                       />
                       {fieldErrors.fullName && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -853,7 +779,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.phone ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 font-mono focus:outline-none`}
-                        placeholder="98200 98200"
+                        placeholder="10-digit mobile number"
                       />
                       {fieldErrors.phone && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -875,7 +801,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.email ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
-                        placeholder="priya.sharma@example.com"
+                        placeholder="name@example.com"
                       />
                       {fieldErrors.email && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -907,7 +833,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.houseNo ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
-                        placeholder="e.g. Flat 402, Sunshine Apartments, B-Wing"
+                        placeholder="House / Flat / Building No."
                       />
                       {fieldErrors.houseNo && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -929,7 +855,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.street ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
-                        placeholder="e.g. Link Road, Lokhandwala, Andheri West"
+                        placeholder="Street / Area / Locality"
                       />
                       {fieldErrors.street && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -949,7 +875,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         value={formData.landmark}
                         onChange={(e) => handleInputChange("landmark", e.target.value)}
                         className="w-full bg-white border border-neutral-300 focus:border-neutral-900 rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none"
-                        placeholder="e.g. Near Infiniti Mall / Opposite ICICI Bank"
+                        placeholder="Landmark (e.g. Near Central Park)"
                       />
                     </div>
 
@@ -965,7 +891,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.city ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
-                        placeholder="e.g. Mumbai"
+                        placeholder="Enter city"
                       />
                       {fieldErrors.city && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -987,6 +913,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           fieldErrors.state ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
                       >
+                        <option value="">Select State</option>
                         {INDIAN_STATES.map((st) => (
                           <option key={st} value={st}>
                             {st}
@@ -1014,7 +941,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         className={`w-full bg-white border ${
                           fieldErrors.pincode ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
                         } rounded-xl px-3.5 py-2.5 text-neutral-900 font-mono focus:outline-none`}
-                        placeholder="e.g. 400053"
+                        placeholder="6-digit PIN code"
                       />
                       {fieldErrors.pincode && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">

@@ -16,6 +16,7 @@ import { Footer } from "./components/Footer";
 // Product Details Page
 import { ProductDetailsPage } from "./components/ProductDetailsPage";
 import { getProductSlug, findProductBySlugOrId } from "./lib/slug";
+import { updatePageMetaTags } from "./lib/meta";
 
 // Modals and Overlays
 import { QuickViewModal } from "./components/QuickViewModal";
@@ -43,12 +44,12 @@ export default function App() {
     const handleLocationChange = () => {
       const pathname = window.location.pathname;
       if (pathname.startsWith("/product/")) {
-        const slug = pathname.replace(/^\/product\//, "");
-        const found = findProductBySlugOrId(slug);
+        const rawSlug = pathname.replace(/^\/product\//, "");
+        const found = findProductBySlugOrId(rawSlug);
         if (found) {
           setActiveProduct(found);
         } else {
-          window.history.replaceState(null, "", "/");
+          window.history.replaceState(null, "", "/" + window.location.search);
           setActiveProduct(null);
         }
       } else {
@@ -62,17 +63,24 @@ export default function App() {
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
+  // Update document title and Open Graph metadata when active product changes
+  useEffect(() => {
+    updatePageMetaTags(activeProduct);
+  }, [activeProduct]);
+
   // Handler to open product details page
   const handleSelectProduct = (product: Product) => {
     const slug = getProductSlug(product);
-    window.history.pushState(null, "", `/product/${slug}`);
+    const search = window.location.search || "";
+    window.history.pushState(null, "", `/product/${slug}${search}`);
     setActiveProduct(product);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handler to go back home
   const handleGoHome = () => {
-    window.history.pushState(null, "", "/");
+    const search = window.location.search || "";
+    window.history.pushState(null, "", `/${search}`);
     setActiveProduct(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

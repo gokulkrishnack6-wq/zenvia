@@ -1,11 +1,13 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { PRODUCTS } from "./src/data/products";
+import { findProductBySlugOrId, getProductSlug } from "./src/lib/slug";
 import {
   sendNewOrderEmail,
   sendFailedPaymentEmail,
@@ -54,13 +56,13 @@ function getAIClient(): GoogleGenAI | null {
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
-  console.log(">>> HEALTH REQUEST RECEIVED");
-
-  res.status(200);
-  res.setHeader("Content-Type", "text/plain");
-  res.end("ZENVIA SERVER OK");
+  res.json({
+    status: "ok",
+    brand: "Zenvia Ultra-Luxury",
+    razorpayConfigured: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+  });
 });
- 
+
 // Razorpay 1: Secure Order Creation Endpoint
 app.post("/api/razorpay/create-order", async (req, res) => {
   try {
@@ -496,6 +498,70 @@ Instructions:
   }
 });
 
+function escapeHtml(str: string): string {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function renderProductPageWithMeta(rawSlug: string): string | null {
+  const product = findProductBySlugOrId(rawSlug);
+  if (!product) return null;
+
+  const indexPath =
+    process.env.NODE_ENV === "production"
+      ? path.join(process.cwd(), "dist", "index.html")
+      : path.join(process.cwd(), "index.html");
+
+  if (!fs.existsSync(indexPath)) return null;
+
+  let html = fs.readFileSync(indexPath, "utf-8");
+  const siteName = "ZENVIA";
+  const slug = getProductSlug(product);
+  const canonicalUrl = `https://zenviaco.in/product/${slug}`;
+  const pageTitle = `${product.name} | Zenvia`;
+  const description = `${product.name} — ${product.tagline || product.description}. Order online at Zenvia with Free India Express Shipping & Cash on Delivery.`;
+  const imageUrl = product.image;
+
+  // Replace default title
+  html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(pageTitle)}</title>`);
+
+  const metaTagsHtml = `
+    <meta name="description" content="${escapeHtml(description)}" />
+    <meta property="og:title" content="${escapeHtml(pageTitle)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:type" content="product" />
+    <meta property="og:site_name" content="${escapeHtml(siteName)}" />
+    <meta property="product:price:amount" content="${product.price}" />
+    <meta property="product:price:currency" content="INR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(pageTitle)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+  `;
+
+  return html.replace("</head>", `${metaTagsHtml}\n</head>`);
+}
+
+// Serve product pages with injected Open Graph metadata for crawlers & direct visits
+app.get("/product/*", (req, res, next) => {
+  try {
+    const rawSlug = req.path.replace(/^\/product\//, "");
+    const htmlWithMeta = renderProductPageWithMeta(rawSlug);
+    if (htmlWithMeta) {
+      return res.status(200).set({ "Content-Type": "text/html" }).send(htmlWithMeta);
+    }
+  } catch (err) {
+    console.error("Product meta injection error:", err);
+  }
+  next();
+});
+
 // Setup Vite development middleware or static production serving
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
@@ -517,8 +583,4 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
-  startServer();
-}
-
-export default app;
+startServer();
