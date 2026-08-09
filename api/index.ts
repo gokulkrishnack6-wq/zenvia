@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import Razorpay from "razorpay";
-import { PRODUCTS } from "../src/data/products";
+import { PRODUCTS } from "../src/data/products.ts";
 import {
   sendNewOrderEmail,
   sendFailedPaymentEmail,
@@ -11,7 +11,7 @@ import {
   sendReviewSubmissionEmail,
   sendNewsletterSignupEmail,
   STORE_OWNER_EMAIL,
-} from "../src/server/email";
+} from "../src/server/email.ts";
 
 dotenv.config();
 

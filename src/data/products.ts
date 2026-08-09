@@ -1,10 +1,10 @@
-import { Product, CategoryType } from "../types";
+import { Product, CategoryType } from "../types.ts";
 import {
   catPrinterMain,
   catPrinterDesk,
   catPrinterGreen,
   catPrinterBlue,
-} from "../lib/catPrinterImages";
+} from "../lib/catPrinterImages.ts";
 
 export const CATEGORIES: { id: CategoryType; name: string; tagline: string; image: string; itemCount: number }[] = [
   {
