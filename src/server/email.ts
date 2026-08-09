@@ -1,36 +1,19 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const STORE_OWNER_EMAIL = process.env.STORE_OWNER_EMAIL || "zenviashopindia@gmail.com";
+export const STORE_OWNER_EMAIL =
+  process.env.STORE_OWNER_EMAIL || "zenviashopindia@gmail.com";
 
 // Set to track sent order/payment notification IDs to prevent duplicate emails
 const sentNotificationIds = new Set<string>();
 
-// Lazy creation of Nodemailer Transporter if SMTP credentials exist
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const port = Number(process.env.SMTP_PORT) || 587;
-
-  if (host && user && pass) {
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
-      },
-    });
-  }
-  return null;
-}
-
-// Core mail sender function
-async function sendEmailNotification(subject: string, textBody: string, htmlBody?: string) {
+// Send email using Resend API
+async function sendEmailNotification(
+  subject: string,
+  textBody: string,
+  htmlBody?: string
+) {
   console.log(`\n==================================================`);
   console.log(`[ZENVIA EMAIL NOTIFICATION TO STORE OWNER]`);
   console.log(`To: ${STORE_OWNER_EMAIL}`);
@@ -40,21 +23,54 @@ async function sendEmailNotification(subject: string, textBody: string, htmlBody
   console.log(`==================================================\n`);
 
   try {
-    const transporter = createTransporter();
-    if (transporter) {
-      await transporter.sendMail({
-        from: `"Zenvia Store System" <${process.env.SMTP_USER || STORE_OWNER_EMAIL}>`,
-        to: STORE_OWNER_EMAIL,
+    const resendApiKey = process.env.RESEND_API_KEY;
+
+    if (!resendApiKey) {
+      console.error(
+        "[ZENVIA EMAIL ERROR] RESEND_API_KEY is not configured."
+      );
+      return;
+    }
+
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: `Zenvia Store <${fromEmail}>`,
+        to: [STORE_OWNER_EMAIL],
         subject,
         text: textBody,
-        html: htmlBody || `<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; color: #111;">${textBody}</pre>`,
-      });
-      console.log(`[ZENVIA EMAIL] Successfully dispatched via SMTP to ${STORE_OWNER_EMAIL}`);
-    } else {
-      console.log(`[ZENVIA EMAIL] SMTP not configured. Notification logged to server console.`);
+        html:
+          htmlBody ||
+          `<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; color: #111;">${textBody}</pre>`,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(
+        "[ZENVIA EMAIL ERROR] Resend failed:",
+        result
+      );
+      return;
     }
+
+    console.log(
+      `[ZENVIA EMAIL] Successfully dispatched via Resend to ${STORE_OWNER_EMAIL}`
+    );
+    console.log(`[ZENVIA EMAIL] Resend ID: ${result.id}`);
   } catch (err: any) {
-    console.error(`[ZENVIA EMAIL ERROR] Failed to send email via SMTP:`, err.message || err);
+    console.error(
+      "[ZENVIA EMAIL ERROR] Failed to send email via Resend:",
+      err.message || err
+    );
   }
 }
 
