@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   CheckCircle2,
@@ -20,7 +20,13 @@ import {
   Home,
   Navigation,
   Edit3,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Package,
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
 import { CartItem, Currency, CheckoutData } from "../types";
 import { formatRupee } from "../lib/currency";
@@ -153,26 +159,37 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
   } | null>(null);
 
-  // CRITICAL FIX: Reset checkout session state whenever the modal opens or new item is selected
+  const [showDetails, setShowDetails] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const prevIsOpenRef = useRef(isOpen);
+
+  // Reset checkout session state ONLY when the modal transitions from closed to open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       setStep(1);
       setFormData(initialFormState);
       setOrderConfirmation(null);
       setIsProcessing(false);
       setPaymentError(null);
       setFieldErrors({});
+      setShowDetails(false);
+      setCopiedKey(null);
     }
-  }, [isOpen, directBuyItem?.product.id]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  const handleCopy = (text: string, key: string) => {
+    if (!text) return;
+    navigator.clipboard?.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => {
+      setCopiedKey((prev) => (prev === key ? null : prev));
+    }, 2000);
+  };
 
   const handleCloseModal = () => {
     if (isProcessing) return;
-    setStep(1);
-    setFormData(initialFormState);
-    setOrderConfirmation(null);
-    setIsProcessing(false);
-    setPaymentError(null);
-    setFieldErrors({});
     onClose();
   };
 
@@ -634,11 +651,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <ZenviaLogo variant="dark" className="h-9 w-auto" />
             <div>
               <span className="text-lg font-extrabold text-neutral-900 tracking-wide uppercase block">
-                Zenvia Checkout
+                {step === 3 ? "Order Confirmed" : "Zenvia Checkout"}
               </span>
               <span className="text-xs text-emerald-700 font-semibold flex items-center space-x-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>100% RBI Verified Razorpay Gateway • Fast India Shipping</span>
+                <span>
+                  {step === 3
+                    ? "Official Purchase Receipt • Zenvia Guarantee"
+                    : "100% RBI Verified Razorpay Gateway • Fast India Shipping"}
+                </span>
               </span>
             </div>
           </div>
@@ -1226,134 +1247,395 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
           {/* STEP 3: ORDER CONFIRMATION & PAYMENT STATUS */}
           {step === 3 && orderConfirmation && (
-            <div className="py-4 max-w-2xl mx-auto space-y-6">
-              {/* Top Banner */}
-              <div className="text-center space-y-2">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="py-2 max-w-2xl mx-auto space-y-6"
+            >
+              {/* 1. Large Animated Success Checkmark & Header */}
+              <div className="text-center space-y-3">
+                <div className="relative inline-flex items-center justify-center">
+                  {/* Subtle pulsing glow ring */}
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0.6 }}
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute w-24 h-24 rounded-full bg-emerald-400/30"
+                  />
+                  {/* Main animated checkmark badge */}
+                  <motion.div
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 18,
+                      delay: 0.1,
+                    }}
+                    className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white flex items-center justify-center shadow-xl shadow-emerald-600/30 border-4 border-white"
+                  >
+                    <Check className="w-10 h-10 stroke-[3] text-white" />
+                  </motion.div>
                 </div>
 
-                <span className="text-xs font-black uppercase tracking-widest text-emerald-700 block">
-                  {orderConfirmation.paymentStatus === "PAID"
-                    ? "✓ PAYMENT SUCCESSFUL & VERIFIED"
-                    : "✓ ORDER CONFIRMED"}
-                </span>
-
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900">
-                  Order Confirmed!
-                </h2>
-
-                <p className="text-xs text-neutral-600 max-w-md mx-auto leading-relaxed">
-                  Thank you, <strong>{orderConfirmation.customerDetails.fullName}</strong>! A confirmation SMS and WhatsApp update with tracking link have been dispatched to <strong>{orderConfirmation.customerDetails.phone}</strong>.
-                </p>
+                <div className="space-y-1">
+                  <motion.h2
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight"
+                  >
+                    Order Placed Successfully!
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.25 }}
+                    className="text-sm text-neutral-600 max-w-md mx-auto leading-relaxed"
+                  >
+                    Thank you for shopping with Zenvia. Your order has been confirmed.
+                  </motion.p>
+                </div>
               </div>
 
-              {/* Detailed Order Summary Card */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 space-y-4 shadow-2xs text-xs">
-                {/* Meta details header */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-b border-neutral-200 pb-3">
+              {/* 2. Order ID & Tracking Numbers Quick Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              >
+                {/* Order ID */}
+                <div className="bg-neutral-50 border border-neutral-200/90 rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
                   <div>
-                    <span className="text-neutral-500 block text-[11px]">Order ID</span>
-                    <strong className="font-mono text-neutral-900 block font-bold text-sm">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
+                      Order ID
+                    </span>
+                    <span className="font-mono text-sm font-black text-neutral-900">
                       {orderConfirmation.orderId}
-                    </strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(orderConfirmation.orderId, "orderId")}
+                    className="p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition-colors flex items-center space-x-1 cursor-pointer text-xs font-semibold"
+                    title="Copy Order ID"
+                  >
+                    {copiedKey === "orderId" ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-[11px] text-emerald-600 font-bold">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-neutral-500" />
+                        <span className="text-[11px] text-neutral-600">Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Tracking Number */}
+                <div className="bg-neutral-50 border border-neutral-200/90 rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
+                      Tracking Number (BlueDart)
+                    </span>
+                    <span className="font-mono text-sm font-black text-neutral-900">
+                      {orderConfirmation.trackingNumber}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(orderConfirmation.trackingNumber, "tracking")}
+                    className="p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition-colors flex items-center space-x-1 cursor-pointer text-xs font-semibold"
+                    title="Copy Tracking Number"
+                  >
+                    {copiedKey === "tracking" ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-[11px] text-emerald-600 font-bold">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-neutral-500" />
+                        <span className="text-[11px] text-neutral-600">Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* 3. Payment Status Callout (COD vs Razorpay) */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                {orderConfirmation.paymentStatus === "PAID" ? (
+                  // Razorpay Verified Banner
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/90 flex items-start space-x-3.5 shadow-2xs">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-900">
+                          Payment Successful
+                        </span>
+                        {orderConfirmation.paymentId && (
+                          <span className="text-[11px] font-mono font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                            ID: {orderConfirmation.paymentId}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-emerald-800 mt-0.5 font-medium">
+                        Your payment has been securely received via Razorpay. A tax invoice has been sent to <strong>{orderConfirmation.customerDetails.email}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  // COD Confirmed Banner
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200/90 flex items-start space-x-3.5 shadow-2xs">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Banknote className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-900">
+                          Cash on Delivery
+                        </span>
+                        <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                          Pay on Arrival
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-800 mt-0.5 font-medium">
+                        Pay when your order arrives. You can pay via Cash or any UPI app (Google Pay, PhonePe, Paytm) directly to the delivery executive.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* 4. Express Delivery Tracker Progress */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-neutral-900 text-white rounded-2xl p-5 shadow-md"
+              >
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Truck className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">
+                      Your order is on its way.
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-extrabold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/20">
+                    BlueDart Express (2–3 Days)
+                  </span>
+                </div>
+
+                {/* Stepper tracker */}
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="space-y-1.5">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto text-xs font-bold shadow-sm shadow-emerald-500/50">
+                      ✓
+                    </div>
+                    <span className="text-[10px] font-bold text-neutral-200 block">Confirmed</span>
+                    <span className="text-[9px] text-emerald-400 block font-medium">Completed</span>
                   </div>
 
-                  {orderConfirmation.paymentId && (
-                    <div>
-                      <span className="text-neutral-500 block text-[11px]">Razorpay Payment ID</span>
-                      <strong className="font-mono text-amber-800 block font-bold text-xs">
-                        {orderConfirmation.paymentId}
-                      </strong>
+                  <div className="space-y-1.5">
+                    <div className="w-7 h-7 rounded-full bg-amber-500 text-neutral-950 flex items-center justify-center mx-auto text-xs font-bold animate-pulse">
+                      2
                     </div>
-                  )}
+                    <span className="text-[10px] font-bold text-neutral-200 block">Processing</span>
+                    <span className="text-[9px] text-amber-400 block font-medium">Packing now</span>
+                  </div>
 
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Payment Status</span>
-                    <span className="inline-flex items-center space-x-1 font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-700" />
-                      <span>{orderConfirmation.paymentStatus}</span>
+                  <div className="space-y-1.5">
+                    <div className="w-7 h-7 rounded-full bg-neutral-800 text-neutral-400 flex items-center justify-center mx-auto text-xs font-bold border border-neutral-700">
+                      3
+                    </div>
+                    <span className="text-[10px] font-medium text-neutral-400 block">Dispatched</span>
+                    <span className="text-[9px] text-neutral-500 block">Within 24h</span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="w-7 h-7 rounded-full bg-neutral-800 text-neutral-400 flex items-center justify-center mx-auto text-xs font-bold border border-neutral-700">
+                      4
+                    </div>
+                    <span className="text-[10px] font-medium text-neutral-400 block">Delivered</span>
+                    <span className="text-[9px] text-neutral-500 block">2–3 Days</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* 5. Purchased Products List */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="bg-neutral-50 border border-neutral-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-2xs text-xs"
+              >
+                <div className="flex items-center justify-between border-b border-neutral-200 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <Package className="w-4 h-4 text-amber-600" />
+                    <span className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
+                      Ordered Products ({orderConfirmation.items.length})
+                    </span>
+                  </div>
+                  <span className="text-xs font-black text-neutral-900 font-mono">
+                    Total: {orderConfirmation.amountPaid}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {orderConfirmation.items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between bg-white p-3 rounded-xl border border-neutral-200/80 shadow-2xs"
+                    >
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          referrerPolicy="no-referrer"
+                          className="w-13 h-13 rounded-lg object-cover border border-neutral-200 shrink-0 bg-neutral-100"
+                        />
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-neutral-900 text-xs sm:text-sm truncate">
+                            {item.product.name}
+                          </h4>
+                          <div className="text-[11px] text-neutral-500 flex flex-wrap gap-2 mt-0.5 font-medium">
+                            {item.selectedColor && (
+                              <span>
+                                Color: <strong className="text-neutral-700">{item.selectedColor}</strong>
+                              </span>
+                            )}
+                            {item.selectedSize && (
+                              <span>
+                                Size: <strong className="text-neutral-700">{item.selectedSize}</strong>
+                              </span>
+                            )}
+                            <span className="text-neutral-800">
+                              Qty: <strong className="text-neutral-950 font-black">{item.quantity}</strong>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right font-black text-neutral-900 font-mono text-xs sm:text-sm shrink-0 ml-3">
+                        {formatRupee(item.product.price * item.quantity)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pricing Breakdown Row */}
+                <div className="pt-2 border-t border-neutral-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="text-neutral-500">
+                    Payment Method:{" "}
+                    <strong className="text-neutral-900">{orderConfirmation.paymentMethod}</strong>
+                  </div>
+                  <div className="text-neutral-900 font-bold text-sm">
+                    Amount Payable / Paid:{" "}
+                    <span className="text-amber-800 font-black font-mono">
+                      {orderConfirmation.amountPaid}
                     </span>
                   </div>
                 </div>
+              </motion.div>
 
-                {/* Purchased Products List */}
-                <div>
-                  <span className="text-xs font-bold text-neutral-900 block mb-2 uppercase tracking-wider">
-                    Purchased Items ({orderConfirmation.items.length})
-                  </span>
-                  <div className="space-y-2">
-                    {orderConfirmation.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-xl border border-neutral-200">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={item.product.image}
-                            alt={item.product.name}
-                            referrerPolicy="no-referrer"
-                            className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0"
-                          />
-                          <div>
-                            <h4 className="font-bold text-neutral-900">{item.product.name}</h4>
-                            <div className="text-[11px] text-neutral-500 flex flex-wrap gap-2 mt-0.5">
-                              {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
-                              {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
-                              <span>Qty: <strong className="text-neutral-900 font-extrabold">{item.quantity}</strong></span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right font-extrabold text-neutral-900 font-mono">
-                          {formatRupee(item.product.price * item.quantity)}
+              {/* 6. Expandable Order & Delivery Details Accordion */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-neutral-50 border border-neutral-200/90 rounded-2xl overflow-hidden shadow-2xs text-xs"
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-neutral-100/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-amber-600" />
+                    <span className="font-bold text-neutral-900">
+                      {showDetails ? "Hide Delivery & Customer Details" : "View Order Details & Delivery Address"}
+                    </span>
+                  </div>
+                  {showDetails ? (
+                    <ChevronUp className="w-4 h-4 text-neutral-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-neutral-600" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showDetails && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="border-t border-neutral-200 p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white"
+                    >
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                          Customer Information
+                        </span>
+                        <div className="text-xs text-neutral-900 font-medium space-y-1">
+                          <p>
+                            Name: <strong className="text-neutral-950 font-bold">{orderConfirmation.customerDetails.fullName}</strong>
+                          </p>
+                          <p>
+                            Mobile: <span className="font-mono">{orderConfirmation.customerDetails.phone}</span>
+                          </p>
+                          <p>
+                            Email: <span>{orderConfirmation.customerDetails.email}</span>
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Customer Details & Shipping Address */}
-                <div className="pt-3 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-neutral-500 block mb-1 font-bold">Customer Details:</span>
-                    <div className="text-neutral-900 font-semibold space-y-0.5">
-                      <div>Name: <strong className="text-neutral-900">{orderConfirmation.customerDetails.fullName}</strong></div>
-                      <div>Mobile: <span className="font-mono">{orderConfirmation.customerDetails.phone}</span></div>
-                      <div>Email: <span>{orderConfirmation.customerDetails.email}</span></div>
-                    </div>
-                  </div>
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                          Shipping Address
+                        </span>
+                        <address className="not-italic text-xs text-neutral-800 font-medium leading-relaxed">
+                          {orderConfirmation.customerDetails.houseNo}, {orderConfirmation.customerDetails.street}
+                          {orderConfirmation.customerDetails.landmark && (
+                            <>, Landmark: {orderConfirmation.customerDetails.landmark}</>
+                          )}
+                          <br />
+                          {orderConfirmation.customerDetails.city}, {orderConfirmation.customerDetails.state} -{" "}
+                          <strong className="font-bold">{orderConfirmation.customerDetails.pincode}</strong>
+                        </address>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
-                  <div>
-                    <span className="text-neutral-500 block mb-1 font-bold">Delivery Address:</span>
-                    <address className="not-italic text-neutral-800 font-medium leading-snug">
-                      {orderConfirmation.customerDetails.houseNo}, {orderConfirmation.customerDetails.street}<br />
-                      {orderConfirmation.customerDetails.landmark ? `Landmark: ${orderConfirmation.customerDetails.landmark}, ` : ""}
-                      {orderConfirmation.customerDetails.city}, {orderConfirmation.customerDetails.state} - <strong>{orderConfirmation.customerDetails.pincode}</strong>
-                    </address>
-                  </div>
-                </div>
-
-                {/* Pricing Summary */}
-                <div className="pt-3 border-t border-neutral-200 flex flex-wrap items-center justify-between text-xs">
-                  <div className="text-neutral-600">
-                    <span>Shipping Partner: </span>
-                    <strong className="text-neutral-900">BlueDart Air Express (2–3 Days)</strong>
-                  </div>
-
-                  <div className="text-right font-extrabold text-neutral-900 text-sm">
-                    Amount Paid: <span className="text-amber-800 font-mono">{orderConfirmation.amountPaid}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Button: Continue Shopping */}
-              <div className="flex items-center justify-center pt-2">
+              {/* 7. Action Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 }}
+                className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3"
+              >
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="w-full sm:w-auto px-10 py-3.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-extrabold uppercase tracking-wider shadow-md cursor-pointer transition-all active:scale-[0.98]"
+                  id="continue-shopping-btn"
+                  className="w-full sm:w-auto px-10 py-4 rounded-xl bg-neutral-950 hover:bg-neutral-900 active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider shadow-lg hover:shadow-xl cursor-pointer transition-all flex items-center justify-center space-x-2"
                 >
-                  Continue Shopping
+                  <span>Continue Shopping</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
       </div>
