@@ -153,3 +153,82 @@ export interface CheckoutData {
   address?: string;
   postalCode?: string;
 }
+
+export interface SavedAddress {
+  id: string;
+  label: "Home" | "Work" | "Other" | string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  houseNo: string;
+  street: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+  createdAt?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  avatarUrl?: string;
+  authProvider: "google" | "email";
+  createdAt: string;
+  savedAddresses: SavedAddress[];
+}
+
+export type OrderStatus =
+  | "ORDER PLACED"
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "SHIPPED"
+  | "OUT FOR DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED";
+
+export interface OrderItemRecord {
+  id?: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
+}
+
+export interface CustomerOrder {
+  id: string; // e.g. "ZENVIA-COD-123456" or "order_xxxx"
+  userId?: string;
+  userEmail: string;
+  date: string;
+  items: OrderItemRecord[];
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  total: number;
+  formattedTotal: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentId?: string;
+  trackingNumber: string;
+  orderStatus: OrderStatus;
+  customerDetails: {
+    fullName: string;
+    phone: string;
+    email: string;
+    houseNo: string;
+    street: string;
+    landmark?: string;
+    city: string;
+    state: string;
+    pincode: string;
+    fullAddress: string;
+  };
+  shippingMethod?: string;
+  createdAt: string;
+}
+
