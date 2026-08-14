@@ -10,11 +10,14 @@ import {
   Sparkles,
   MapPin,
   ChevronDown,
+  Package,
+  LogOut,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Currency, CategoryType } from "../types";
 import { CATEGORIES } from "../data/products";
 import { ZenviaLogo } from "./ZenviaLogo";
+import { useAuth } from "../context/AuthContext";
 
 interface NavbarProps {
   cartCount: number;
@@ -43,9 +46,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectCategory,
   selectedCategory,
 }) => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -240,16 +245,111 @@ export const Navbar: React.FC<NavbarProps> = ({
             </AnimatePresence>
           </motion.button>
 
-          {/* User Account */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={onOpenAccount}
-            className="text-neutral-700 hover:text-neutral-900 p-2 transition-colors cursor-pointer"
-            title="My Account"
-            aria-label="My Account"
-          >
-            <User className="w-5 h-5" />
-          </motion.button>
+          {/* User Account / Profile Menu */}
+          <div className="relative">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (isAuthenticated) {
+                  setUserMenuOpen(!userMenuOpen);
+                } else {
+                  onOpenAccount();
+                }
+              }}
+              id="navbar-account-btn"
+              className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100/80 transition-colors border border-transparent hover:border-neutral-200 cursor-pointer"
+              title={isAuthenticated ? `Account: ${user?.fullName}` : "Sign In / Account"}
+              aria-label="Customer Account"
+            >
+              {isAuthenticated && user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName}
+                  referrerPolicy="no-referrer"
+                  className="w-6 h-6 rounded-full object-cover border border-amber-500/50"
+                />
+              ) : isAuthenticated ? (
+                <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-800 font-bold flex items-center justify-center text-xs">
+                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                </div>
+              ) : (
+                <User className="w-5 h-5 text-neutral-700" />
+              )}
+
+              <span className="hidden sm:inline text-xs font-semibold text-neutral-800 truncate max-w-[100px]">
+                {isAuthenticated ? user?.fullName?.split(" ")[0] || "Account" : "Sign In"}
+              </span>
+
+              {isAuthenticated && (
+                <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+              )}
+            </motion.button>
+
+            {/* User Dropdown */}
+            <AnimatePresence>
+              {userMenuOpen && isAuthenticated && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                  onMouseLeave={() => setUserMenuOpen(false)}
+                  className="absolute right-0 mt-2 w-56 bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl py-2 z-50 text-xs text-stone-200"
+                >
+                  <div className="px-4 py-2 border-b border-stone-800">
+                    <p className="font-semibold text-stone-100 truncate">{user?.fullName}</p>
+                    <p className="text-[11px] text-stone-400 font-mono truncate">{user?.email}</p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      onOpenAccount();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 hover:bg-stone-800 text-stone-300 hover:text-amber-400 text-left transition-colors"
+                  >
+                    <Package className="w-4 h-4 text-amber-400" />
+                    <span>My Orders ({user ? "View All" : ""})</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      onOpenAccount();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 hover:bg-stone-800 text-stone-300 hover:text-amber-400 text-left transition-colors"
+                  >
+                    <MapPin className="w-4 h-4 text-amber-400" />
+                    <span>Saved Addresses</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      onOpenAccount();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 hover:bg-stone-800 text-stone-300 hover:text-amber-400 text-left transition-colors"
+                  >
+                    <User className="w-4 h-4 text-amber-400" />
+                    <span>Personal Details</span>
+                  </button>
+
+                  <div className="pt-1 mt-1 border-t border-stone-800">
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 hover:bg-rose-950/40 text-rose-400 text-left transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -263,6 +363,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="lg:hidden bg-white border-b border-neutral-200 px-6 py-5 mt-2 space-y-4 shadow-xl overflow-hidden"
           >
+            {/* Account Quick Status on Mobile */}
+            <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
+                  {isAuthenticated ? (user?.fullName?.charAt(0).toUpperCase() || "U") : <User className="w-4 h-4" />}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-neutral-900">
+                    {isAuthenticated ? user?.fullName : "Guest Shopper"}
+                  </p>
+                  <p className="text-[10px] text-neutral-500 font-mono">
+                    {isAuthenticated ? user?.email : "Sign in to save addresses"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAccount();
+                }}
+                className="text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg border border-amber-200"
+              >
+                {isAuthenticated ? "My Account" : "Sign In"}
+              </button>
+            </div>
+
             <div className="relative">
               <button
                 onClick={() => {
@@ -307,6 +433,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {cat.name}
                 </button>
               ))}
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAccount();
+                }}
+                className="text-left py-2 text-neutral-700 hover:text-amber-600 border-b border-neutral-100 flex items-center justify-between"
+              >
+                <span>My Orders & Tracking</span>
+                <Package className="w-4 h-4 text-neutral-400" />
+              </button>
 
               <button
                 onClick={() => {

@@ -25,13 +25,17 @@ import {
   ChevronDown,
   ChevronUp,
   Package,
+  Plus,
+  Bookmark,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
-import { CartItem, Currency, CheckoutData } from "../types";
+import { CartItem, Currency, CheckoutData, SavedAddress } from "../types";
 import { formatRupee } from "../lib/currency";
 import { loadRazorpayScript } from "../lib/loadRazorpay";
 import { ZenviaLogo } from "./ZenviaLogo";
+import { useAuth } from "../context/AuthContext";
+import { AuthModal } from "./AuthModal";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -41,6 +45,7 @@ interface CheckoutModalProps {
   discountPercent: number;
   onClose: () => void;
   onOrderComplete: () => void;
+  onOpenAccount?: () => void;
 }
 
 const INDIAN_STATES = [
@@ -110,10 +115,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   discountPercent,
   onClose,
   onOrderComplete,
+  onOpenAccount,
 }) => {
+  const { user, isAuthenticated, token, addAddress } = useAuth();
+
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Customer & Address Details, 2: Payment & Order Summary, 3: Confirmation
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("new");
+  const [saveAddressToAccount, setSaveAddressToAccount] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Initial empty form state
   const initialFormState: FormState = {
@@ -164,20 +175,101 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const prevIsOpenRef = useRef(isOpen);
 
+  // Auto-fill form from authenticated user profile or saved address
+  const populateFromUserOrAddress = (preferredAddressId?: string) => {
+    if (!user) return;
+
+    let targetAddress: SavedAddress | undefined;
+    if (preferredAddressId && preferredAddressId !== "new") {
+      targetAddress = user.savedAddresses?.find((a) => a.id === preferredAddressId);
+    } else if (user.savedAddresses && user.savedAddresses.length > 0) {
+      targetAddress = user.savedAddresses.find((a) => a.isDefault) || user.savedAddresses[0];
+    }
+
+    if (targetAddress) {
+      setSelectedAddressId(targetAddress.id);
+      setFormData((prev) => ({
+        ...prev,
+        fullName: targetAddress.fullName || user.fullName || prev.fullName,
+        phone: targetAddress.phone || user.phone || prev.phone,
+        email: targetAddress.email || user.email || prev.email,
+        houseNo: targetAddress.houseNo || "",
+        street: targetAddress.street || "",
+        landmark: targetAddress.landmark || "",
+        city: targetAddress.city || "",
+        state: targetAddress.state || "Karnataka",
+        pincode: targetAddress.pincode || "",
+      }));
+    } else {
+      setSelectedAddressId("new");
+      setFormData((prev) => ({
+        ...prev,
+        fullName: user.fullName || prev.fullName,
+        phone: user.phone || prev.phone,
+        email: user.email || prev.email,
+      }));
+    }
+  };
+
   // Reset checkout session state ONLY when the modal transitions from closed to open
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
       setStep(1);
-      setFormData(initialFormState);
       setOrderConfirmation(null);
       setIsProcessing(false);
       setPaymentError(null);
       setFieldErrors({});
       setShowDetails(false);
       setCopiedKey(null);
+
+      // Auto-fill if user is logged in
+      if (isAuthenticated && user) {
+        populateFromUserOrAddress();
+      } else {
+        setFormData(initialFormState);
+        setSelectedAddressId("new");
+      }
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated, user]);
+
+  // When an address chip is clicked
+  const handleSelectSavedAddress = (addrId: string) => {
+    if (addrId === "new") {
+      setSelectedAddressId("new");
+      setFormData((prev) => ({
+        ...prev,
+        fullName: user?.fullName || prev.fullName,
+        phone: user?.phone || prev.phone,
+        email: user?.email || prev.email,
+        houseNo: "",
+        street: "",
+        landmark: "",
+        city: "",
+        state: "",
+        pincode: "",
+      }));
+      return;
+    }
+
+    const addr = user?.savedAddresses?.find((a) => a.id === addrId);
+    if (addr) {
+      setSelectedAddressId(addr.id);
+      setFormData((prev) => ({
+        ...prev,
+        fullName: addr.fullName,
+        phone: addr.phone,
+        email: addr.email || user?.email || prev.email,
+        houseNo: addr.houseNo,
+        street: addr.street,
+        landmark: addr.landmark || "",
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+      }));
+      setFieldErrors({});
+    }
+  };
 
   const handleCopy = (text: string, key: string) => {
     if (!text) return;
@@ -295,9 +387,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (formData.paymentMethod === "cod") {
       setIsProcessing(true);
       try {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const codRes = await fetch("/api/orders/cod", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             items: activeItems.map((item) => ({
               id: item.product.id,
@@ -318,6 +415,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               fullAddress,
             },
             discountPercent,
+            saveAddressToProfile: isAuthenticated && saveAddressToAccount,
           }),
         });
 
@@ -385,9 +483,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
 
       // 2. Call backend to create Razorpay Order securely
+      const orderHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        orderHeaders["Authorization"] = `Bearer ${token}`;
+      }
+
       const orderRes = await fetch("/api/razorpay/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: orderHeaders,
         body: JSON.stringify({
           items: activeItems.map((item) => ({
             id: item.product.id,
@@ -422,14 +525,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           // Received Razorpay response, now send signature to backend for verification
           setIsProcessing(true);
           try {
+            const verifyHeaders: Record<string, string> = { "Content-Type": "application/json" };
+            if (token) {
+              verifyHeaders["Authorization"] = `Bearer ${token}`;
+            }
+
             const verifyRes = await fetch("/api/razorpay/verify-payment", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: verifyHeaders,
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 isTestMode: orderData.isTestMode,
+                saveAddressToProfile: isAuthenticated && saveAddressToAccount,
                 orderDetails: {
                   orderId: response.razorpay_order_id,
                   items: activeItems.map((i) => ({
@@ -751,12 +860,98 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {step === 1 && (
             <div className="space-y-6 max-w-2xl mx-auto">
               {/* Header */}
-              <div className="border-b border-neutral-200 pb-3">
-                <h3 className="text-xl font-extrabold text-neutral-900">Customer & Delivery Details</h3>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Enter your contact and shipping information once. You will review everything in the next step.
-                </p>
+              <div className="border-b border-neutral-200 pb-3 flex items-start justify-between">
+                <div>
+                  <h3 className="text-xl font-extrabold text-neutral-900">Customer & Delivery Details</h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Enter your contact and shipping information once. You will review everything in the next step.
+                  </p>
+                </div>
               </div>
+
+              {/* Guest Sign-In Banner */}
+              {!isAuthenticated && (
+                <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center shrink-0">
+                      <Zap className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Already have a Zenvia Account?</p>
+                      <p className="text-[11px] text-neutral-600">
+                        Sign in for 1-tap checkout with your saved addresses and order history.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    id="checkout-guest-signin-btn"
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold shrink-0 cursor-pointer shadow-xs transition-transform active:scale-95"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+
+              {/* Saved Addresses Chip Selector for Authenticated Customers */}
+              {isAuthenticated && user?.savedAddresses && user.savedAddresses.length > 0 && (
+                <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-900 flex items-center space-x-1.5">
+                      <Bookmark className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Your Saved Addresses</span>
+                    </span>
+                    <span className="text-[11px] text-neutral-500 font-medium">Click to 1-tap apply</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {user.savedAddresses.map((addr) => {
+                      const isSelected = selectedAddressId === addr.id;
+                      return (
+                        <button
+                          key={addr.id}
+                          type="button"
+                          onClick={() => handleSelectSavedAddress(addr.id)}
+                          className={`p-3 rounded-xl text-left border transition-all cursor-pointer text-xs flex flex-col justify-between ${
+                            isSelected
+                              ? "border-amber-500 bg-amber-50/90 ring-2 ring-amber-500/20 shadow-xs text-neutral-950"
+                              : "border-neutral-200 bg-white hover:border-neutral-300 text-neutral-700"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full mb-1">
+                            <span className="font-bold flex items-center space-x-1">
+                              <MapPin className={`w-3.5 h-3.5 ${isSelected ? "text-amber-600" : "text-neutral-400"}`} />
+                              <span>{addr.label || "Address"}</span>
+                            </span>
+                            {addr.isDefault && (
+                              <span className="text-[9px] font-extrabold bg-amber-200/90 text-amber-900 px-1.5 py-0.5 rounded">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-neutral-600 line-clamp-2 leading-relaxed">
+                            {addr.houseNo}, {addr.street}, {addr.city} - {addr.pincode}
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectSavedAddress("new")}
+                      className={`p-3 rounded-xl text-left border transition-all cursor-pointer text-xs flex items-center justify-center space-x-2 ${
+                        selectedAddressId === "new"
+                          ? "border-neutral-900 bg-neutral-900 text-white font-bold"
+                          : "border-dashed border-neutral-300 bg-white hover:border-neutral-400 text-neutral-700"
+                      }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Enter Another Address</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Form Grid */}
               <div className="space-y-5">
@@ -985,6 +1180,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Save Address to Profile Checkbox (For Authenticated Customers) */}
+                {isAuthenticated && (
+                  <div className="pt-2 flex items-center space-x-2.5 bg-neutral-50 p-3 rounded-xl border border-neutral-200/80">
+                    <input
+                      type="checkbox"
+                      id="save-address-to-account"
+                      checked={saveAddressToAccount}
+                      onChange={(e) => setSaveAddressToAccount(e.target.checked)}
+                      className="w-4 h-4 rounded border-neutral-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <label htmlFor="save-address-to-account" className="text-xs font-semibold text-neutral-700 cursor-pointer">
+                      Save this delivery address to my Zenvia profile for 1-tap future orders
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Step 1 Action Button */}
@@ -1618,27 +1829,70 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </AnimatePresence>
               </motion.div>
 
-              {/* 7. Action Buttons */}
+              {/* 7. Action Buttons & Post-Purchase Account Options */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.55 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3"
+                className="space-y-4 pt-3"
               >
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  id="continue-shopping-btn"
-                  className="w-full sm:w-auto px-10 py-4 rounded-xl bg-neutral-950 hover:bg-neutral-900 active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider shadow-lg hover:shadow-xl cursor-pointer transition-all flex items-center justify-center space-x-2"
-                >
-                  <span>Continue Shopping</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {!isAuthenticated && (
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Want to track this order live?</p>
+                      <p className="text-[11px] text-neutral-600">
+                        Create an account with <span className="font-semibold text-neutral-800">{orderConfirmation.customerDetails.email}</span> to track delivery milestones & save your address.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAuthModalOpen(true)}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs transition-transform active:scale-95"
+                    >
+                      Create Free Account
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {isAuthenticated && onOpenAccount && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleCloseModal();
+                        onOpenAccount();
+                      }}
+                      id="view-my-orders-btn"
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white border border-neutral-300 hover:border-neutral-900 text-neutral-900 text-xs font-black uppercase tracking-wider shadow-xs hover:shadow-md cursor-pointer transition-all flex items-center justify-center space-x-2"
+                    >
+                      <Package className="w-4 h-4 text-amber-600" />
+                      <span>View in My Orders</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    id="continue-shopping-btn"
+                    className="w-full sm:w-auto px-10 py-3.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider shadow-lg hover:shadow-xl cursor-pointer transition-all flex items-center justify-center space-x-2"
+                  >
+                    <span>Continue Shopping</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}
         </div>
       </div>
+
+      {/* Auth Modal for 1-Tap sign-in from checkout */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialEmail={formData.email}
+        initialName={formData.fullName}
+      />
     </div>
   );
 };

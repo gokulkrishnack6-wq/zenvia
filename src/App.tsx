@@ -357,6 +357,7 @@ export default function App() {
           setCheckoutOpen(false);
           setDirectBuyItem(null);
         }}
+        onOpenAccount={() => setAccountOpen(true)}
         onOrderComplete={() => {
           if (directBuyItem) {
             setDirectBuyItem(null);
@@ -403,6 +404,7 @@ export default function App() {
         }}
         onOpenCart={() => setCartOpen(true)}
         onOpenWishlist={() => setWishlistOpen(true)}
+        onOpenAccount={() => setAccountOpen(true)}
       />
 
       {/* Corner Toast for Recent Indian Orders */}

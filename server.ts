@@ -16,6 +16,24 @@ import {
   sendNewsletterSignupEmail,
   STORE_OWNER_EMAIL,
 } from "./src/server/email";
+import {
+  getUserByToken,
+  sanitizeUser,
+  revokeSession,
+  handleGoogleAuth,
+  registerEmailUser,
+  loginEmailUser,
+  updateUserProfile,
+  addSavedAddress,
+  updateSavedAddress,
+  deleteSavedAddress,
+  setDefaultAddress,
+  saveOrder,
+  getOrdersForUser,
+  getOrderById,
+  linkGuestOrder,
+  StoredUser,
+} from "./src/server/accountDb";
 
 dotenv.config();
 
@@ -23,6 +41,14 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Helper middleware to extract authenticated user from Bearer token
+function getAuthUser(req: express.Request): StoredUser | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const token = authHeader.substring(7).trim();
+  return getUserByToken(token);
+}
 
 // Lazy Razorpay initialization
 function getRazorpayInstance(): Razorpay | null {
@@ -207,10 +233,76 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
     }
 
     // Payment Signature verified (or approved in test/demo mode)
-    // Send New Order Email to Store Owner in background (non-blocking)
+    // Extract authenticated user if available
+    const authUser = getAuthUser(req);
+    const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
+    const orderIdToSave = orderDetails?.orderId || razorpay_order_id;
+    const nowIso = new Date().toISOString();
+
+    // Persist order in secure server database
     if (customerDetails && orderDetails) {
+      saveOrder({
+        id: orderIdToSave,
+        userId: authUser ? authUser.id : undefined,
+        userEmail: customerDetails.email || (authUser ? authUser.email : ""),
+        date: nowIso,
+        items: (orderDetails.items || []).map((i: any) => ({
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+          selectedColor: i.selectedColor,
+          selectedSize: i.selectedSize,
+        })),
+        subtotal: orderDetails.subtotal || 0,
+        discount: orderDetails.discount || 0,
+        shipping: orderDetails.shipping || 0,
+        total: orderDetails.total || 0,
+        formattedTotal: `₹${(orderDetails.total || 0).toLocaleString("en-IN")}`,
+        paymentMethod: "Razorpay (UPI / Cards / NetBanking)",
+        paymentStatus: "PAID",
+        paymentId: razorpay_payment_id,
+        trackingNumber: trackingId,
+        orderStatus: "CONFIRMED",
+        customerDetails: {
+          fullName: customerDetails.fullName || "Customer",
+          phone: customerDetails.phone || "",
+          email: customerDetails.email || "",
+          houseNo: customerDetails.houseNo || "",
+          street: customerDetails.street || "",
+          landmark: customerDetails.landmark,
+          city: customerDetails.city || "",
+          state: customerDetails.state || "",
+          pincode: customerDetails.pincode || "",
+          fullAddress: customerDetails.fullAddress || "",
+        },
+        shippingMethod: "BlueDart Air Express (2–3 Days)",
+        createdAt: nowIso,
+      });
+
+      // If user requested to save address to profile or if user is authenticated and has no saved address
+      if (authUser && req.body.saveAddressToProfile) {
+        try {
+          addSavedAddress(authUser.id, {
+            label: "Home",
+            fullName: customerDetails.fullName || authUser.fullName,
+            phone: customerDetails.phone || authUser.phone,
+            email: customerDetails.email || authUser.email,
+            houseNo: customerDetails.houseNo || "",
+            street: customerDetails.street || "",
+            landmark: customerDetails.landmark,
+            city: customerDetails.city || "",
+            state: customerDetails.state || "",
+            pincode: customerDetails.pincode || "",
+            isDefault: authUser.savedAddresses.length === 0,
+          });
+        } catch (addrErr) {
+          console.warn("[Zenvia] Failed to auto-save address during Razorpay order:", addrErr);
+        }
+      }
+
+      // Send New Order Email to Store Owner in background (non-blocking)
       void sendNewOrderEmail({
-        orderId: orderDetails.orderId || razorpay_order_id,
+        orderId: orderIdToSave,
         items: orderDetails.items || [],
         subtotal: orderDetails.subtotal || 0,
         discount: orderDetails.discount || 0,
@@ -244,8 +336,9 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
       verified: true,
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
+      trackingNumber: trackingId,
       status: "PAID",
-      timestamp: new Date().toISOString(),
+      timestamp: nowIso,
     });
   } catch (error: any) {
     console.error("Razorpay verification error:", error);
@@ -260,7 +353,7 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
 // COD Order Server Endpoint
 app.post("/api/orders/cod", async (req, res) => {
   try {
-    const { items, customerDetails, discountPercent = 0 } = req.body;
+    const { items, customerDetails, discountPercent = 0, saveAddressToProfile } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0 || !customerDetails) {
       return res.status(400).json({ error: "Items array and customer details are required" });
@@ -277,9 +370,11 @@ app.post("/api/orders/cod", async (req, res) => {
       const qty = Math.max(1, parseInt(item.quantity) || 1);
       rawSubtotal += product.price * qty;
       validatedItems.push({
+        id: product.id,
         name: product.name,
         price: product.price,
         quantity: qty,
+        image: product.image,
         selectedColor: item.selectedColor,
         selectedSize: item.selectedSize,
       });
@@ -292,6 +387,62 @@ app.post("/api/orders/cod", async (req, res) => {
 
     const codOrderId = "ZENVIA-COD-" + Math.floor(100000 + Math.random() * 900000);
     const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
+    const nowIso = new Date().toISOString();
+
+    const authUser = getAuthUser(req);
+
+    // Save order into database
+    saveOrder({
+      id: codOrderId,
+      userId: authUser ? authUser.id : undefined,
+      userEmail: customerDetails.email || (authUser ? authUser.email : ""),
+      date: nowIso,
+      items: validatedItems,
+      subtotal: rawSubtotal,
+      discount: discountAmount,
+      shipping: shippingCost,
+      total: finalTotal,
+      formattedTotal: `₹${finalTotal.toLocaleString("en-IN")}`,
+      paymentMethod: "Cash on Delivery (COD)",
+      paymentStatus: "CONFIRMED",
+      trackingNumber: trackingId,
+      orderStatus: "CONFIRMED",
+      customerDetails: {
+        fullName: customerDetails.fullName || "Customer",
+        phone: customerDetails.phone || "",
+        email: customerDetails.email || "",
+        houseNo: customerDetails.houseNo || "",
+        street: customerDetails.street || "",
+        landmark: customerDetails.landmark,
+        city: customerDetails.city || "",
+        state: customerDetails.state || "",
+        pincode: customerDetails.pincode || "",
+        fullAddress: customerDetails.fullAddress || "",
+      },
+      shippingMethod: "BlueDart Air Express (2–3 Days)",
+      createdAt: nowIso,
+    });
+
+    // Optionally save address to user's profile
+    if (authUser && saveAddressToProfile) {
+      try {
+        addSavedAddress(authUser.id, {
+          label: "Home",
+          fullName: customerDetails.fullName || authUser.fullName,
+          phone: customerDetails.phone || authUser.phone,
+          email: customerDetails.email || authUser.email,
+          houseNo: customerDetails.houseNo || "",
+          street: customerDetails.street || "",
+          landmark: customerDetails.landmark,
+          city: customerDetails.city || "",
+          state: customerDetails.state || "",
+          pincode: customerDetails.pincode || "",
+          isDefault: authUser.savedAddresses.length === 0,
+        });
+      } catch (addrErr) {
+        console.warn("[Zenvia] Failed to auto-save address during COD order:", addrErr);
+      }
+    }
 
     // Send New Order Notification to Store Owner in the background (non-blocking)
     void sendNewOrderEmail({
@@ -334,6 +485,276 @@ app.post("/api/orders/cod", async (req, res) => {
     console.error("COD order processing error:", error);
     return res.status(500).json({ error: error.message || "Failed to process COD order" });
   }
+});
+
+// ==========================================
+// CUSTOMER AUTH & ACCOUNT API ENDPOINTS
+// ==========================================
+
+// Google Sign-In / Account Creation Endpoint
+app.post("/api/auth/google", (req, res) => {
+  try {
+    const { email, fullName, avatarUrl, phone } = req.body;
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email address is required" });
+    }
+
+    const result = handleGoogleAuth({
+      email,
+      fullName: fullName || "Valued Customer",
+      avatarUrl,
+      phone,
+    });
+
+    return res.json({
+      success: true,
+      user: result.user,
+      token: result.token,
+      isNewUser: result.isNewUser,
+      message: result.isNewUser
+        ? "Welcome to Zenvia! Your account has been created."
+        : "Welcome back to Zenvia!",
+    });
+  } catch (err: any) {
+    console.error("Google Auth error:", err);
+    return res.status(500).json({ error: err.message || "Authentication failed" });
+  }
+});
+
+// Email + Password Registration Endpoint
+app.post("/api/auth/register", (req, res) => {
+  try {
+    const { email, password, fullName, phone } = req.body;
+
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Please provide a valid email address." });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long." });
+    }
+    if (!fullName || fullName.trim().length === 0) {
+      return res.status(400).json({ error: "Full name is required." });
+    }
+
+    const result = registerEmailUser({
+      email,
+      password,
+      fullName,
+      phone: phone || "",
+    });
+
+    return res.json({
+      success: true,
+      user: result.user,
+      token: result.token,
+      message: "Account created successfully.",
+    });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Registration failed" });
+  }
+});
+
+// Email + Password Login Endpoint
+app.post("/api/auth/login", (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required." });
+    }
+
+    const result = loginEmailUser(email, password);
+
+    return res.json({
+      success: true,
+      user: result.user,
+      token: result.token,
+      message: "Welcome back!",
+    });
+  } catch (err: any) {
+    return res.status(401).json({ error: err.message || "Invalid credentials." });
+  }
+});
+
+// User Session Verification & Profile Fetch
+app.get("/api/auth/me", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized or session expired" });
+  }
+  return res.json({
+    success: true,
+    user: sanitizeUser(user),
+  });
+});
+
+// Logout / Revoke Session Endpoint
+app.post("/api/auth/logout", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7).trim();
+    revokeSession(token);
+  }
+  return res.json({ success: true, message: "Logged out successfully" });
+});
+
+// Update Profile Endpoint
+app.put("/api/auth/profile", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const { fullName, phone, avatarUrl } = req.body;
+    const updatedUser = updateUserProfile(user.id, { fullName, phone, avatarUrl });
+    return res.json({ success: true, user: updatedUser });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to update profile" });
+  }
+});
+
+// Add Saved Delivery Address
+app.post("/api/auth/addresses", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const { label, fullName, phone, email, houseNo, street, landmark, city, state, pincode, isDefault } = req.body;
+
+    if (!fullName || !phone || !houseNo || !street || !city || !state || !pincode) {
+      return res.status(400).json({ error: "All required address fields must be filled" });
+    }
+
+    const updatedUser = addSavedAddress(user.id, {
+      label: label || "Home",
+      fullName,
+      phone,
+      email: email || user.email,
+      houseNo,
+      street,
+      landmark,
+      city,
+      state,
+      pincode,
+      isDefault: Boolean(isDefault),
+    });
+
+    return res.json({ success: true, user: updatedUser });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to save address" });
+  }
+});
+
+// Update Saved Delivery Address
+app.put("/api/auth/addresses/:id", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const addressId = req.params.id;
+    const updatedUser = updateSavedAddress(user.id, addressId, req.body);
+    return res.json({ success: true, user: updatedUser });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to update address" });
+  }
+});
+
+// Delete Saved Delivery Address
+app.delete("/api/auth/addresses/:id", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const addressId = req.params.id;
+    const updatedUser = deleteSavedAddress(user.id, addressId);
+    return res.json({ success: true, user: updatedUser });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to delete address" });
+  }
+});
+
+// Set Default Delivery Address
+app.post("/api/auth/addresses/:id/default", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const addressId = req.params.id;
+    const updatedUser = setDefaultAddress(user.id, addressId);
+    return res.json({ success: true, user: updatedUser });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to set default address" });
+  }
+});
+
+// ==========================================
+// MY ORDERS & ORDER TRACKING API ENDPOINTS
+// ==========================================
+
+// Get Orders for Authenticated User Only (Never trusts raw user ID from client)
+app.get("/api/orders/my-orders", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized. Please sign in to view your orders." });
+  }
+
+  const orders = getOrdersForUser(user.id, user.email);
+  return res.json({
+    success: true,
+    orders,
+  });
+});
+
+// Get Specific Order Details with Authorization Verification
+app.get("/api/orders/:orderId", (req, res) => {
+  const authUser = getAuthUser(req);
+  const orderId = req.params.orderId;
+
+  // If user is authenticated, query for order belonging to this user
+  if (authUser) {
+    const order = getOrderById(orderId, authUser.id, authUser.email);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found or unauthorized" });
+    }
+    return res.json({ success: true, order });
+  }
+
+  // If guest, only allow retrieval if customer matches email provided in query or header
+  const guestEmail = (req.query.email as string)?.trim().toLowerCase();
+  if (guestEmail) {
+    const order = getOrderById(orderId, undefined, guestEmail);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found or email mismatch" });
+    }
+    return res.json({ success: true, order });
+  }
+
+  return res.status(401).json({ error: "Authentication required to view order details" });
+});
+
+// Link Guest Order to Authenticated Account
+app.post("/api/orders/link-guest-order", (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { orderId } = req.body;
+  if (!orderId) {
+    return res.status(400).json({ error: "orderId is required" });
+  }
+
+  const linked = linkGuestOrder(orderId, user.id, user.email);
+  return res.json({ success: linked });
 });
 
 // Endpoint for Payment Failure or Cancellation Notification
