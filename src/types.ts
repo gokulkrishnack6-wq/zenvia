@@ -11,6 +11,23 @@ export interface ProductSpec {
   value: string;
 }
 
+export interface ProductVideo {
+  title: string;
+  url: string;
+}
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface HowToUseStep {
+  stepNumber: number;
+  title: string;
+  description: string;
+  image?: string;
+}
+
 export interface Product {
   id: string;
   slug?: string;
@@ -26,6 +43,20 @@ export interface Product {
   galleryImages: string[];
   rotation360Images?: string[];
   videoUrl?: string;
+  videos?: ProductVideo[];
+  whyYouNeedThis?: {
+    headline: string;
+    description: string;
+    callout?: string;
+  };
+  beforeAfterStory?: {
+    beforeTitle: string;
+    beforeText: string;
+    afterTitle: string;
+    afterText: string;
+  };
+  howToUse?: HowToUseStep[];
+  faqs?: FAQItem[];
   specs: ProductSpec[];
   description: string;
   craftsmanshipStory: string;

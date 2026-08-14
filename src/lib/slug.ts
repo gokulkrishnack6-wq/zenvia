@@ -21,6 +21,8 @@ const ALIAS_MAP: Record<string, string> = {
   "smart-hydration-water-bottle": "p9",
   "cordless-hair-straightener-brush": "p10",
   "silicone-scalp-massager-brush": "p11",
+  "retractable-car-sunshade-umbrella": "p12",
+  "car-sunshade-umbrella": "p12",
 };
 
 /**

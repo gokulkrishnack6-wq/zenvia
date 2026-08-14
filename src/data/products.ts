@@ -1,10 +1,10 @@
-import { Product, CategoryType } from "../types.ts";
+import { Product, CategoryType } from "../types";
 import {
   catPrinterMain,
   catPrinterDesk,
   catPrinterGreen,
   catPrinterBlue,
-} from "../lib/catPrinterImages.ts";
+} from "../lib/catPrinterImages";
 
 export const CATEGORIES: { id: CategoryType; name: string; tagline: string; image: string; itemCount: number }[] = [
   {
@@ -393,6 +393,125 @@ export const PRODUCTS: Product[] = [
     ],
     tags: ["Scalp", "Massager", "PersonalCare"],
     stockCount: 50,
+  },
+  {
+    id: "p12",
+    slug: "retractable-car-sunshade-umbrella",
+    name: "Retractable Car Sunshade Umbrella",
+    tagline: "Beat the Heat. Protect Your Car. Drive More Comfortably.",
+    price: 699,
+    originalPrice: 1499,
+    rating: 4.8,
+    reviewCount: 641,
+    category: "Lifestyle",
+    image: "https://m.media-amazon.com/images/I/61EhRhDYHIL._SL1024_.jpg",
+    alternateImage: "https://m.media-amazon.com/images/I/61Y3JfGXHRL._SL1024_.jpg",
+    galleryImages: [
+      "https://m.media-amazon.com/images/I/61EhRhDYHIL._SL1024_.jpg",
+      "https://m.media-amazon.com/images/I/61Y3JfGXHRL._SL1024_.jpg",
+      "https://m.media-amazon.com/images/I/71+Fd3P0SUL._SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/61gphzv6IRL._SL1024_.jpg",
+      "https://m.media-amazon.com/images/I/61PEd4JPXzL._SL1024_.jpg",
+      "https://m.media-amazon.com/images/I/71VxOsxC4NL._SL1282_.jpg",
+      "https://m.media-amazon.com/images/I/71nuGO+No2L._SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/61YLHEIb9KL._SL1000_.jpg",
+      "https://m.media-amazon.com/images/I/71pNis6BXYL._SL1500_.jpg",
+    ],
+    videoUrl: "https://www.amazon.in/vdp/1678585cb4dd4e89bd22dda8125d3dca?aci=amzn1.ive.seller.video.1678585cb4dd4e89bd22dda8125d3dca&product=B0DBHFJBWB&ref=cm_sw_cp_r_ib_dt_7uaiMltDfep6Y",
+    videos: [
+      {
+        title: "Retractable Sunshade Umbrella Product Overview & Setup",
+        url: "https://www.amazon.in/vdp/1678585cb4dd4e89bd22dda8125d3dca?aci=amzn1.ive.seller.video.1678585cb4dd4e89bd22dda8125d3dca&product=B0DBHFJBWB&ref=cm_sw_cp_r_ib_dt_7uaiMltDfep6Y",
+      },
+      {
+        title: "Car Windshield Sunshade Demonstration & Folding Guide",
+        url: "https://www.amazon.in/vdp/128798652e224ba0ab9d30e939910fe7?aci=amzn1.ive.seller.video.128798652e224ba0ab9d30e939910fe7&product=B0H6339ZFG&ref=cm_sw_cp_r_ib_dt_qYoAsyunsjOBg",
+      },
+    ],
+    specs: [
+      { label: "Product Type", value: "Retractable Car Windshield Sunshade Umbrella" },
+      { label: "Design", value: "Push-Up Umbrella Folding Mechanism with Reinforced Alloy Skeleton" },
+      { label: "Canopy Surface", value: "Heat & Light Reflective Composite Shield" },
+      { label: "Storage", value: "Compact Foldable Body with Protective Storage Sleeve Included" },
+      { label: "Fitment", value: "Universal fit for Hatchbacks, Sedans, Compact SUVs & MPVs" },
+      { label: "Use Case", value: "Car Windshield / Window Heat Protection when Parked Outdoors" },
+    ],
+    description: "Parking your car under direct Indian sunlight can quickly turn the cabin into an uncomfortably hot oven. The Retractable Car Sunshade Umbrella provides a fast, hassle-free way to shield your windshield and reduce direct sunlight entering your vehicle. Designed with an umbrella-style push mechanism and sturdy alloy ribs, it pops open in under 5 seconds to shade your interior, protecting dashboard electronics, steering wheel, and leather seats. When you're ready to drive, simply collapse it like a standard pocket umbrella and slip it into your door pocket or glove box.",
+    craftsmanshipStory: "Engineered specifically for everyday Indian parking conditions, offering quick deployment, compact storage, and reliable heat shading without suction cups or cumbersome folding panels.",
+    features: [
+      "Instant 5-Second Umbrella Mechanism - Opens and closes effortlessly like a compact pocket umbrella",
+      "Direct Sunlight & Glare Reduction - Blocks harsh sunlight from penetrating your car windshield",
+      "Keeps Cabin & Seats More Comfortable - Reduces direct heat exposure on steering wheel and dashboard",
+      "Compact Door-Pocket Storage - Folds down tightly and fits inside the included storage pouch",
+      "Reinforced Alloy Skeleton - Strong multi-rib construction built for daily commuting and travel",
+      "Car-Friendly Scratch-Free Tip - Frosted handle and padded tip protect your windshield and dashboard",
+    ],
+    whyYouNeedThis: {
+      headline: "Your Car Doesn't Have to Feel Like an Oven.",
+      description: "Parked under the Indian sun? Getting into a hot car can be uncomfortable, especially during summer. The Retractable Car Sunshade Umbrella provides a simple way to reduce direct sunlight entering your car while parked.",
+      callout: "Open it. Position it. Protect your interior from direct sunlight.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "WITHOUT SUNSHADE",
+      beforeText: "Direct sunlight penetrates windshield → scorching interior, hot steering wheel, and uncomfortable seating upon return.",
+      afterTitle: "WITH ZENVIA SUNSHADE",
+      afterText: "Direct sunlight shielded → cooler dashboard and steering wheel → significantly more comfortable driving experience.",
+    },
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Open the Retractable Sunshade",
+        description: "Unwrap the fastening strap and slide open the umbrella mechanism in one smooth motion.",
+        image: "https://m.media-amazon.com/images/I/61EhRhDYHIL._SL1024_.jpg",
+      },
+      {
+        stepNumber: 2,
+        title: "Position Against Windshield",
+        description: "Place the shade against the inside of your front windshield and flip down your car's sun visors to lock it securely in place.",
+        image: "https://m.media-amazon.com/images/I/61Y3JfGXHRL._SL1024_.jpg",
+      },
+      {
+        stepNumber: 3,
+        title: "Retract & Store Away",
+        description: "Press the quick-release catch to collapse the umbrella, secure with strap, and tuck into your door pocket or glove box.",
+        image: "https://m.media-amazon.com/images/I/61gphzv6IRL._SL1024_.jpg",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is the Retractable Car Sunshade Umbrella used for?",
+        answer: "It is designed to shield your car interior from harsh direct sunlight when parked outdoors, helping keep seats and steering wheel more comfortable.",
+      },
+      {
+        question: "How does it help with sunlight?",
+        answer: "The reflective canopy blocks direct sun rays from penetrating through the front windshield, reducing cabin heat absorption.",
+      },
+      {
+        question: "Is it easy to install?",
+        answer: "Yes! It opens just like a standard umbrella in under 5 seconds. Simply push it open, rest it against the inside windshield, and pull down your sun visors to hold it in place.",
+      },
+      {
+        question: "Can it be folded/retracted after use?",
+        answer: "Absolutely. Press the release catch, collapse the ribs, wrap the strap, and slide it into the compact storage sleeve.",
+      },
+      {
+        question: "Is it suitable for everyday use?",
+        answer: "Yes, the reinforced alloy frame and flexible ribs are built for regular daily commuting, office parking, and travel.",
+      },
+      {
+        question: "How should I store it?",
+        answer: "When folded, it fits conveniently into your driver door pocket, seatback pocket, or glove compartment.",
+      },
+      {
+        question: "Will it fit my car?",
+        answer: "It is designed with a versatile size profile suitable for most Indian hatchbacks, sedans, compact SUVs, and MPVs.",
+      },
+    ],
+    tags: ["New", "Car Accessories", "Sunshade", "Lifestyle", "Utility"],
+    stockCount: 25,
+    isNew: true,
+    isBestseller: true,
+    isFeatured: true,
   },
 ];
 
