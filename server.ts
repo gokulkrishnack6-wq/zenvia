@@ -188,14 +188,14 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
 
         // Send alert email for failed verification attempt
         if (customerDetails) {
-          await sendFailedPaymentEmail({
+          void sendFailedPaymentEmail({
             razorpayOrderId: razorpay_order_id,
             amount: orderDetails?.total || 0,
             items: orderDetails?.items,
             customer: customerDetails,
             status: "PAYMENT VERIFICATION FAILED",
             reason: "Signature mismatch on backend verification",
-          });
+          }).catch((err) => console.error("[ZENVIA EMAIL] Signature mismatch email failed:", err));
         }
 
         return res.status(400).json({
@@ -207,9 +207,9 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
     }
 
     // Payment Signature verified (or approved in test/demo mode)
-    // NOW send New Order Email to Store Owner server-side
+    // Send New Order Email to Store Owner in background (non-blocking)
     if (customerDetails && orderDetails) {
-      await sendNewOrderEmail({
+      void sendNewOrderEmail({
         orderId: orderDetails.orderId || razorpay_order_id,
         items: orderDetails.items || [],
         subtotal: orderDetails.subtotal || 0,
@@ -234,6 +234,8 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
           razorpayOrderId: razorpay_order_id,
           razorpayPaymentId: razorpay_payment_id,
         },
+      }).catch((emailError) => {
+        console.error("[ZENVIA EMAIL] Razorpay order notification failed:", emailError);
       });
     }
 
@@ -291,8 +293,8 @@ app.post("/api/orders/cod", async (req, res) => {
     const codOrderId = "ZENVIA-COD-" + Math.floor(100000 + Math.random() * 900000);
     const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
 
-    // Send New Order Notification to Store Owner
-    await sendNewOrderEmail({
+    // Send New Order Notification to Store Owner in the background (non-blocking)
+    void sendNewOrderEmail({
       orderId: codOrderId,
       items: validatedItems,
       subtotal: rawSubtotal,
@@ -315,8 +317,11 @@ app.post("/api/orders/cod", async (req, res) => {
         method: "Cash on Delivery (COD)",
         status: "COD - Pending Cash/UPI at Doorstep",
       },
+    }).catch((emailError) => {
+      console.error("[ZENVIA EMAIL] COD order notification failed:", emailError);
     });
 
+    // Immediately return success to customer without waiting for SMTP
     return res.json({
       success: true,
       orderId: codOrderId,
@@ -336,7 +341,7 @@ app.post("/api/notifications/payment-failed", async (req, res) => {
   try {
     const { orderId, razorpayOrderId, items, amount, customerDetails, status, reason } = req.body;
 
-    await sendFailedPaymentEmail({
+    void sendFailedPaymentEmail({
       orderId,
       razorpayOrderId,
       items,
@@ -344,6 +349,8 @@ app.post("/api/notifications/payment-failed", async (req, res) => {
       customer: customerDetails,
       status: status || "PAYMENT CANCELLED",
       reason: reason || "User closed payment window or transaction was declined",
+    }).catch((err) => {
+      console.error("[ZENVIA EMAIL] Payment failure notification error:", err);
     });
 
     return res.json({ success: true, message: "Payment attempt logged and store owner notified." });

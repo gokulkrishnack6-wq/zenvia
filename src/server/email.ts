@@ -16,6 +16,13 @@ function createTransporter() {
   const pass = process.env.SMTP_PASS?.trim().replace(/\s+/g, "");
   const port = Number(process.env.SMTP_PORT) || 587;
 
+  // Timeout configuration to prevent hanging sockets or delayed connections
+  const timeoutConfig = {
+    connectionTimeout: 6000, // 6 seconds max to connect
+    greetingTimeout: 6000,   // 6 seconds max for greeting
+    socketTimeout: 8000,     // 8 seconds max socket activity
+  };
+
   // Verify non-empty and non-placeholder credentials
   if (user && pass && pass !== "MY_SMTP_PASS" && pass.length > 0) {
     const isGmail = (host && host.toLowerCase().includes("gmail")) || user.toLowerCase().includes("@gmail.com");
@@ -27,6 +34,7 @@ function createTransporter() {
           user,
           pass,
         },
+        ...timeoutConfig,
       });
     }
 
@@ -42,6 +50,7 @@ function createTransporter() {
         tls: {
           rejectUnauthorized: false,
         },
+        ...timeoutConfig,
       });
     }
   }
