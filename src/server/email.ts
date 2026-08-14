@@ -1,19 +1,55 @@
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const STORE_OWNER_EMAIL =
-  process.env.STORE_OWNER_EMAIL || "zenviashopindia@gmail.com";
+export const STORE_OWNER_EMAIL = process.env.STORE_OWNER_EMAIL || "zenviashopindia@gmail.com";
 
 // Set to track sent order/payment notification IDs to prevent duplicate emails
 const sentNotificationIds = new Set<string>();
 
-// Send email using Resend API
-async function sendEmailNotification(
-  subject: string,
-  textBody: string,
-  htmlBody?: string
-) {
+// Lazy creation of Nodemailer Transporter if valid SMTP credentials exist
+function createTransporter() {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  // Strip spaces from password in case the user pasted a 16-character Google App Password with spaces
+  const pass = process.env.SMTP_PASS?.trim().replace(/\s+/g, "");
+  const port = Number(process.env.SMTP_PORT) || 587;
+
+  // Verify non-empty and non-placeholder credentials
+  if (user && pass && pass !== "MY_SMTP_PASS" && pass.length > 0) {
+    const isGmail = (host && host.toLowerCase().includes("gmail")) || user.toLowerCase().includes("@gmail.com");
+
+    if (isGmail) {
+      return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user,
+          pass,
+        },
+      });
+    }
+
+    if (host) {
+      return nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: {
+          user,
+          pass,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+    }
+  }
+  return null;
+}
+
+// Core mail sender function
+async function sendEmailNotification(subject: string, textBody: string, htmlBody?: string) {
   console.log(`\n==================================================`);
   console.log(`[ZENVIA EMAIL NOTIFICATION TO STORE OWNER]`);
   console.log(`To: ${STORE_OWNER_EMAIL}`);
@@ -23,54 +59,31 @@ async function sendEmailNotification(
   console.log(`==================================================\n`);
 
   try {
-    const resendApiKey = process.env.RESEND_API_KEY;
-
-    if (!resendApiKey) {
-      console.error(
-        "[ZENVIA EMAIL ERROR] RESEND_API_KEY is not configured."
-      );
-      return;
-    }
-
-    const fromEmail =
-      process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: `Zenvia Store <${fromEmail}>`,
-        to: [STORE_OWNER_EMAIL],
+    const transporter = createTransporter();
+    if (transporter) {
+      const fromAddress = process.env.SMTP_USER?.trim() || STORE_OWNER_EMAIL;
+      await transporter.sendMail({
+        from: `"Zenvia Store System" <${fromAddress}>`,
+        to: STORE_OWNER_EMAIL,
         subject,
         text: textBody,
-        html:
-          htmlBody ||
-          `<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; color: #111;">${textBody}</pre>`,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error(
-        "[ZENVIA EMAIL ERROR] Resend failed:",
-        result
-      );
-      return;
+        html: htmlBody || `<pre style="font-family: monospace; font-size: 13px; line-height: 1.5; color: #111;">${textBody}</pre>`,
+      });
+      console.log(`[ZENVIA EMAIL] Successfully dispatched via SMTP to ${STORE_OWNER_EMAIL}`);
+    } else {
+      console.log(`[ZENVIA EMAIL] SMTP not configured or credentials inactive. Notification captured in server log above.`);
     }
-
-    console.log(
-      `[ZENVIA EMAIL] Successfully dispatched via Resend to ${STORE_OWNER_EMAIL}`
-    );
-    console.log(`[ZENVIA EMAIL] Resend ID: ${result.id}`);
   } catch (err: any) {
-    console.error(
-      "[ZENVIA EMAIL ERROR] Failed to send email via Resend:",
-      err.message || err
-    );
+    const errMsg = err?.message || String(err);
+    if (errMsg.includes("535") || errMsg.includes("Invalid login") || errMsg.includes("Username and Password not accepted")) {
+      console.warn(
+        `[ZENVIA EMAIL NOTICE] SMTP Authentication (535): The provided SMTP password for ${process.env.SMTP_USER || "SMTP"} was not accepted by the mail server.\n` +
+        `💡 Gmail Note: If using Gmail, Google requires a 16-character App Password (https://myaccount.google.com/apppasswords) rather than your personal account password.\n` +
+        `Notification has been safely captured in the server console log above.`
+      );
+    } else {
+      console.warn(`[ZENVIA EMAIL NOTICE] SMTP delivery note: ${errMsg}. Notification captured in server console log above.`);
+    }
   }
 }
 

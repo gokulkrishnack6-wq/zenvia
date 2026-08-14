@@ -732,7 +732,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Header */}
               <div className="border-b border-neutral-200 pb-3">
                 <h3 className="text-xl font-extrabold text-neutral-900">Customer & Delivery Details</h3>
-                <p className="text-xs text-neutral-500 mt-0.5">Enter your contact and shipping details to proceed to payment.</p>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Enter your contact and shipping information once. You will review everything in the next step.
+                </p>
               </div>
 
               {/* Form Grid */}
@@ -752,11 +754,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </label>
                       <input
                         type="text"
+                        autoComplete="name"
                         value={formData.fullName}
                         onChange={(e) => handleInputChange("fullName", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.fullName ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
+                        } rounded-xl px-3.5 py-3 text-neutral-900 focus:outline-none font-medium text-sm`}
                         placeholder="Enter your full name"
                       />
                       {fieldErrors.fullName && (
@@ -773,12 +776,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         Mobile Number (+91) <span className="text-rose-600">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        maxLength={10}
                         value={formData.phone}
-                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        onChange={(e) => handleInputChange("phone", e.target.value.replace(/\D/g, ""))}
                         className={`w-full bg-white border ${
                           fieldErrors.phone ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 font-mono focus:outline-none`}
+                        } rounded-xl px-3.5 py-3 text-neutral-900 font-mono text-sm focus:outline-none`}
                         placeholder="10-digit mobile number"
                       />
                       {fieldErrors.phone && (
@@ -796,11 +802,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </label>
                       <input
                         type="email"
+                        autoComplete="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.email ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
+                        } rounded-xl px-3.5 py-3 text-neutral-900 text-sm focus:outline-none`}
                         placeholder="name@example.com"
                       />
                       {fieldErrors.email && (
@@ -828,12 +835,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </label>
                       <input
                         type="text"
+                        autoComplete="address-line1"
                         value={formData.houseNo}
                         onChange={(e) => handleInputChange("houseNo", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.houseNo ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
-                        placeholder="House / Flat / Building No."
+                        } rounded-xl px-3.5 py-3 text-neutral-900 text-sm focus:outline-none`}
+                        placeholder="House / Flat / Apartment / Building No."
                       />
                       {fieldErrors.houseNo && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -846,15 +854,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     {/* Street / Area */}
                     <div className="sm:col-span-2">
                       <label className="text-neutral-800 font-bold block mb-1">
-                        Street / Area <span className="text-rose-600">*</span>
+                        Street / Area / Locality <span className="text-rose-600">*</span>
                       </label>
                       <input
                         type="text"
+                        autoComplete="address-line2"
                         value={formData.street}
                         onChange={(e) => handleInputChange("street", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.street ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none`}
+                        } rounded-xl px-3.5 py-3 text-neutral-900 text-sm focus:outline-none`}
                         placeholder="Street / Area / Locality"
                       />
                       {fieldErrors.street && (
@@ -874,8 +883,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         type="text"
                         value={formData.landmark}
                         onChange={(e) => handleInputChange("landmark", e.target.value)}
-                        className="w-full bg-white border border-neutral-300 focus:border-neutral-900 rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none"
-                        placeholder="Landmark (e.g. Near Central Park)"
+                        className="w-full bg-white border border-neutral-300 focus:border-neutral-900 rounded-xl px-3.5 py-3 text-neutral-900 text-sm focus:outline-none"
+                        placeholder="Nearby landmark (e.g. Near Apollo Hospital, Opposite Metro Station)"
                       />
                     </div>
 
@@ -886,12 +895,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </label>
                       <input
                         type="text"
+                        autoComplete="address-level2"
                         value={formData.city}
                         onChange={(e) => handleInputChange("city", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.city ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
-                        placeholder="Enter city"
+                        } rounded-xl px-3.5 py-3 text-neutral-900 focus:outline-none font-medium text-sm`}
+                        placeholder="City"
                       />
                       {fieldErrors.city && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -911,7 +921,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         onChange={(e) => handleInputChange("state", e.target.value)}
                         className={`w-full bg-white border ${
                           fieldErrors.state ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 focus:outline-none font-medium`}
+                        } rounded-xl px-3.5 py-3 text-neutral-900 focus:outline-none font-medium text-sm`}
                       >
                         <option value="">Select State</option>
                         {INDIAN_STATES.map((st) => (
@@ -935,13 +945,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </label>
                       <input
                         type="text"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
                         maxLength={6}
                         value={formData.pincode}
-                        onChange={(e) => handleInputChange("pincode", e.target.value)}
+                        onChange={(e) => handleInputChange("pincode", e.target.value.replace(/\D/g, ""))}
                         className={`w-full bg-white border ${
                           fieldErrors.pincode ? "border-rose-500 bg-rose-50/20" : "border-neutral-300 focus:border-neutral-900"
-                        } rounded-xl px-3.5 py-2.5 text-neutral-900 font-mono focus:outline-none`}
-                        placeholder="6-digit PIN code"
+                        } rounded-xl px-3.5 py-3 text-neutral-900 font-mono text-sm focus:outline-none`}
+                        placeholder="6-digit PIN code (e.g. 110001)"
                       />
                       {fieldErrors.pincode && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold flex items-center space-x-1">
@@ -962,51 +974,67 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   id="proceed-to-payment-step-btn"
                   className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-extrabold uppercase tracking-wider shadow-md flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <span>Proceed to Payment</span>
+                  <span>Continue to Payment</span>
                   <ArrowRight className="w-4 h-4 text-amber-400" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 2: ORDER SUMMARY & PAYMENT SELECTION */}
+          {/* STEP 2: ORDER SUMMARY & PAYMENT */}
           {step === 2 && (
             <div className="space-y-6 max-w-2xl mx-auto">
-              {/* Verified Customer Details Box */}
-              <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-4 space-y-2 shadow-2xs">
-                <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2">
-                  <span className="text-xs font-extrabold text-emerald-900 uppercase tracking-wider flex items-center space-x-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Verified Customer & Delivery Address</span>
-                  </span>
+              {/* Header */}
+              <div className="border-b border-neutral-200 pb-3">
+                <h3 className="text-xl font-extrabold text-neutral-900">Order Summary & Payment</h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Review your delivery destination and select your payment method.
+                </p>
+              </div>
+
+              {/* READ-ONLY DELIVERY SUMMARY (NO DUPLICATE INPUT FIELDS) */}
+              <div className="bg-neutral-50 border border-neutral-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between border-b border-neutral-200 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-neutral-900">
+                      DELIVERING TO
+                    </span>
+                  </div>
 
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="text-emerald-800 hover:text-emerald-950 font-bold text-xs flex items-center space-x-1 cursor-pointer hover:underline"
+                    id="edit-delivery-details-btn"
+                    className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-white border border-neutral-300 hover:border-neutral-900 text-neutral-800 hover:text-neutral-950 font-bold text-xs shadow-2xs transition-all cursor-pointer"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3.5 h-3.5 text-amber-600" />
                     <span>Edit Details</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-neutral-800 pt-1">
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Customer Name & Contact:</span>
-                    <strong className="text-neutral-900 font-bold">{formData.fullName}</strong>
-                    <div className="text-[11px] text-neutral-600 mt-0.5">
-                      Phone: <span className="font-mono">{formData.phone}</span><br />
-                      Email: {formData.email}
-                    </div>
+                <div className="text-xs text-neutral-800 space-y-1.5">
+                  <div className="font-extrabold text-neutral-950 text-sm">
+                    {formData.fullName}
                   </div>
-
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Delivery Location:</span>
-                    <address className="not-italic font-medium text-[11px] leading-snug text-neutral-800">
-                      {formData.houseNo}, {formData.street}<br />
-                      {formData.landmark ? `Landmark: ${formData.landmark}, ` : ""}
-                      {formData.city}, {formData.state} - <strong>{formData.pincode}</strong>
-                    </address>
+                  <div className="text-neutral-700 leading-relaxed">
+                    <span>{formData.houseNo}, {formData.street}</span>
+                    {formData.landmark && (
+                      <span className="block text-neutral-500 text-[11px]">Landmark: {formData.landmark}</span>
+                    )}
+                    <span className="block font-semibold text-neutral-900">
+                      {formData.city}, {formData.state} - <span className="font-mono">{formData.pincode}</span>
+                    </span>
+                  </div>
+                  <div className="pt-2 border-t border-neutral-200/80 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-neutral-600">
+                    <div>
+                      <span className="font-semibold text-neutral-500">Phone: </span>
+                      <strong className="text-neutral-900 font-mono">+91 {formData.phone}</strong>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-neutral-500">Email: </span>
+                      <strong className="text-neutral-900">{formData.email}</strong>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1018,21 +1046,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <ShoppingBag className="w-4 h-4 text-amber-600" />
                     <span>Order Items ({activeItems.length})</span>
                   </h4>
-                  <span className="text-xs font-bold text-neutral-500">Fast Express Shipping Included</span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Free Express Delivery
+                  </span>
                 </div>
 
                 <div className="space-y-2">
                   {activeItems.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between bg-neutral-50 p-3 rounded-xl border border-neutral-200 text-xs">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 min-w-0">
                         <img
                           src={item.product.image}
                           alt={item.product.name}
                           referrerPolicy="no-referrer"
-                          className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0"
+                          className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0 bg-white"
                         />
-                        <div>
-                          <h5 className="font-bold text-neutral-900">{item.product.name}</h5>
+                        <div className="min-w-0">
+                          <h5 className="font-bold text-neutral-900 truncate">{item.product.name}</h5>
                           <div className="text-[11px] text-neutral-500 flex flex-wrap gap-2 mt-0.5">
                             {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
                             {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
@@ -1040,7 +1070,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className="text-right font-extrabold text-neutral-900 text-sm font-mono">
+                      <div className="text-right font-extrabold text-neutral-900 text-sm font-mono shrink-0 pl-2">
                         {formatRupee(item.product.price * item.quantity)}
                       </div>
                     </div>
@@ -1151,14 +1181,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               {/* Step 2 Action Buttons */}
-              <div className="flex justify-between items-center pt-4 border-t border-neutral-200">
+              <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 pt-4 border-t border-neutral-200">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
                   disabled={isProcessing}
-                  className="px-5 py-2.5 rounded-xl border border-neutral-300 text-xs text-neutral-700 font-semibold disabled:opacity-50 cursor-pointer hover:bg-neutral-100"
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-neutral-300 text-xs text-neutral-700 font-semibold disabled:opacity-50 cursor-pointer hover:bg-neutral-100 flex items-center justify-center space-x-1.5"
                 >
-                  ← Edit Address
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Details</span>
                 </button>
 
                 <button
@@ -1166,15 +1197,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   onClick={handleExecutePayment}
                   disabled={isProcessing}
                   id="pay-now-razorpay-btn"
-                  className={`px-8 py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg flex items-center space-x-2 transition-all cursor-pointer ${
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer ${
                     formData.paymentMethod === "cod"
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      : "bg-amber-500 hover:bg-amber-600 text-white active:scale-[0.98]"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98]"
+                      : "bg-amber-500 hover:bg-amber-600 text-neutral-950 active:scale-[0.98]"
                   } disabled:opacity-60 disabled:cursor-not-allowed`}
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <Loader2 className="w-4 h-4 animate-spin text-current" />
                       <span>Processing Payment...</span>
                     </>
                   ) : formData.paymentMethod === "cod" ? (
@@ -1184,7 +1215,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <Zap className="w-4 h-4 fill-white text-white" />
+                      <Zap className="w-4 h-4 fill-neutral-950 text-neutral-950" />
                       <span>Pay Now with Razorpay • {formattedTotal}</span>
                     </>
                   )}
