@@ -193,6 +193,7 @@ export interface CustomerOrder {
   subtotal: number;
   discount: number;
   shipping: number;
+  codCharge?: number;
   total: number;
   formattedTotal: string;
   paymentMethod: string;

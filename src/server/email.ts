@@ -81,6 +81,7 @@ export async function sendNewOrderEmail(orderData: {
   subtotal: number;
   discount: number;
   shipping: number;
+  codCharge?: number;
   total: number;
   customer: {
     fullName: string;
@@ -149,8 +150,8 @@ ${itemsListFormatted}
 FINANCIAL BREAKDOWN
 Subtotal: ₹${orderData.subtotal.toLocaleString("en-IN")}
 Discount: -₹${orderData.discount.toLocaleString("en-IN")}
-Delivery Charge: ₹${orderData.shipping === 0 ? "FREE" : orderData.shipping.toLocaleString("en-IN")}
-TOTAL AMOUNT: ₹${orderData.total.toLocaleString("en-IN")}
+Delivery Charge: ₹${orderData.shipping === 0 ? "FREE" : orderData.shipping.toLocaleString("en-IN")}${orderData.codCharge && orderData.codCharge > 0 ? `\nCOD Handling Charge (5%): ₹${orderData.codCharge.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ""}
+TOTAL AMOUNT: ₹${orderData.total.toLocaleString("en-IN", { minimumFractionDigits: Number.isInteger(orderData.total) ? 0 : 2, maximumFractionDigits: 2 })}
 
 PAYMENT DETAILS
 Method: ${orderData.payment.method}

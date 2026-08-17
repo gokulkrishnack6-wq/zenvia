@@ -25,7 +25,6 @@ import { WishlistDrawer } from "./components/WishlistDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { AISearchModal } from "./components/AISearchModal";
 import { RecentlyPurchasedPopup } from "./components/RecentlyPurchasedPopup";
-import { AccountModal } from "./components/AccountModal";
 import { PolicyModal } from "./components/PolicyModal";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 
@@ -101,7 +100,6 @@ export default function App() {
   // Modals
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [aiSearchOpen, setAISearchOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
@@ -129,19 +127,20 @@ export default function App() {
   };
 
   // Cart Management
-  const handleAddToCart = (product: Product, color?: string, size?: string) => {
+  const handleAddToCart = (product: Product, color?: string, size?: string, quantity = 1) => {
+    const qtyToAdd = Math.max(1, quantity);
     setCartItems((prev) => {
       const existingIdx = prev.findIndex((item) => item.product.id === product.id);
       if (existingIdx > -1) {
         const updated = [...prev];
-        updated[existingIdx].quantity += 1;
+        updated[existingIdx].quantity += qtyToAdd;
         return updated;
       }
       return [
         ...prev,
         {
           product,
-          quantity: 1,
+          quantity: qtyToAdd,
           selectedColor: color || product.colors?.[0]?.name,
           selectedSize: size || product.sizes?.[0],
         },
@@ -202,7 +201,6 @@ export default function App() {
         selectedCurrency={currency}
         onOpenCart={() => setCartOpen(true)}
         onOpenWishlist={() => setWishlistOpen(true)}
-        onOpenAccount={() => setAccountOpen(true)}
         onOpenAISearch={() => setAISearchOpen(true)}
         onOpenPolicy={() => setPolicyOpen(true)}
         onSelectCategory={(cat) => {
@@ -302,7 +300,6 @@ export default function App() {
           setSelectedCategory(cat);
           handleGoHome();
         }}
-        onOpenAccount={() => setAccountOpen(true)}
         onOpenAISearch={() => setAISearchOpen(true)}
         onOpenPolicy={() => setPolicyOpen(true)}
       />
@@ -357,7 +354,6 @@ export default function App() {
           setCheckoutOpen(false);
           setDirectBuyItem(null);
         }}
-        onOpenAccount={() => setAccountOpen(true)}
         onOrderComplete={() => {
           if (directBuyItem) {
             setDirectBuyItem(null);
@@ -380,32 +376,26 @@ export default function App() {
         onBuyNow={handleBuyNow}
       />
 
-      {/* Account Modal */}
-      <AccountModal
-        isOpen={accountOpen}
-        currency={currency}
-        onClose={() => setAccountOpen(false)}
-      />
-
       {/* Customer Policy & Help Modal */}
       <PolicyModal
         isOpen={policyOpen}
         onClose={() => setPolicyOpen(false)}
       />
 
-      {/* Mobile Bottom Navigation Bar */}
-      <MobileBottomNav
-        cartCount={cartCount}
-        wishlistCount={wishlistIds.length}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(cat) => {
-          setSelectedCategory(cat);
-          handleGoHome();
-        }}
-        onOpenCart={() => setCartOpen(true)}
-        onOpenWishlist={() => setWishlistOpen(true)}
-        onOpenAccount={() => setAccountOpen(true)}
-      />
+      {/* Mobile Bottom Navigation Bar (Shown on catalog & explore views) */}
+      {!activeProduct && (
+        <MobileBottomNav
+          cartCount={cartCount}
+          wishlistCount={wishlistIds.length}
+          selectedCategory={selectedCategory}
+          onSelectCategory={(cat) => {
+            setSelectedCategory(cat);
+            handleGoHome();
+          }}
+          onOpenCart={() => setCartOpen(true)}
+          onOpenWishlist={() => setWishlistOpen(true)}
+        />
+      )}
 
       {/* Corner Toast for Recent Indian Orders */}
       <RecentlyPurchasedPopup onQuickView={handleSelectProduct} />

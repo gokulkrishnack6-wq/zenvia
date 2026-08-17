@@ -30,8 +30,8 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
 import { CartItem, Currency } from "../types";
-import { formatRupee } from "../lib/currency";
-import { calculateItemSubtotal } from "../lib/pricing";
+import { formatRupee, formatRupeeExact } from "../lib/currency";
+import { calculateItemSubtotal, calculateCODCharge, calculateCODTotal } from "../lib/pricing";
 import { loadRazorpayScript } from "../lib/loadRazorpay";
 import {
   checkPincodeServiceability,
@@ -218,10 +218,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     (acc, item) => acc + calculateItemSubtotal(item.product, item.quantity),
     0
   );
-  const discountAmount = (rawSubtotal * discountPercent) / 100;
+  const discountAmount = Math.round((rawSubtotal * discountPercent) / 100);
   const shippingCost = rawSubtotal >= 499 ? 0 : 49;
-  const finalTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
-  const formattedTotal = formatRupee(finalTotal);
+  const baseOnlineTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
+
+  // Cash on Delivery 5% Handling Fee
+  const codHandlingCharge = calculateCODCharge(baseOnlineTotal);
+  const codTotal = calculateCODTotal(baseOnlineTotal);
+
+  const isCOD = formData.paymentMethod === "cod";
+  const currentPayableAmount = isCOD ? codTotal : baseOnlineTotal;
+
+  const formattedOnlineTotal = formatRupeeExact(baseOnlineTotal);
+  const formattedCodTotal = formatRupeeExact(codTotal);
+  const formattedCodCharge = formatRupeeExact(codHandlingCharge);
+  const formattedTotal = formatRupeeExact(currentPayableAmount);
 
   // Validate field on blur or change
   const validateSingleField = (key: keyof FormState, value: string): string | undefined => {
@@ -447,7 +458,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             paymentMethod: "Cash on Delivery (COD)",
             paymentStatus: "COD - Cash on Delivery",
             verified: true,
-            amountPaid: formattedTotal,
+            amountPaid: codData.formattedTotal || formattedCodTotal,
             trackingNumber: codData.trackingNumber,
             items: [...activeItems],
             customerDetails: {
@@ -602,7 +613,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 paymentMethod: "Razorpay (UPI / Cards / Net Banking)",
                 paymentStatus: "PAID",
                 verified: true,
-                amountPaid: formattedTotal,
+                amountPaid: formattedOnlineTotal,
                 trackingNumber:
                   verifyData.trackingNumber ||
                   `TRK-${verifyData.orderId.replace(/[^a-zA-Z0-9]/g, "").slice(-8).toUpperCase()}`,
@@ -879,22 +890,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <div className="pt-2 border-t border-neutral-200/80 space-y-1.5 text-neutral-600 text-xs">
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
-                          <span className="font-semibold text-neutral-900">{formatRupee(rawSubtotal)}</span>
+                          <span className="font-semibold text-neutral-900">{formatRupeeExact(rawSubtotal)}</span>
                         </div>
                         {discountAmount > 0 && (
                           <div className="flex justify-between text-emerald-700 font-semibold">
                             <span>Coupon Discount ({discountPercent}%):</span>
-                            <span>-{formatRupee(discountAmount)}</span>
+                            <span>-{formatRupeeExact(discountAmount)}</span>
                           </div>
                         )}
                         <div className="flex justify-between items-center">
                           <span>Shipping & Delivery:</span>
                           <span className="font-bold text-emerald-700">
-                            {shippingCost === 0 ? "FREE (Pan-India)" : formatRupee(shippingCost)}
+                            {shippingCost === 0 ? "FREE (Pan-India)" : formatRupeeExact(shippingCost)}
                           </span>
                         </div>
+                        {isCOD && (
+                          <div className="flex justify-between items-center text-amber-900 font-semibold bg-amber-50/80 -mx-1 px-1.5 py-1 rounded">
+                            <span>COD Handling Charge (5%):</span>
+                            <span className="font-bold font-mono text-amber-950">+{formattedCodCharge}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center pt-2 border-t border-neutral-200 text-neutral-900 font-extrabold text-sm">
-                          <span>Final Total:</span>
+                          <span>Total Payable:</span>
                           <span className="text-amber-800 font-black font-mono text-base">
                             {formattedTotal}
                           </span>
@@ -1241,13 +1258,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center justify-between gap-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <span className="text-sm font-extrabold text-neutral-900 block">
                           UPI / Cards / Net Banking
                         </span>
-                        <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded">
-                          Fastest Checkout
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-black text-neutral-900 font-mono">
+                            {formattedOnlineTotal}
+                          </span>
+                          <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded">
+                            Fastest Checkout
+                          </span>
+                        </div>
                       </div>
                       <p className="text-xs text-neutral-600 mt-1">
                         Direct switch to Google Pay, PhonePe, Paytm, BHIM, or use Credit/Debit Cards & Net Banking.
@@ -1292,16 +1314,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center justify-between gap-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <span className="text-sm font-extrabold text-neutral-900 block">
                           Cash on Delivery (COD)
                         </span>
-                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded">
-                          Pay on Arrival
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-black text-neutral-900 font-mono">
+                            {formattedCodTotal}
+                          </span>
+                          <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded">
+                            Pay on Arrival
+                          </span>
+                        </div>
                       </div>
                       <p className="text-xs text-neutral-600 mt-1">
                         Pay cash or scan UPI directly to the courier executive upon doorstep arrival.
+                      </p>
+                      <p className="text-[11px] font-bold text-amber-800 mt-1 flex items-center space-x-1">
+                        <span>• Includes {formattedCodCharge} COD handling charge</span>
                       </p>
                     </div>
                   </div>

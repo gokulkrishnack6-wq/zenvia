@@ -69,3 +69,30 @@ export function calculatePerPiecePrice(product: Product, quantity: number): numb
   const total = calculateItemSubtotal(product, quantity);
   return total / quantity;
 }
+
+/**
+ * Standard Cash on Delivery (COD) Handling Charge Percentage (5%)
+ */
+export const COD_HANDLING_PERCENT = 5;
+
+/**
+ * Calculates the 5% COD handling charge on the base payable online amount.
+ * Returns exact amount rounded to 2 decimal places.
+ * Example: for ₹699 -> ₹34.95
+ */
+export function calculateCODCharge(baseAmount: number): number {
+  if (baseAmount <= 0) return 0;
+  return Math.round(baseAmount * (COD_HANDLING_PERCENT / 100) * 100) / 100;
+}
+
+/**
+ * Calculates the final total for Cash on Delivery (baseAmount + 5% COD handling charge).
+ * Returns exact amount rounded to 2 decimal places.
+ * Example: for ₹699 -> ₹733.95
+ */
+export function calculateCODTotal(baseAmount: number): number {
+  if (baseAmount <= 0) return 0;
+  const charge = calculateCODCharge(baseAmount);
+  return Math.round((baseAmount + charge) * 100) / 100;
+}
+

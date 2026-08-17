@@ -7,7 +7,8 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { PRODUCTS } from "./src/data/products";
-import { calculateItemSubtotal } from "./src/lib/pricing";
+import { calculateItemSubtotal, calculateCODCharge, calculateCODTotal } from "./src/lib/pricing";
+import { formatRupeeExact } from "./src/lib/currency";
 import { findProductBySlugOrId, getProductSlug } from "./src/lib/slug";
 import {
   sendNewOrderEmail,
@@ -649,15 +650,18 @@ app.post("/api/orders/cod", async (req, res) => {
     }
 
     const numericDiscount = Math.max(0, Number(discountPercent) || 0);
-    const discountAmount = (rawSubtotal * numericDiscount) / 100;
+    const discountAmount = Math.round((rawSubtotal * numericDiscount) / 100);
     const shippingCost = rawSubtotal >= 499 ? 0 : 49;
-    const finalTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
+    const baseOnlineTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
+    const codCharge = calculateCODCharge(baseOnlineTotal);
+    const finalTotal = calculateCODTotal(baseOnlineTotal);
+    const formattedCodTotal = formatRupeeExact(finalTotal);
 
     const codOrderId = "ZENVIA-COD-" + Math.floor(100000 + Math.random() * 900000);
     const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
     const nowIso = new Date().toISOString();
 
-    // Save order into database
+    // Save order into database with authoritative COD charge and total
     saveOrder({
       id: codOrderId,
       userEmail: customerDetails.email || "",
@@ -666,8 +670,9 @@ app.post("/api/orders/cod", async (req, res) => {
       subtotal: rawSubtotal,
       discount: discountAmount,
       shipping: shippingCost,
+      codCharge,
       total: finalTotal,
-      formattedTotal: `₹${finalTotal.toLocaleString("en-IN")}`,
+      formattedTotal: formattedCodTotal,
       paymentMethod: "Cash on Delivery (COD)",
       paymentStatus: "CONFIRMED",
       trackingNumber: trackingId,
@@ -695,6 +700,7 @@ app.post("/api/orders/cod", async (req, res) => {
       subtotal: rawSubtotal,
       discount: discountAmount,
       shipping: shippingCost,
+      codCharge,
       total: finalTotal,
       customer: {
         fullName: customerDetails.fullName || "Customer",
@@ -723,7 +729,9 @@ app.post("/api/orders/cod", async (req, res) => {
       trackingNumber: trackingId,
       status: "CONFIRMED",
       paymentMethod: "Cash on Delivery (COD)",
-      formattedTotal: `₹${finalTotal.toLocaleString("en-IN")}`,
+      codCharge,
+      total: finalTotal,
+      formattedTotal: formattedCodTotal,
     });
   } catch (error: any) {
     console.error("COD order processing error:", error);

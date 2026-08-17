@@ -174,9 +174,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Sticky bottom bar visibility trigger when scrolling past main buy action
-  const [showStickyBar, setShowStickyBar] = useState(false);
-  const buyActionRef = useRef<HTMLDivElement>(null);
+  // Variant selection error state
+  const [variantError, setVariantError] = useState<string | null>(null);
 
   // Reset selected image and quantity when product changes
   useEffect(() => {
@@ -189,19 +188,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setSelectedColor(product.colors?.[0]?.name);
     setSelectedSize(product.sizes?.[0]);
     setQuantity(1);
+    setVariantError(null);
   };
-
-  // Scroll observer for sticky mobile bar
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!buyActionRef.current) return;
-      const rect = buyActionRef.current.getBoundingClientRect();
-      setShowStickyBar(rect.bottom < 0);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const currentItemSubtotal = calculateItemSubtotal(product, quantity);
   const formattedPrice = formatRupee(currentItemSubtotal);
@@ -224,12 +212,38 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     : 0;
 
   const handleAddToCartClick = () => {
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      setVariantError("Please select a color variant");
+      const el = document.getElementById("product-variants-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      setVariantError("Please select a size variant");
+      const el = document.getElementById("product-variants-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    setVariantError(null);
     onAddToCart(product, selectedColor, selectedSize, quantity);
     setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 2500);
   };
 
   const handleBuyNowClick = () => {
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      setVariantError("Please select a color before proceeding");
+      const el = document.getElementById("product-variants-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      setVariantError("Please select a size before proceeding");
+      const el = document.getElementById("product-variants-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    setVariantError(null);
     onBuyNow(product, quantity, selectedColor, selectedSize);
   };
 
@@ -273,7 +287,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   ).slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20 pt-4">
+    <div className="min-h-screen bg-neutral-50 pb-28 md:pb-16 pt-4">
       {/* Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Breadcrumb & Navigation */}
@@ -665,57 +679,68 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </span>
                 </div>
 
-                {/* Color Variants (if available) */}
-                {product.colors && product.colors.length > 0 && (
-                  <div className="mb-5 space-y-2">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-800 block">
-                      Color: <span className="text-amber-700 font-bold">{selectedColor}</span>
-                    </label>
-                    <div className="flex items-center space-x-2.5">
-                      {product.colors.map((c) => (
-                        <button
-                          key={c.name}
-                          onClick={() => setSelectedColor(c.name)}
-                          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                            selectedColor === c.name
-                              ? "border-amber-500 bg-amber-50 text-neutral-900 shadow-sm ring-1 ring-amber-400"
-                              : "border-neutral-200 hover:border-neutral-300 text-neutral-700"
-                          }`}
-                        >
-                          <span
-                            className="w-3.5 h-3.5 rounded-full border border-neutral-300 inline-block"
-                            style={{ backgroundColor: c.hex }}
-                          />
-                          <span>{c.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Color & Size Variants (if available) */}
+                {(product.colors?.length || product.sizes?.length) ? (
+                  <div id="product-variants-section" className="scroll-mt-28">
+                    {/* Color Variants (if available) */}
+                    {product.colors && product.colors.length > 0 && (
+                      <div className="mb-5 space-y-2">
+                        <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-800 block">
+                          Color: <span className="text-amber-700 font-bold">{selectedColor}</span>
+                        </label>
+                        <div className="flex items-center space-x-2.5">
+                          {product.colors.map((c) => (
+                            <button
+                              key={c.name}
+                              onClick={() => {
+                                setSelectedColor(c.name);
+                                setVariantError(null);
+                              }}
+                              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                                selectedColor === c.name
+                                  ? "border-amber-500 bg-amber-50 text-neutral-900 shadow-sm ring-1 ring-amber-400"
+                                  : "border-neutral-200 hover:border-neutral-300 text-neutral-700"
+                              }`}
+                            >
+                              <span
+                                className="w-3.5 h-3.5 rounded-full border border-neutral-300 inline-block"
+                                style={{ backgroundColor: c.hex }}
+                              />
+                              <span>{c.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Size Variants (if available) */}
-                {product.sizes && product.sizes.length > 0 && (
-                  <div className="mb-5 space-y-2">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-800 block">
-                      Size: <span className="text-amber-700 font-bold">{selectedSize}</span>
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      {product.sizes.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => setSelectedSize(s)}
-                          className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                            selectedSize === s
-                              ? "border-amber-500 bg-amber-50 text-neutral-900 shadow-sm ring-1 ring-amber-400"
-                              : "border-neutral-200 hover:border-neutral-300 text-neutral-700"
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
+                    {/* Size Variants (if available) */}
+                    {product.sizes && product.sizes.length > 0 && (
+                      <div className="mb-5 space-y-2">
+                        <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-800 block">
+                          Size: <span className="text-amber-700 font-bold">{selectedSize}</span>
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          {product.sizes.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => {
+                                setSelectedSize(s);
+                                setVariantError(null);
+                              }}
+                              className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                                selectedSize === s
+                                  ? "border-amber-500 bg-amber-50 text-neutral-900 shadow-sm ring-1 ring-amber-400"
+                                  : "border-neutral-200 hover:border-neutral-300 text-neutral-700"
+                              }`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                ) : null}
 
                 {/* QUANTITY-BASED BUNDLE OFFERS (BUY 1, BUY 2, BUY 3) */}
                 {product.pricingTiers && product.pricingTiers.length > 0 && (
@@ -850,7 +875,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
 
                 {/* Main Action Buttons: Buy Now & Add to Cart */}
-                <div ref={buyActionRef} className="space-y-3 pt-2">
+                <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Buy Now Button */}
                     <button
@@ -1369,47 +1394,59 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       </div>
 
       {/* ========================================================
-          STICKY MOBILE BOTTOM ACTION BAR
+          STICKY MOBILE BOTTOM "BUY NOW" PURCHASE BAR
       ======================================================== */}
       <div
-        className={`fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-neutral-200 p-3 z-40 sm:hidden transition-transform duration-300 shadow-2xl ${
-          showStickyBar ? "translate-y-0" : "translate-y-full"
-        }`}
+        id="sticky-mobile-buy-bar"
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
-        <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
-          <div className="flex items-center space-x-2 shrink-0">
-            <img
-              src={product.image}
-              alt={product.name}
-              referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-lg object-cover border border-neutral-200"
-            />
-            <div>
-              <span className="text-xs font-bold text-neutral-900 truncate block max-w-[110px]">
-                {product.name}
-              </span>
-              <span className="text-xs font-black text-amber-700">
+        <div className="flex items-center justify-between gap-3.5 max-w-lg mx-auto">
+          {/* Left: Dynamic Price & Delivery Indicator */}
+          <div className="flex flex-col justify-center shrink-0">
+            <div className="flex items-baseline space-x-1.5">
+              <span className="text-xl font-black text-neutral-900 tracking-tight leading-none">
                 {formattedPrice}
               </span>
+              {formattedOriginalPrice && (
+                <span className="text-xs text-neutral-400 line-through font-semibold">
+                  {formattedOriginalPrice}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-1 mt-0.5">
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
+                <Truck className="w-2.5 h-2.5 text-emerald-600 inline shrink-0" />
+                <span>Free Delivery</span>
+              </span>
+              {bundleSavings > 0 && (
+                <>
+                  <span className="text-neutral-300 text-[10px]">•</span>
+                  <span className="text-[9px] font-extrabold text-amber-800 bg-amber-100 px-1 rounded">
+                    Save ₹{bundleSavings}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 flex-1 justify-end">
-            <button
-              onClick={handleAddToCartClick}
-              className="py-2.5 px-3 rounded-xl bg-neutral-900 text-white text-xs font-bold shrink-0 cursor-pointer"
-            >
-              Add
-            </button>
-            <button
-              onClick={handleBuyNowClick}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 text-white text-xs font-extrabold uppercase tracking-wider shrink-0 shadow-md cursor-pointer flex items-center space-x-1"
-            >
-              <Zap className="w-3.5 h-3.5 fill-amber-200 text-amber-200" />
-              <span>Buy Now</span>
-            </button>
-          </div>
+          {/* Right: High-Visibility BUY NOW CTA Button */}
+          <button
+            type="button"
+            id="mobile-sticky-buy-now-btn"
+            onClick={handleBuyNowClick}
+            className="flex-1 min-h-[48px] h-[48px] py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Zap className="w-4 h-4 fill-neutral-950 text-neutral-950 shrink-0" />
+            <span className="font-black">BUY NOW</span>
+          </button>
         </div>
+
+        {/* Variant selection error notice if missing selection */}
+        {variantError && (
+          <div className="mt-1 text-[11px] font-bold text-rose-600 text-center animate-fadeIn">
+            {variantError}
+          </div>
+        )}
       </div>
 
       {/* ========================================================
