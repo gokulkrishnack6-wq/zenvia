@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { PRODUCTS } from "./src/data/products";
+import { calculateItemSubtotal } from "./src/lib/pricing";
 import { findProductBySlugOrId, getProductSlug } from "./src/lib/slug";
 import {
   sendNewOrderEmail,
@@ -17,23 +18,12 @@ import {
   STORE_OWNER_EMAIL,
 } from "./src/server/email";
 import {
-  getUserByToken,
-  sanitizeUser,
-  revokeSession,
-  handleGoogleAuth,
-  registerEmailUser,
-  loginEmailUser,
-  updateUserProfile,
-  addSavedAddress,
-  updateSavedAddress,
-  deleteSavedAddress,
-  setDefaultAddress,
   saveOrder,
-  getOrdersForUser,
   getOrderById,
-  linkGuestOrder,
-  StoredUser,
-} from "./src/server/accountDb";
+  getOrderByPaymentId,
+  savePendingOrderIntent,
+  getPendingOrderIntent,
+} from "./src/server/orderDb";
 
 dotenv.config();
 
@@ -42,29 +32,52 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Helper middleware to extract authenticated user from Bearer token
-function getAuthUser(req: express.Request): StoredUser | null {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-  const token = authHeader.substring(7).trim();
-  return getUserByToken(token);
+// Helper to sanitize environment keys (trims spaces, quotes, newlines, semicolons, and inadvertent prefixes)
+function cleanKey(val?: string): string {
+  if (!val) return "";
+  let clean = val.trim();
+  // Strip BOM, zero-width characters, and non-printable control characters
+  clean = clean.replace(/[\u200B-\u200D\uFEFF\u00A0\x00-\x1F\x7F-\x9F]/g, "").trim();
+  // Strip outer quotes (both double, single, and backticks)
+  while (
+    (clean.startsWith('"') && clean.endsWith('"')) ||
+    (clean.startsWith("'") && clean.endsWith("'")) ||
+    (clean.startsWith("`") && clean.endsWith("`"))
+  ) {
+    clean = clean.slice(1, -1).trim();
+  }
+  // Strip inadvertent prefixes, suffixes, and noise
+  clean = clean
+    .replace(/^RAZORPAY_KEY_ID\s*[:=]\s*/i, "")
+    .replace(/^RAZORPAY_KEY_SECRET\s*[:=]\s*/i, "")
+    .replace(/^key_id\s*[:=]\s*/i, "")
+    .replace(/^key_secret\s*[:=]\s*/i, "")
+    .replace(/^Bearer\s+/i, "")
+    .replace(/^Basic\s+/i, "")
+    .replace(/[;\r\n\t]/g, "")
+    .trim();
+  return clean;
 }
 
-// Lazy Razorpay initialization
-function getRazorpayInstance(): Razorpay | null {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (keyId && keySecret) {
-    try {
-      return new Razorpay({
-        key_id: keyId,
-        key_secret: keySecret,
-      });
-    } catch (err) {
-      console.warn("Failed to initialize Razorpay SDK:", err);
-    }
+// Razorpay SDK Client Initializer
+function getRazorpayClient(): { razorpay: Razorpay; keyId: string; keySecret: string } | null {
+  const keyId = cleanKey(process.env.RAZORPAY_KEY_ID);
+  const keySecret = cleanKey(process.env.RAZORPAY_KEY_SECRET);
+
+  if (!keyId || !keySecret) {
+    return null;
   }
-  return null;
+
+  try {
+    const instance = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+    return { razorpay: instance, keyId, keySecret };
+  } catch (err) {
+    console.error("[Razorpay] Initialization error:", err);
+    return null;
+  }
 }
 
 // Lazy Google Gen AI initialization
@@ -89,254 +102,507 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+// Real PIN Code Serviceability Cache & Validator
+const serverPincodeCache = new Map<string, any>();
+const SERVER_DUMMY_PINS = new Set([
+  "000000", "111111", "222222", "333333", "444444", "555555",
+  "666666", "777777", "888888", "999999", "123456", "654321",
+  "123123", "987654", "100000", "200000", "300000", "400000",
+  "500000", "600000", "700000", "800000", "900000",
+]);
+
+const SERVER_VALID_PREFIXES = new Set([
+  "11", "12", "13", "14", "15", "16", "17", "18", "19",
+  "20", "21", "22", "23", "24", "25", "26", "27", "28",
+  "30", "31", "32", "33", "34", "36", "37", "38", "39",
+  "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
+  "50", "51", "52", "53", "56", "57", "58", "59",
+  "60", "61", "62", "63", "64", "67", "68", "69",
+  "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
+  "80", "81", "82", "83", "84", "85",
+]);
+
+app.get("/api/pincode/check", async (req, res) => {
+  const rawPincode = String(req.query.pincode || "").trim();
+
+  // 1. Format validation
+  if (!rawPincode) {
+    return res.json({
+      serviceable: false,
+      status: "invalid_format",
+      title: "Invalid PIN Code",
+      message: "Please enter a valid 6-digit Indian PIN code.",
+    });
+  }
+
+  if (!/^\d+$/.test(rawPincode) || rawPincode.length !== 6 || rawPincode.startsWith("0")) {
+    return res.json({
+      serviceable: false,
+      status: "invalid_format",
+      title: "Invalid PIN Code",
+      message: "Please enter a valid 6-digit Indian PIN code.",
+    });
+  }
+
+  // 2. Reject obvious dummy sequences
+  if (SERVER_DUMMY_PINS.has(rawPincode)) {
+    return res.json({
+      serviceable: false,
+      status: "unavailable",
+      title: "Delivery Not Available",
+      message: "Sorry, delivery is currently unavailable for this PIN code.",
+    });
+  }
+
+  // 3. Reject invalid postal circle prefixes
+  const prefix = rawPincode.substring(0, 2);
+  if (!SERVER_VALID_PREFIXES.has(prefix)) {
+    return res.json({
+      serviceable: false,
+      status: "unavailable",
+      title: "Delivery Not Available",
+      message: "Sorry, delivery is currently unavailable for this PIN code.",
+    });
+  }
+
+  // 4. In-memory cache check
+  if (serverPincodeCache.has(rawPincode)) {
+    return res.json(serverPincodeCache.get(rawPincode));
+  }
+
+  // 5. Query official India Post national directory
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const postalRes = await fetch(`https://api.postalpincode.in/pincode/${rawPincode}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (postalRes.ok) {
+      const data = (await postalRes.json()) as any;
+      if (
+        Array.isArray(data) &&
+        data.length > 0 &&
+        data[0].Status === "Success" &&
+        Array.isArray(data[0].PostOffice) &&
+        data[0].PostOffice.length > 0
+      ) {
+        const po = data[0].PostOffice[0];
+        const locationName = po.District
+          ? `${po.District}, ${po.State}`
+          : po.Name
+          ? `${po.Name}, ${po.State}`
+          : po.State || "India";
+
+        const validResult = {
+          serviceable: true,
+          status: "available",
+          title: "Delivery Available",
+          message: "We deliver to this PIN code.",
+          location: locationName,
+          district: po.District || "",
+          state: po.State || "",
+          codAvailable: true,
+          courier: "BlueDart / Delhivery Express",
+        };
+
+        serverPincodeCache.set(rawPincode, validResult);
+        return res.json(validResult);
+      }
+    }
+  } catch (fetchErr) {
+    console.warn(`[Pincode Check] Error or timeout querying India Post API for ${rawPincode}:`, fetchErr);
+  }
+
+  const unserviceableResult = {
+    serviceable: false,
+    status: "unavailable",
+    title: "Delivery Not Available",
+    message: "Sorry, delivery is currently unavailable for this PIN code.",
+  };
+
+  serverPincodeCache.set(rawPincode, unserviceableResult);
+  return res.json(unserviceableResult);
+});
+
 // Razorpay 1: Secure Order Creation Endpoint
 app.post("/api/razorpay/create-order", async (req, res) => {
   try {
+    // Robust check for required environment variables
+    const rawKeyId = process.env.RAZORPAY_KEY_ID;
+    const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!rawKeyId || !rawKeySecret || !rawKeyId.trim() || !rawKeySecret.trim()) {
+      return res.status(500).json({
+        success: false,
+        error: "Razorpay is not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to the Google AI Studio project settings (Settings > Secrets).",
+      });
+    }
+
+    const rzpClient = getRazorpayClient();
+    if (!rzpClient) {
+      return res.status(500).json({
+        success: false,
+        error: "Razorpay is not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to the Google AI Studio project settings (Settings > Secrets).",
+      });
+    }
+
     const { items, discountPercent = 0 } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: "Order items array is required" });
+      return res.status(400).json({ success: false, error: "Order items array is required" });
     }
 
-    // Securely calculate amount on server side using canonical PRODUCTS catalog
+    // Securely calculate canonical amount on server side using PRODUCTS catalog
     let rawSubtotal = 0;
     const validatedItems = [];
 
     for (const item of items) {
       const product = PRODUCTS.find((p) => p.id === item.id);
       if (!product) {
-        return res.status(400).json({ error: `Invalid product ID: ${item.id}` });
+        return res.status(400).json({ success: false, error: `Invalid product ID: ${item.id}` });
       }
-      const qty = Math.max(1, parseInt(item.quantity) || 1);
-      rawSubtotal += product.price * qty;
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      const itemSubtotal = calculateItemSubtotal(product, qty);
+      rawSubtotal += itemSubtotal;
       validatedItems.push({
         id: product.id,
         name: product.name,
         price: product.price,
+        itemSubtotal,
         quantity: qty,
       });
     }
 
     const numericDiscount = Math.max(0, Number(discountPercent) || 0);
-    const discountAmount = (rawSubtotal * numericDiscount) / 100;
+    const discountAmount = Math.round((rawSubtotal * numericDiscount) / 100);
     const shippingCost = rawSubtotal >= 499 ? 0 : 49;
-    const finalTotalRupees = Math.max(0, rawSubtotal - discountAmount + shippingCost);
+    const finalTotalRupees = Math.max(1, rawSubtotal - discountAmount + shippingCost);
     const amountInPaise = Math.round(finalTotalRupees * 100);
 
-    const razorpay = getRazorpayInstance();
-    const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_ZenviaStoreKey";
+    const receipt = `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-    if (razorpay) {
-      const options = {
-        amount: amountInPaise,
-        currency: "INR",
-        receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        notes: {
-          store: "Zenvia India",
-          itemsCount: validatedItems.length.toString(),
-        },
-      };
+    const order = await rzpClient.razorpay.orders.create({
+      amount: amountInPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        store: "Zenvia India",
+        itemsCount: validatedItems.length.toString(),
+      },
+    });
 
-      const order = await razorpay.orders.create(options);
-      return res.json({
-        success: true,
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        keyId,
-        isTestMode: false,
-        summary: {
-          subtotal: rawSubtotal,
-          discount: discountAmount,
-          shipping: shippingCost,
-          finalTotal: finalTotalRupees,
-        },
-      });
-    } else {
-      // Demo/Test mode when environment variables are not configured
-      const demoOrderId = `order_demo_${Date.now()}_${Math.floor(Math.random() * 9000 + 1000)}`;
-      return res.json({
-        success: true,
-        orderId: demoOrderId,
-        amount: amountInPaise,
-        currency: "INR",
-        keyId,
-        isTestMode: true,
-        message: "Demo mode active: RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET not set in environment.",
-        summary: {
-          subtotal: rawSubtotal,
-          discount: discountAmount,
-          shipping: shippingCost,
-          finalTotal: finalTotalRupees,
-        },
-      });
-    }
+    return res.json({
+      success: true,
+      keyId: rzpClient.keyId,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      summary: {
+        subtotal: rawSubtotal,
+        discount: discountAmount,
+        shipping: shippingCost,
+        finalTotal: finalTotalRupees,
+      },
+    });
   } catch (error: any) {
     console.error("Razorpay create-order error:", error);
-    return res.status(500).json({ error: error.message || "Failed to create Razorpay order" });
+    const errorDesc =
+      error?.error?.description ||
+      error?.description ||
+      error?.message ||
+      "Failed to create Razorpay order";
+
+    const isAuthError =
+      errorDesc.toLowerCase().includes("auth") ||
+      (error?.error?.code === "BAD_REQUEST_ERROR" && errorDesc.toLowerCase().includes("auth"));
+
+    const userMessage = isAuthError
+      ? "Razorpay authentication failed: The Key Secret does not match the Key ID. Please verify your Razorpay API keys in Settings > Secrets or choose Cash on Delivery (COD)."
+      : `Razorpay order creation failed: ${errorDesc}`;
+
+    return res.status(400).json({
+      success: false,
+      isAuthError,
+      error: userMessage,
+    });
   }
 });
 
-// Razorpay 2: Backend Signature Verification Endpoint
+// Razorpay 2: Backend Signature Verification & Payment Verification Endpoint
 app.post("/api/razorpay/verify-payment", async (req, res) => {
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      isTestMode = false,
-      orderDetails,
       customerDetails,
+      items,
+      discountPercent = 0,
+      saveAddressToProfile = false,
     } = req.body;
 
-    if (!razorpay_order_id || !razorpay_payment_id) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
         verified: false,
-        error: "Missing required payment parameters for verification",
+        error: "Missing required payment parameters for verification.",
       });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!customerDetails || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Missing customer details or items for order recording.",
+      });
+    }
 
-    if (keySecret && !isTestMode) {
-      // HMAC SHA-256 signature verification
-      const body = razorpay_order_id + "|" + razorpay_payment_id;
-      const expectedSignature = crypto
-        .createHmac("sha256", keySecret)
-        .update(body.toString())
-        .digest("hex");
+    const rzpClient = getRazorpayClient();
+    if (!rzpClient) {
+      return res.status(500).json({
+        success: false,
+        verified: false,
+        error: "Razorpay is not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to the server environment.",
+      });
+    }
 
-      const isSignatureValid = expectedSignature === razorpay_signature;
+    // PHASE 9: Duplicate Payment Protection / Idempotency
+    const existingOrder = getOrderByPaymentId(razorpay_payment_id);
+    if (existingOrder) {
+      return res.json({
+        success: true,
+        verified: true,
+        orderId: existingOrder.id,
+        paymentId: razorpay_payment_id,
+        status: "PAID",
+        alreadyProcessed: true,
+      });
+    }
 
-      if (!isSignatureValid) {
-        console.warn("Razorpay payment verification failed: signature mismatch");
+    // PHASE 7: Cryptographic HMAC SHA-256 signature verification
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", rzpClient.keySecret)
+      .update(body)
+      .digest("hex");
 
-        // Send alert email for failed verification attempt
-        if (customerDetails) {
-          void sendFailedPaymentEmail({
-            razorpayOrderId: razorpay_order_id,
-            amount: orderDetails?.total || 0,
-            items: orderDetails?.items,
-            customer: customerDetails,
-            status: "PAYMENT VERIFICATION FAILED",
-            reason: "Signature mismatch on backend verification",
-          }).catch((err) => console.error("[ZENVIA EMAIL] Signature mismatch email failed:", err));
-        }
+    if (expectedSignature !== razorpay_signature) {
+      console.warn("Razorpay payment verification failed: cryptographic signature mismatch");
 
+      if (customerDetails) {
+        void sendFailedPaymentEmail({
+          razorpayOrderId: razorpay_order_id,
+          amount: 0,
+          items,
+          customer: customerDetails,
+          status: "PAYMENT VERIFICATION FAILED",
+          reason: "Cryptographic signature mismatch on backend verification",
+        }).catch((err) => console.error("[ZENVIA EMAIL] Signature mismatch email failed:", err));
+      }
+
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Payment verification failed: cryptographic signature mismatch.",
+      });
+    }
+
+    // Calculate canonical expected amounts from database catalog
+    let verifiedSubtotal = 0;
+    const verifiedItems = [];
+
+    for (const item of items) {
+      const prod = PRODUCTS.find((p) => p.id === item.id);
+      if (!prod) {
         return res.status(400).json({
           success: false,
           verified: false,
-          error: "Payment verification failed: signature mismatch",
+          error: `Invalid product in order: ${item.id}`,
         });
       }
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      const itemSubtotal = calculateItemSubtotal(prod, qty);
+      verifiedSubtotal += itemSubtotal;
+      verifiedItems.push({
+        id: prod.id,
+        name: prod.name,
+        price: prod.price,
+        itemSubtotal,
+        quantity: qty,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+      });
     }
 
-    // Payment Signature verified (or approved in test/demo mode)
-    // Extract authenticated user if available
-    const authUser = getAuthUser(req);
-    const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
-    const orderIdToSave = orderDetails?.orderId || razorpay_order_id;
+    const verifiedDiscount = Math.round((verifiedSubtotal * (Math.max(0, Number(discountPercent)) || 0)) / 100);
+    const verifiedShipping = verifiedSubtotal >= 499 ? 0 : 49;
+    const verifiedTotalRupees = Math.max(1, verifiedSubtotal - verifiedDiscount + verifiedShipping);
+    const verifiedAmountPaise = Math.round(verifiedTotalRupees * 100);
+
+    // PHASE 8: Verify actual order and payment directly with Razorpay API (Fail closed)
+    let rzpOrder: any;
+    try {
+      rzpOrder = await rzpClient.razorpay.orders.fetch(razorpay_order_id);
+    } catch (orderFetchErr: any) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Razorpay order could not be retrieved from gateway.",
+      });
+    }
+
+    if (!rzpOrder) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Razorpay order not found on gateway.",
+      });
+    }
+
+    if (rzpOrder.currency !== "INR") {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Order currency on gateway is not INR.",
+      });
+    }
+
+    if (Number(rzpOrder.amount) !== verifiedAmountPaise) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Order amount on gateway does not match server expected amount.",
+      });
+    }
+
+    let rzpPayment: any;
+    try {
+      rzpPayment = await rzpClient.razorpay.payments.fetch(razorpay_payment_id);
+    } catch (paymentFetchErr: any) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Razorpay payment could not be retrieved from gateway.",
+      });
+    }
+
+    if (!rzpPayment) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Razorpay payment record not found on gateway.",
+      });
+    }
+
+    if (rzpPayment.order_id !== razorpay_order_id) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Payment record does not belong to the verified Razorpay order.",
+      });
+    }
+
+    if (Number(rzpPayment.amount) !== verifiedAmountPaise) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Payment amount does not match expected order total.",
+      });
+    }
+
+    if (rzpPayment.currency !== "INR") {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: "Payment currency is not INR.",
+      });
+    }
+
+    if (rzpPayment.status !== "captured") {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: `Payment status is '${rzpPayment.status}'. Payment must be captured.`,
+      });
+    }
+
+    // PHASE 10: Order Persistence and Confirmation
     const nowIso = new Date().toISOString();
+    const trackingNumber = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
+    const fullAddress =
+      customerDetails.fullAddress ||
+      `${customerDetails.houseNo || ""}, ${customerDetails.street || ""}${customerDetails.landmark ? `, ${customerDetails.landmark}` : ""}, ${customerDetails.city || ""}, ${customerDetails.state || ""} - ${customerDetails.pincode || ""}`.trim();
 
-    // Persist order in secure server database
-    if (customerDetails && orderDetails) {
-      saveOrder({
-        id: orderIdToSave,
-        userId: authUser ? authUser.id : undefined,
-        userEmail: customerDetails.email || (authUser ? authUser.email : ""),
-        date: nowIso,
-        items: (orderDetails.items || []).map((i: any) => ({
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity,
-          selectedColor: i.selectedColor,
-          selectedSize: i.selectedSize,
-        })),
-        subtotal: orderDetails.subtotal || 0,
-        discount: orderDetails.discount || 0,
-        shipping: orderDetails.shipping || 0,
-        total: orderDetails.total || 0,
-        formattedTotal: `₹${(orderDetails.total || 0).toLocaleString("en-IN")}`,
-        paymentMethod: "Razorpay (UPI / Cards / NetBanking)",
-        paymentStatus: "PAID",
-        paymentId: razorpay_payment_id,
-        trackingNumber: trackingId,
-        orderStatus: "CONFIRMED",
-        customerDetails: {
-          fullName: customerDetails.fullName || "Customer",
-          phone: customerDetails.phone || "",
-          email: customerDetails.email || "",
-          houseNo: customerDetails.houseNo || "",
-          street: customerDetails.street || "",
-          landmark: customerDetails.landmark,
-          city: customerDetails.city || "",
-          state: customerDetails.state || "",
-          pincode: customerDetails.pincode || "",
-          fullAddress: customerDetails.fullAddress || "",
-        },
-        shippingMethod: "BlueDart Air Express (2–3 Days)",
-        createdAt: nowIso,
-      });
+    saveOrder({
+      id: razorpay_order_id,
+      userEmail: customerDetails.email || "",
+      date: nowIso,
+      items: verifiedItems,
+      subtotal: verifiedSubtotal,
+      discount: verifiedDiscount,
+      shipping: verifiedShipping,
+      total: verifiedTotalRupees,
+      formattedTotal: `₹${verifiedTotalRupees.toLocaleString("en-IN")}`,
+      paymentMethod: "Razorpay",
+      paymentStatus: "PAID",
+      paymentId: razorpay_payment_id,
+      trackingNumber,
+      orderStatus: "CONFIRMED",
+      customerDetails: {
+        fullName: customerDetails.fullName || "Customer",
+        phone: customerDetails.phone || "",
+        email: customerDetails.email || "",
+        houseNo: customerDetails.houseNo || "",
+        street: customerDetails.street || "",
+        landmark: customerDetails.landmark,
+        city: customerDetails.city || "",
+        state: customerDetails.state || "",
+        pincode: customerDetails.pincode || "",
+        fullAddress,
+      },
+      shippingMethod: "Express Shipping (2–3 Days)",
+      createdAt: nowIso,
+    });
 
-      // If user requested to save address to profile or if user is authenticated and has no saved address
-      if (authUser && req.body.saveAddressToProfile) {
-        try {
-          addSavedAddress(authUser.id, {
-            label: "Home",
-            fullName: customerDetails.fullName || authUser.fullName,
-            phone: customerDetails.phone || authUser.phone,
-            email: customerDetails.email || authUser.email,
-            houseNo: customerDetails.houseNo || "",
-            street: customerDetails.street || "",
-            landmark: customerDetails.landmark,
-            city: customerDetails.city || "",
-            state: customerDetails.state || "",
-            pincode: customerDetails.pincode || "",
-            isDefault: authUser.savedAddresses.length === 0,
-          });
-        } catch (addrErr) {
-          console.warn("[Zenvia] Failed to auto-save address during Razorpay order:", addrErr);
-        }
-      }
-
-      // Send New Order Email to Store Owner in background (non-blocking)
-      void sendNewOrderEmail({
-        orderId: orderIdToSave,
-        items: orderDetails.items || [],
-        subtotal: orderDetails.subtotal || 0,
-        discount: orderDetails.discount || 0,
-        shipping: orderDetails.shipping || 0,
-        total: orderDetails.total || 0,
-        customer: {
-          fullName: customerDetails.fullName || "Customer",
-          phone: customerDetails.phone || "",
-          email: customerDetails.email || "",
-          houseNo: customerDetails.houseNo || "",
-          street: customerDetails.street || "",
-          landmark: customerDetails.landmark,
-          city: customerDetails.city || "",
-          state: customerDetails.state || "",
-          pincode: customerDetails.pincode || "",
-          fullAddress: customerDetails.fullAddress || "",
-        },
-        payment: {
-          method: "Razorpay (UPI / Cards / NetBanking)",
-          status: "PAID",
-          razorpayOrderId: razorpay_order_id,
-          razorpayPaymentId: razorpay_payment_id,
-        },
-      }).catch((emailError) => {
-        console.error("[ZENVIA EMAIL] Razorpay order notification failed:", emailError);
-      });
-    }
+    // Send confirmation email in background
+    void sendNewOrderEmail({
+      orderId: razorpay_order_id,
+      items: verifiedItems,
+      subtotal: verifiedSubtotal,
+      discount: verifiedDiscount,
+      shipping: verifiedShipping,
+      total: verifiedTotalRupees,
+      customer: {
+        fullName: customerDetails.fullName || "Customer",
+        phone: customerDetails.phone || "",
+        email: customerDetails.email || "",
+        houseNo: customerDetails.houseNo || "",
+        street: customerDetails.street || "",
+        landmark: customerDetails.landmark,
+        city: customerDetails.city || "",
+        state: customerDetails.state || "",
+        pincode: customerDetails.pincode || "",
+        fullAddress,
+      },
+      payment: {
+        method: "Razorpay",
+        status: "PAID",
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+      },
+    }).catch((emailError) => {
+      console.error("[ZENVIA EMAIL] Razorpay order notification failed:", emailError);
+    });
 
     return res.json({
       success: true,
       verified: true,
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
-      trackingNumber: trackingId,
+      trackingNumber,
       status: "PAID",
       timestamp: nowIso,
     });
@@ -345,7 +611,7 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
     return res.status(500).json({
       success: false,
       verified: false,
-      error: error.message || "Internal server error during verification",
+      error: error.message || "Internal server error during payment verification",
     });
   }
 });
@@ -368,11 +634,13 @@ app.post("/api/orders/cod", async (req, res) => {
         return res.status(400).json({ error: `Invalid product ID: ${item.id}` });
       }
       const qty = Math.max(1, parseInt(item.quantity) || 1);
-      rawSubtotal += product.price * qty;
+      const itemSubtotal = calculateItemSubtotal(product, qty);
+      rawSubtotal += itemSubtotal;
       validatedItems.push({
         id: product.id,
         name: product.name,
         price: product.price,
+        itemSubtotal,
         quantity: qty,
         image: product.image,
         selectedColor: item.selectedColor,
@@ -389,13 +657,10 @@ app.post("/api/orders/cod", async (req, res) => {
     const trackingId = "BD-" + Math.floor(10000000 + Math.random() * 90000000);
     const nowIso = new Date().toISOString();
 
-    const authUser = getAuthUser(req);
-
     // Save order into database
     saveOrder({
       id: codOrderId,
-      userId: authUser ? authUser.id : undefined,
-      userEmail: customerDetails.email || (authUser ? authUser.email : ""),
+      userEmail: customerDetails.email || "",
       date: nowIso,
       items: validatedItems,
       subtotal: rawSubtotal,
@@ -422,27 +687,6 @@ app.post("/api/orders/cod", async (req, res) => {
       shippingMethod: "BlueDart Air Express (2–3 Days)",
       createdAt: nowIso,
     });
-
-    // Optionally save address to user's profile
-    if (authUser && saveAddressToProfile) {
-      try {
-        addSavedAddress(authUser.id, {
-          label: "Home",
-          fullName: customerDetails.fullName || authUser.fullName,
-          phone: customerDetails.phone || authUser.phone,
-          email: customerDetails.email || authUser.email,
-          houseNo: customerDetails.houseNo || "",
-          street: customerDetails.street || "",
-          landmark: customerDetails.landmark,
-          city: customerDetails.city || "",
-          state: customerDetails.state || "",
-          pincode: customerDetails.pincode || "",
-          isDefault: authUser.savedAddresses.length === 0,
-        });
-      } catch (addrErr) {
-        console.warn("[Zenvia] Failed to auto-save address during COD order:", addrErr);
-      }
-    }
 
     // Send New Order Notification to Store Owner in the background (non-blocking)
     void sendNewOrderEmail({
@@ -485,276 +729,6 @@ app.post("/api/orders/cod", async (req, res) => {
     console.error("COD order processing error:", error);
     return res.status(500).json({ error: error.message || "Failed to process COD order" });
   }
-});
-
-// ==========================================
-// CUSTOMER AUTH & ACCOUNT API ENDPOINTS
-// ==========================================
-
-// Google Sign-In / Account Creation Endpoint
-app.post("/api/auth/google", (req, res) => {
-  try {
-    const { email, fullName, avatarUrl, phone } = req.body;
-    if (!email || !email.includes("@")) {
-      return res.status(400).json({ error: "Valid email address is required" });
-    }
-
-    const result = handleGoogleAuth({
-      email,
-      fullName: fullName || "Valued Customer",
-      avatarUrl,
-      phone,
-    });
-
-    return res.json({
-      success: true,
-      user: result.user,
-      token: result.token,
-      isNewUser: result.isNewUser,
-      message: result.isNewUser
-        ? "Welcome to Zenvia! Your account has been created."
-        : "Welcome back to Zenvia!",
-    });
-  } catch (err: any) {
-    console.error("Google Auth error:", err);
-    return res.status(500).json({ error: err.message || "Authentication failed" });
-  }
-});
-
-// Email + Password Registration Endpoint
-app.post("/api/auth/register", (req, res) => {
-  try {
-    const { email, password, fullName, phone } = req.body;
-
-    if (!email || !email.includes("@")) {
-      return res.status(400).json({ error: "Please provide a valid email address." });
-    }
-    if (!password || password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters long." });
-    }
-    if (!fullName || fullName.trim().length === 0) {
-      return res.status(400).json({ error: "Full name is required." });
-    }
-
-    const result = registerEmailUser({
-      email,
-      password,
-      fullName,
-      phone: phone || "",
-    });
-
-    return res.json({
-      success: true,
-      user: result.user,
-      token: result.token,
-      message: "Account created successfully.",
-    });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Registration failed" });
-  }
-});
-
-// Email + Password Login Endpoint
-app.post("/api/auth/login", (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
-    }
-
-    const result = loginEmailUser(email, password);
-
-    return res.json({
-      success: true,
-      user: result.user,
-      token: result.token,
-      message: "Welcome back!",
-    });
-  } catch (err: any) {
-    return res.status(401).json({ error: err.message || "Invalid credentials." });
-  }
-});
-
-// User Session Verification & Profile Fetch
-app.get("/api/auth/me", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized or session expired" });
-  }
-  return res.json({
-    success: true,
-    user: sanitizeUser(user),
-  });
-});
-
-// Logout / Revoke Session Endpoint
-app.post("/api/auth/logout", (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.substring(7).trim();
-    revokeSession(token);
-  }
-  return res.json({ success: true, message: "Logged out successfully" });
-});
-
-// Update Profile Endpoint
-app.put("/api/auth/profile", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-    const { fullName, phone, avatarUrl } = req.body;
-    const updatedUser = updateUserProfile(user.id, { fullName, phone, avatarUrl });
-    return res.json({ success: true, user: updatedUser });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Failed to update profile" });
-  }
-});
-
-// Add Saved Delivery Address
-app.post("/api/auth/addresses", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-    const { label, fullName, phone, email, houseNo, street, landmark, city, state, pincode, isDefault } = req.body;
-
-    if (!fullName || !phone || !houseNo || !street || !city || !state || !pincode) {
-      return res.status(400).json({ error: "All required address fields must be filled" });
-    }
-
-    const updatedUser = addSavedAddress(user.id, {
-      label: label || "Home",
-      fullName,
-      phone,
-      email: email || user.email,
-      houseNo,
-      street,
-      landmark,
-      city,
-      state,
-      pincode,
-      isDefault: Boolean(isDefault),
-    });
-
-    return res.json({ success: true, user: updatedUser });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Failed to save address" });
-  }
-});
-
-// Update Saved Delivery Address
-app.put("/api/auth/addresses/:id", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-    const addressId = req.params.id;
-    const updatedUser = updateSavedAddress(user.id, addressId, req.body);
-    return res.json({ success: true, user: updatedUser });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Failed to update address" });
-  }
-});
-
-// Delete Saved Delivery Address
-app.delete("/api/auth/addresses/:id", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-    const addressId = req.params.id;
-    const updatedUser = deleteSavedAddress(user.id, addressId);
-    return res.json({ success: true, user: updatedUser });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Failed to delete address" });
-  }
-});
-
-// Set Default Delivery Address
-app.post("/api/auth/addresses/:id/default", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-    const addressId = req.params.id;
-    const updatedUser = setDefaultAddress(user.id, addressId);
-    return res.json({ success: true, user: updatedUser });
-  } catch (err: any) {
-    return res.status(400).json({ error: err.message || "Failed to set default address" });
-  }
-});
-
-// ==========================================
-// MY ORDERS & ORDER TRACKING API ENDPOINTS
-// ==========================================
-
-// Get Orders for Authenticated User Only (Never trusts raw user ID from client)
-app.get("/api/orders/my-orders", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized. Please sign in to view your orders." });
-  }
-
-  const orders = getOrdersForUser(user.id, user.email);
-  return res.json({
-    success: true,
-    orders,
-  });
-});
-
-// Get Specific Order Details with Authorization Verification
-app.get("/api/orders/:orderId", (req, res) => {
-  const authUser = getAuthUser(req);
-  const orderId = req.params.orderId;
-
-  // If user is authenticated, query for order belonging to this user
-  if (authUser) {
-    const order = getOrderById(orderId, authUser.id, authUser.email);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found or unauthorized" });
-    }
-    return res.json({ success: true, order });
-  }
-
-  // If guest, only allow retrieval if customer matches email provided in query or header
-  const guestEmail = (req.query.email as string)?.trim().toLowerCase();
-  if (guestEmail) {
-    const order = getOrderById(orderId, undefined, guestEmail);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found or email mismatch" });
-    }
-    return res.json({ success: true, order });
-  }
-
-  return res.status(401).json({ error: "Authentication required to view order details" });
-});
-
-// Link Guest Order to Authenticated Account
-app.post("/api/orders/link-guest-order", (req, res) => {
-  const user = getAuthUser(req);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const { orderId } = req.body;
-  if (!orderId) {
-    return res.status(400).json({ error: "orderId is required" });
-  }
-
-  const linked = linkGuestOrder(orderId, user.id, user.email);
-  return res.json({ success: linked });
 });
 
 // Endpoint for Payment Failure or Cancellation Notification

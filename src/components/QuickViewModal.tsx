@@ -15,9 +15,11 @@ import {
   Play,
   CreditCard,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { Product, Currency } from "../types";
-import { formatRupee } from "../lib/currency";
+import { formatRupee, formatRupeeExact } from "../lib/currency";
+import { calculateItemSubtotal, calculateBundleSavings, calculatePerPiecePrice } from "../lib/pricing";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 
 interface QuickViewModalProps {
@@ -40,31 +42,37 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   onBuyNow,
   onToggleWishlist,
 }) => {
-  if (!product) return null;
-
-  const [selectedImg, setSelectedImg] = useState(product.image);
+  const [selectedImg, setSelectedImg] = useState(product?.image || "");
   const [activeMedia, setActiveMedia] = useState<"image" | "video">("image");
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name);
-  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0]);
+  const [selectedColor, setSelectedColor] = useState(product?.colors?.[0]?.name);
+  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0]);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   // Reset scroll and media when product changes
   useEffect(() => {
-    setSelectedImg(product.image);
-    setActiveMedia("image");
-    setQuantity(1);
-    setSelectedColor(product.colors?.[0]?.name);
-    setSelectedSize(product.sizes?.[0]);
+    if (product) {
+      setSelectedImg(product.image);
+      setActiveMedia("image");
+      setQuantity(1);
+      setSelectedColor(product.colors?.[0]?.name);
+      setSelectedSize(product.sizes?.[0]);
 
-    const container = document.getElementById("modal-scroll-container");
-    if (container) {
-      container.scrollTop = 0;
+      const container = document.getElementById("modal-scroll-container");
+      if (container) {
+        container.scrollTop = 0;
+      }
     }
   }, [product]);
 
-  const formattedPrice = formatRupee(product.price * quantity);
+  if (!product) return null;
+
+  const currentSubtotal = calculateItemSubtotal(product, quantity);
+  const bundleSavings = calculateBundleSavings(product, quantity);
+  const formattedPrice = formatRupee(currentSubtotal);
   const formattedOriginal = product.originalPrice ? formatRupee(product.originalPrice * quantity) : null;
+  const perPieceRate = calculatePerPiecePrice(product, quantity);
+  const formattedPerPiece = formatRupeeExact(perPieceRate);
 
   const handleAddToCart = () => {
     onAddToCart(product, selectedColor, selectedSize, quantity);
@@ -295,10 +303,63 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   </div>
                 )}
 
-                {/* Quantity Selector */}
+                {/* Quantity & Bulk Tier Selector */}
                 <div className="mb-4">
+                  {product.pricingTiers && product.pricingTiers.length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-xs font-bold text-neutral-800 flex items-center space-x-1.5 mb-2">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Select Bundle Quantity Offer:</span>
+                      </span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {product.pricingTiers.map((tier) => {
+                          const isSelected = quantity === tier.quantity;
+                          const tierPrice = tier.totalPrice || (tier as any).price;
+                          const perPiece = formatRupeeExact(tier.perPiecePrice || tierPrice / tier.quantity);
+                          const tierBadge = tier.label || (tier as any).badge;
+                          return (
+                            <button
+                              key={tier.quantity}
+                              type="button"
+                              onClick={() => setQuantity(tier.quantity)}
+                              className={`relative p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500 shadow-sm"
+                                  : "border-neutral-200 bg-white hover:border-neutral-300"
+                              }`}
+                            >
+                              {tierBadge && (
+                                <span className={`absolute -top-2 left-2 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                                  tier.isBestValue || tierBadge === "BEST VALUE"
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-amber-600 text-white"
+                                }`}>
+                                  {tierBadge}
+                                </span>
+                              )}
+                              <div className="text-xs font-black text-neutral-900 mt-1">
+                                Buy {tier.quantity}
+                              </div>
+                              <div className="text-sm font-black text-amber-800">
+                                {formatRupee(tierPrice)}
+                              </div>
+                              <div className="text-[10px] text-neutral-500 font-medium">
+                                {perPiece}/item
+                              </div>
+                              {tier.savings && tier.savings > 0 ? (
+                                <div className="text-[10px] font-bold text-emerald-700 mt-0.5">
+                                  Save ₹{tier.savings}
+                                </div>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <span className="text-xs font-bold text-neutral-800 block mb-1.5">
-                    Quantity:
+                    Custom Quantity:
                   </span>
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center border border-neutral-300 rounded-xl bg-white shadow-xs">
@@ -322,9 +383,17 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <span className="text-xs text-neutral-500 font-medium">
-                      Subtotal: <strong className="text-neutral-900 font-extrabold">{formattedPrice}</strong>
-                    </span>
+                    <div className="text-xs text-neutral-600">
+                      <span>Total: <strong className="text-neutral-900 font-extrabold">{formattedPrice}</strong></span>
+                      {quantity > 1 && (
+                        <span className="text-neutral-500 font-medium ml-1.5">({formattedPerPiece}/pc)</span>
+                      )}
+                      {bundleSavings > 0 && (
+                        <span className="text-emerald-700 font-bold ml-1.5 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          Save ₹{bundleSavings}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -332,23 +401,17 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl mb-3 space-y-1">
                   <div className="flex items-center space-x-2 text-xs font-bold text-neutral-900">
                     <Truck className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Free Express Delivery Across India</span>
+                    <span>Fast &amp; Reliable Delivery Across India</span>
                   </div>
                   <p className="text-[11px] text-neutral-600 leading-relaxed pl-6">
-                    Ships within 24 hours. Estimated delivery: 3-5 business days via BlueDart / Delhivery.
+                    Delivery available across eligible locations. Your order will be delivered to the address provided during checkout.
                   </p>
                 </div>
 
-                {/* Payment & Refund Guarantees */}
-                <div className="grid grid-cols-2 gap-2 text-[11px] mb-4">
-                  <div className="p-2.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center space-x-2 text-emerald-950">
-                    <CreditCard className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span className="font-bold">100% Secure Checkout (UPI/COD)</span>
-                  </div>
-                  <div className="p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center space-x-2 text-blue-950">
-                    <RotateCcw className="w-4 h-4 text-blue-700 shrink-0" />
-                    <span className="font-bold">7-Day Easy Returns</span>
-                  </div>
+                {/* Payment Guarantees */}
+                <div className="p-2.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center space-x-2 text-emerald-950 text-[11px] mb-4">
+                  <CreditCard className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span className="font-bold">100% Secure Checkout (UPI / Cards / Net Banking / COD)</span>
                 </div>
 
                 {/* Specifications Table */}
@@ -405,7 +468,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </div>
 
                 {/* Trust Badges */}
-                <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-medium text-neutral-500 pt-1">
+                <div className="grid grid-cols-2 gap-3 text-center text-[10px] font-medium text-neutral-500 pt-1">
                   <div className="flex flex-col items-center">
                     <Truck className="w-4 h-4 text-amber-600 mb-0.5" />
                     <span>Free Shipping</span>
@@ -413,10 +476,6 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   <div className="flex flex-col items-center">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 mb-0.5" />
                     <span>100% Genuine</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <RotateCcw className="w-4 h-4 text-blue-600 mb-0.5" />
-                    <span>7-Day Return</span>
                   </div>
                 </div>
               </div>

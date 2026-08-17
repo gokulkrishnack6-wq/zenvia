@@ -6,7 +6,6 @@ import {
   Zap,
   Truck,
   ShieldCheck,
-  RotateCcw,
   Check,
   ChevronRight,
   ChevronLeft,
@@ -34,11 +33,19 @@ import {
   MapPin,
   Clock,
   Lock,
+  Loader2,
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Product, Currency, CategoryType } from "../types";
-import { formatRupee } from "../lib/currency";
+import { Product, ProductVideo, Currency, CategoryType } from "../types";
+import { formatRupee, formatRupeeExact } from "../lib/currency";
+import {
+  calculateItemSubtotal,
+  calculateBundleSavings,
+  calculatePerPiecePrice,
+} from "../lib/pricing";
 import { getProductSlug } from "../lib/slug";
+import { checkPincodeServiceability, PincodeValidationResult } from "../lib/pincodeService";
 import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductCard } from "./ProductCard";
@@ -51,7 +58,7 @@ interface ProductDetailsPageProps {
   onGoHome: () => void;
   onSelectCategory: (cat: CategoryType) => void;
   onSelectProduct: (p: Product) => void;
-  onAddToCart: (p: Product, color?: string, size?: string) => void;
+  onAddToCart: (p: Product, color?: string, size?: string, quantity?: number) => void;
   onBuyNow: (p: Product, quantity: number, color?: string, size?: string) => void;
   onToggleWishlist: (p: Product) => void;
   onQuickView?: (p: Product) => void;
@@ -79,7 +86,27 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     ])
   );
 
-  const [selectedImage, setSelectedImage] = useState(allImages[0] || product.image);
+  const productVideos: ProductVideo[] =
+    product.videos && product.videos.length > 0
+      ? product.videos
+      : product.videoUrl
+      ? [{ title: `${product.name} Video Demonstration`, url: product.videoUrl }]
+      : [];
+
+  const mediaList: {
+    type: "image" | "video";
+    url: string;
+    title?: string;
+  }[] = [
+    ...allImages.map((img) => ({ type: "image" as const, url: img })),
+    ...productVideos.map((vid, idx) => ({
+      type: "video" as const,
+      url: vid.url,
+      title: vid.title || `Demonstration Video ${idx + 1}`,
+    })),
+  ];
+
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(
     product.colors?.[0]?.name
   );
@@ -88,64 +115,59 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   );
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<
-    "description" | "features" | "specs" | "shipping" | "returns"
+    "description" | "features" | "specs" | "shipping"
   >("description");
   const [addedSuccess, setAddedSuccess] = useState(false);
 
   // Lightbox / Image Zoom modal state
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // Active Video Modal State
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
-
   // PIN Code Delivery Checker State
   const [pincodeInput, setPincodeInput] = useState("");
-  const [pincodeResult, setPincodeResult] = useState<{
-    status: "idle" | "loading" | "success" | "error";
-    message?: string;
-    deliveryDate?: string;
-    codAvailable?: boolean;
-  }>({ status: "idle" });
+  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+  const [pincodeResult, setPincodeResult] = useState<PincodeValidationResult | null>(null);
 
-  const handleCheckPincode = (e: React.FormEvent) => {
+  const handleCheckPincode = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleaned = pincodeInput.trim();
-    if (!cleaned || cleaned.length !== 6 || !/^\d{6}$/.test(cleaned)) {
+
+    if (!cleaned) {
       setPincodeResult({
-        status: "error",
-        message: "Please enter a valid 6-digit Indian PIN code",
+        serviceable: false,
+        status: "invalid_format",
+        title: "Invalid PIN Code",
+        message: "Please enter a valid 6-digit Indian PIN code.",
       });
       return;
     }
 
-    setPincodeResult({ status: "loading" });
+    setIsCheckingPincode(true);
+    setPincodeResult(null);
 
-    setTimeout(() => {
-      const delivery = new Date();
-      delivery.setDate(delivery.getDate() + 3);
-      const formattedDate = delivery.toLocaleDateString("en-IN", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
-
+    try {
+      const result = await checkPincodeServiceability(cleaned);
+      setPincodeResult(result);
+    } catch (err) {
       setPincodeResult({
-        status: "success",
-        message: `Delivery available to ${cleaned}`,
-        deliveryDate: formattedDate,
-        codAvailable: true,
+        serviceable: false,
+        status: "unavailable",
+        title: "Delivery Not Available",
+        message: "Sorry, delivery is currently unavailable for this PIN code.",
       });
-    }, 500);
+    } finally {
+      setIsCheckingPincode(false);
+    }
   };
 
-  const currentImgIndex = allImages.indexOf(selectedImage);
-  const handleNextImage = () => {
-    const nextIdx = (currentImgIndex + 1) % allImages.length;
-    setSelectedImage(allImages[nextIdx]);
+  const currentMedia =
+    mediaList[selectedMediaIndex] || mediaList[0] || { type: "image", url: product.image };
+  const currentImage = currentMedia.type === "image" ? currentMedia.url : product.image;
+
+  const handleNextMedia = () => {
+    setSelectedMediaIndex((prev) => (prev + 1) % mediaList.length);
   };
-  const handlePrevImage = () => {
-    const prevIdx = (currentImgIndex - 1 + allImages.length) % allImages.length;
-    setSelectedImage(allImages[prevIdx]);
+  const handlePrevMedia = () => {
+    setSelectedMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
 
   // Share modal & feedback state
@@ -163,14 +185,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   }, [product.id]);
 
   const setAllImagesReset = () => {
-    const fresh = Array.from(
-      new Set([
-        product.image,
-        ...(product.alternateImage ? [product.alternateImage] : []),
-        ...(product.galleryImages || []),
-      ])
-    );
-    setSelectedImage(fresh[0] || product.image);
+    setSelectedMediaIndex(0);
     setSelectedColor(product.colors?.[0]?.name);
     setSelectedSize(product.sizes?.[0]);
     setQuantity(1);
@@ -188,19 +203,28 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const formattedPrice = formatRupee(product.price * quantity);
-  const formattedOriginalPrice = product.originalPrice
-    ? formatRupee(product.originalPrice * quantity)
+  const currentItemSubtotal = calculateItemSubtotal(product, quantity);
+  const formattedPrice = formatRupee(currentItemSubtotal);
+  const bundleSavings = calculateBundleSavings(product, quantity);
+  const perPiecePrice = calculatePerPiecePrice(product, quantity);
+  const formattedPerPiecePrice = formatRupeeExact(perPiecePrice);
+
+  const baseOriginalPrice = product.originalPrice
+    ? product.originalPrice * quantity
     : null;
-  const savingsAmount = product.originalPrice
-    ? formatRupee((product.originalPrice - product.price) * quantity)
+  const formattedOriginalPrice = baseOriginalPrice
+    ? formatRupee(baseOriginalPrice)
     : null;
-  const discountPercent = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const totalSavings = baseOriginalPrice
+    ? baseOriginalPrice - currentItemSubtotal
+    : bundleSavings;
+  const savingsAmount = totalSavings > 0 ? formatRupee(totalSavings) : null;
+  const discountPercent = baseOriginalPrice
+    ? Math.round(((baseOriginalPrice - currentItemSubtotal) / baseOriginalPrice) * 100)
     : 0;
 
   const handleAddToCartClick = () => {
-    onAddToCart(product, selectedColor, selectedSize);
+    onAddToCart(product, selectedColor, selectedSize, quantity);
     setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 2500);
   };
@@ -293,17 +317,29 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-3 sm:p-6 lg:p-8 mb-8 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
             
-            {/* LEFT COLUMN: Mobile-Optimized Image Gallery & Carousel */}
+            {/* LEFT COLUMN: Mobile-Optimized Image & Video Gallery & Carousel */}
             <div className="lg:col-span-6 flex flex-col space-y-3">
-              {/* Main Image View box with touch controls */}
-              <div className="relative aspect-square sm:aspect-4/3 lg:aspect-square rounded-2xl bg-neutral-100 overflow-hidden border border-neutral-200 group">
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover object-center transition-transform duration-300 cursor-pointer select-none"
-                  onClick={() => setIsZoomOpen(true)}
-                />
+              {/* Main Media View box with touch controls */}
+              <div className="relative aspect-square sm:aspect-4/3 lg:aspect-square rounded-2xl bg-neutral-950 overflow-hidden border border-neutral-200 group flex items-center justify-center">
+                {currentMedia.type === "image" ? (
+                  <img
+                    src={currentMedia.url}
+                    alt={product.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover object-center transition-transform duration-300 cursor-pointer select-none"
+                    onClick={() => setIsZoomOpen(true)}
+                  />
+                ) : (
+                  <video
+                    key={currentMedia.url}
+                    src={currentMedia.url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    autoPlay={false}
+                    className="w-full h-full object-contain bg-black select-none"
+                  />
+                )}
 
                 {/* Badges overlay */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
@@ -322,67 +358,97 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       SAVE {discountPercent}%
                     </span>
                   )}
+                  {currentMedia.type === "video" && (
+                    <span className="px-2.5 py-1 rounded-md bg-amber-600 text-white text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider shadow-md flex items-center space-x-1">
+                      <Video className="w-3 h-3" />
+                      <span>VIDEO DEMO</span>
+                    </span>
+                  )}
                 </div>
 
-                {/* Image Counter Badge e.g. "1 / 9" */}
-                {allImages.length > 1 && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-white text-xs font-mono font-bold tracking-widest shadow-md z-10">
-                    {currentImgIndex + 1} / {allImages.length}
+                {/* Media Counter Badge e.g. "1 / 11" */}
+                {mediaList.length > 1 && (
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-mono font-bold tracking-widest shadow-md z-10">
+                    {selectedMediaIndex + 1} / {mediaList.length}
                   </div>
                 )}
 
                 {/* Left/Right Carousel Nav Controls */}
-                {allImages.length > 1 && (
+                {mediaList.length > 1 && (
                   <>
                     <button
-                      onClick={handlePrevImage}
+                      onClick={handlePrevMedia}
                       className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
-                      aria-label="Previous Image"
+                      aria-label="Previous Media"
                     >
                       <ChevronLeft className="w-5 h-5 text-neutral-800" />
                     </button>
                     <button
-                      onClick={handleNextImage}
+                      onClick={handleNextMedia}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
-                      aria-label="Next Image"
+                      aria-label="Next Media"
                     >
                       <ChevronRight className="w-5 h-5 text-neutral-800" />
                     </button>
                   </>
                 )}
 
-                {/* Zoom indicator button */}
-                <button
-                  onClick={() => setIsZoomOpen(true)}
-                  className="absolute bottom-3 right-3 p-2 rounded-xl bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer flex items-center space-x-1 text-xs font-semibold z-10"
-                  title="Click to Zoom Image"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="text-[11px] font-bold">Zoom</span>
-                </button>
+                {/* Zoom indicator button (for images) */}
+                {currentMedia.type === "image" && (
+                  <button
+                    onClick={() => setIsZoomOpen(true)}
+                    className="absolute bottom-3 right-3 p-2 rounded-xl bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer flex items-center space-x-1 text-xs font-semibold z-10"
+                    title="Click to Zoom Image"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="text-[11px] font-bold">Zoom</span>
+                  </button>
+                )}
               </div>
 
               {/* Gallery Thumbnails Horizontal Scroll Row */}
-              {allImages.length > 1 && (
+              {mediaList.length > 1 && (
                 <div className="flex items-center space-x-2.5 overflow-x-auto pb-1 pt-1 scrollbar-none snap-x">
-                  {allImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedImage(img)}
-                      className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer snap-start ${
-                        selectedImage === img
-                          ? "border-amber-500 shadow-sm ring-2 ring-amber-400/30 scale-100"
-                          : "border-neutral-200 hover:border-neutral-300 opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`${product.name} thumbnail ${idx + 1}`}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover object-center"
-                      />
-                    </button>
-                  ))}
+                  {mediaList.map((item, idx) => {
+                    const isSelected = selectedMediaIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedMediaIndex(idx)}
+                        className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer snap-start ${
+                          isSelected
+                            ? "border-amber-500 shadow-sm ring-2 ring-amber-400/30 scale-100"
+                            : "border-neutral-200 hover:border-neutral-300 opacity-75 hover:opacity-100"
+                        }`}
+                      >
+                        {item.type === "image" ? (
+                          <img
+                            src={item.url}
+                            alt={`${product.name} thumbnail ${idx + 1}`}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover object-center"
+                          />
+                        ) : (
+                          <div className="relative w-full h-full bg-neutral-900 flex flex-col items-center justify-center overflow-hidden">
+                            <img
+                              src={product.image}
+                              alt={item.title || "Video thumbnail"}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover opacity-40"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-1">
+                              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-amber-500 text-neutral-950 flex items-center justify-center shadow-md">
+                                <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-neutral-950 ml-0.5 text-neutral-950" />
+                              </div>
+                              <span className="text-[8px] sm:text-[9px] font-black text-amber-300 uppercase tracking-tight mt-0.5 bg-black/70 px-1 rounded">
+                                VIDEO
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -446,6 +512,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 mb-4">
                   <div className="flex flex-wrap items-baseline gap-2 mb-1">
                     <span className="text-2xl sm:text-3xl font-black text-neutral-900">{formattedPrice}</span>
+                    {quantity > 1 && (
+                      <span className="text-xs sm:text-sm font-bold text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded-md">
+                        ({formattedPerPiecePrice} / pc)
+                      </span>
+                    )}
                     {formattedOriginalPrice && (
                       <span className="text-xs sm:text-sm font-semibold text-neutral-400 line-through">
                         {formattedOriginalPrice}
@@ -453,7 +524,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     )}
                     {savingsAmount && (
                       <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md">
-                        Save {savingsAmount} ({discountPercent}% OFF)
+                        Save {savingsAmount} {bundleSavings > 0 ? `(Includes ₹${bundleSavings} Bulk Off)` : `(${discountPercent}% OFF)`}
                       </span>
                     )}
                   </div>
@@ -490,7 +561,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
 
                 {/* TRUST STRIP - Compact Mobile Trust Indicators */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-[11px] font-bold text-neutral-700">
+                <div className="grid grid-cols-3 gap-2 mb-4 text-[11px] font-bold text-neutral-700">
                   <div className="p-2 bg-emerald-50/60 border border-emerald-200/70 rounded-lg flex items-center space-x-1.5">
                     <Lock className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                     <span className="leading-tight">Secure Payment</span>
@@ -502,10 +573,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   <div className="p-2 bg-emerald-50/60 border border-emerald-200/70 rounded-lg flex items-center space-x-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                     <span className="leading-tight">COD Available</span>
-                  </div>
-                  <div className="p-2 bg-emerald-50/60 border border-emerald-200/70 rounded-lg flex items-center space-x-1.5">
-                    <RotateCcw className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span className="leading-tight">Easy Replacement</span>
                   </div>
                 </div>
 
@@ -527,40 +594,60 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         value={pincodeInput}
                         onChange={(e) => {
                           setPincodeInput(e.target.value.replace(/\D/g, ""));
-                          if (pincodeResult.status !== "idle") setPincodeResult({ status: "idle" });
+                          if (pincodeResult) setPincodeResult(null);
                         }}
                         className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-lg text-xs font-semibold text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                       />
                     </div>
                     <button
                       type="submit"
-                      disabled={pincodeResult.status === "loading"}
-                      className="px-4 py-2 bg-neutral-900 hover:bg-black text-white rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                      disabled={isCheckingPincode}
+                      className="px-4 py-2 bg-neutral-900 hover:bg-black text-white rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer shrink-0 disabled:opacity-70 flex items-center justify-center space-x-1.5"
                     >
-                      {pincodeResult.status === "loading" ? "Checking..." : "Check"}
+                      {isCheckingPincode ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                          <span>Checking delivery...</span>
+                        </>
+                      ) : (
+                        <span>Check</span>
+                      )}
                     </button>
                   </form>
 
                   {/* PIN Code Verification Output */}
-                  {pincodeResult.status === "success" && (
-                    <div className="mt-2.5 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1 animate-fadeIn">
-                      <div className="font-extrabold flex items-center space-x-1.5">
+                  {pincodeResult && pincodeResult.serviceable && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5 animate-fadeIn">
+                      <div className="font-black text-emerald-900 flex items-center space-x-1.5">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>{pincodeResult.message}</span>
+                        <span>✓ Delivery Available</span>
                       </div>
-                      <div className="text-[11px] text-emerald-800 font-medium pl-5">
-                        ✓ Estimated Delivery by <strong>{pincodeResult.deliveryDate}</strong> via Blue Dart / Delhivery Express
+                      <p className="text-[12px] font-semibold text-emerald-800 pl-5.5">
+                        {pincodeResult.message}
+                      </p>
+                      {pincodeResult.location && (
+                        <div className="text-[11px] text-emerald-900 font-medium pl-5.5 flex items-center space-x-1">
+                          <span>📍 Delivering to: <strong>{pincodeResult.location}</strong></span>
+                        </div>
+                      )}
+                      <div className="text-[11px] text-emerald-800 font-medium pl-5.5">
+                        ✓ Fast &amp; Reliable Delivery Across India
                       </div>
-                      <div className="text-[11px] text-emerald-800 font-medium pl-5">
+                      <div className="text-[11px] text-emerald-800 font-medium pl-5.5">
                         ✓ Cash on Delivery (COD) Available
                       </div>
                     </div>
                   )}
 
-                  {pincodeResult.status === "error" && (
-                    <div className="mt-2 p-2 rounded-lg bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 flex items-center space-x-1.5">
-                      <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{pincodeResult.message}</span>
+                  {pincodeResult && !pincodeResult.serviceable && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-950 space-y-1 animate-fadeIn">
+                      <div className="font-black text-rose-800 flex items-center space-x-1.5">
+                        <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>{pincodeResult.status === "invalid_format" ? "✕ Invalid PIN Code" : "✕ Delivery Not Available"}</span>
+                      </div>
+                      <p className="text-[12px] font-semibold text-rose-700 pl-5.5">
+                        {pincodeResult.message}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -626,6 +713,105 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                           {s}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* QUANTITY-BASED BUNDLE OFFERS (BUY 1, BUY 2, BUY 3) */}
+                {product.pricingTiers && product.pricingTiers.length > 0 && (
+                  <div className="mb-6 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-900 flex items-center space-x-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Special Quantity Offers</span>
+                      </label>
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-md">
+                        Buy More, Save More
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {product.pricingTiers.map((tier) => {
+                        const isSelected = quantity === tier.quantity;
+                        const perPieceFormatted = formatRupeeExact(tier.perPiecePrice);
+                        return (
+                          <div
+                            key={tier.quantity}
+                            onClick={() => setQuantity(tier.quantity)}
+                            className={`relative p-3.5 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between select-none ${
+                              isSelected
+                                ? "border-amber-600 bg-gradient-to-b from-amber-50/95 to-amber-100/50 shadow-md ring-2 ring-amber-500/20"
+                                : tier.isBestValue
+                                ? "border-emerald-200 bg-emerald-50/30 hover:border-emerald-400 hover:bg-emerald-50/60"
+                                : tier.isPopular
+                                ? "border-amber-200 bg-amber-50/30 hover:border-amber-400 hover:bg-amber-50/60"
+                                : "border-neutral-200/90 bg-white hover:border-amber-300 hover:bg-neutral-50/80"
+                            }`}
+                          >
+                            {/* Prominent Badge for strongest offers */}
+                            {tier.label && (
+                              <div className="absolute -top-2.5 right-2.5">
+                                <span
+                                  className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1 ${
+                                    tier.isBestValue
+                                      ? "bg-emerald-600 text-white ring-1 ring-white"
+                                      : "bg-amber-600 text-white ring-1 ring-white"
+                                  }`}
+                                >
+                                  <Sparkles className="w-2.5 h-2.5 fill-white" />
+                                  <span>{tier.label}</span>
+                                </span>
+                              </div>
+                            )}
+
+                            <div>
+                              {/* Header & Radio */}
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                                  BUY {tier.quantity}
+                                </span>
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    isSelected
+                                      ? "border-amber-600 bg-amber-600 text-white"
+                                      : "border-neutral-300 bg-white"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </div>
+                              </div>
+
+                              {/* Total Bundle Price */}
+                              <div className="text-lg font-black text-neutral-900 tracking-tight leading-tight">
+                                {formatRupee(tier.totalPrice)}
+                              </div>
+
+                              {/* Per-piece breakdown */}
+                              <div className="text-[11px] font-semibold text-neutral-600 mt-0.5">
+                                {perPieceFormatted} per item
+                              </div>
+                            </div>
+
+                            {/* Savings callout */}
+                            <div className="mt-2.5 pt-2 border-t border-neutral-100 flex items-center justify-between">
+                              {tier.savings && tier.savings > 0 ? (
+                                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                  SAVE ₹{tier.savings}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-neutral-400 font-semibold">
+                                  Standard Price
+                                </span>
+                              )}
+                              {isSelected && (
+                                <span className="text-[10px] font-bold text-amber-700">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -748,7 +934,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* Delivery Perks Grid */}
-              <div className="pt-4 border-t border-neutral-200 grid grid-cols-3 gap-2 text-center text-[11px] text-neutral-700">
+              <div className="pt-4 border-t border-neutral-200 grid grid-cols-2 gap-3 text-center text-[11px] text-neutral-700">
                 <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200/60 flex flex-col items-center justify-center space-y-1">
                   <Truck className="w-4 h-4 text-amber-600" />
                   <span className="font-bold leading-tight">Free India Express Delivery</span>
@@ -756,10 +942,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200/60 flex flex-col items-center justify-center space-y-1">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   <span className="font-bold leading-tight">Cash on Delivery Available</span>
-                </div>
-                <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200/60 flex flex-col items-center justify-center space-y-1">
-                  <RotateCcw className="w-4 h-4 text-blue-600" />
-                  <span className="font-bold leading-tight">7-Day Easy Replacement</span>
                 </div>
               </div>
             </div>
@@ -967,56 +1149,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         </div>
 
         {/* ========================================================
-            PRODUCT DEMO VIDEOS SECTION
-        ======================================================== */}
-        {product.videos && product.videos.length > 0 && (
-          <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-6 sm:p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <span className="text-xs font-extrabold text-amber-800 uppercase tracking-widest bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-md">
-                  Demonstration
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-neutral-900 mt-2">
-                  See It In Action
-                </h2>
-              </div>
-              <span className="text-xs text-neutral-500 font-medium hidden sm:inline">
-                Real Demonstration & Folding
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {product.videos.map((vid, idx) => (
-                <div
-                  key={idx}
-                  className="p-5 rounded-2xl bg-neutral-900 text-white border border-neutral-800 flex flex-col justify-between space-y-4 shadow-lg"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
-                      <Video className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-white leading-snug">{vid.title}</h3>
-                      <p className="text-xs text-neutral-400 mt-1">
-                        Watch how quickly it deploys and folds
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setActiveVideoUrl(vid.url)}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 text-xs font-extrabold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md"
-                  >
-                    <Play className="w-4 h-4 fill-neutral-950 text-neutral-950" />
-                    <span>Watch Demonstration</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================
             CUSTOMER REVIEWS & SOCIAL PROOF SECTION
         ======================================================== */}
         <div id="product-reviews-section" className="scroll-mt-24 mb-10 bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-6 sm:p-8">
@@ -1056,7 +1188,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               { id: "features", label: "Key Features" },
               { id: "specs", label: "Specifications" },
               { id: "shipping", label: "Delivery Information" },
-              { id: "returns", label: "Return & Refund Policy" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1154,7 +1285,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     <span>What's Included in the Box</span>
                   </h4>
                   <p className="text-xs text-neutral-700 font-medium">
-                    1 x {product.name}, User Guide & Warranty Document, Protective Cushion Packaging.
+                    1 x {product.name}, User Manual & Setup Guide, Protective Cushion Packaging.
                   </p>
                 </div>
               </div>
@@ -1164,51 +1295,29 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             {activeTab === "shipping" && (
               <div className="max-w-4xl space-y-4 text-xs text-neutral-700 leading-relaxed">
                 <h3 className="text-base font-extrabold text-neutral-900">
-                  Express Delivery Across India
+                  Fast &amp; Reliable Delivery Across India
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-1">
                     <span className="font-extrabold text-neutral-900 block text-sm">
-                      Metro Cities (2–3 Business Days)
+                      Delivery Across Eligible Locations
                     </span>
                     <p className="text-neutral-600">
-                      Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata, Pune & Ahmedabad.
+                      We deliver to serviceable PIN codes across all states and Union Territories in India. Your order will be delivered to the address provided during checkout.
                     </p>
                   </div>
                   <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-1">
                     <span className="font-extrabold text-neutral-900 block text-sm">
-                      Rest of India (3–5 Business Days)
+                      Secure &amp; Insured Packaging
                     </span>
                     <p className="text-neutral-600">
-                      All tier-2, tier-3 cities & town PIN codes served via Blue Dart / Delhivery express air.
+                      Every item is thoroughly inspected, sealed in tamper-evident protective packaging, and handled with care until doorstep delivery.
                     </p>
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-medium">
-                  <strong>Cash on Delivery (COD) & UPI Available:</strong> Free shipping on all orders above ₹499. Real-time SMS and WhatsApp tracking dispatched as soon as order leaves the warehouse.
-                </div>
-              </div>
-            )}
-
-            {/* 5. Returns & Refund Policy */}
-            {activeTab === "returns" && (
-              <div className="max-w-4xl space-y-4 text-xs text-neutral-700 leading-relaxed">
-                <h3 className="text-base font-extrabold text-neutral-900">
-                  7-Day Replacement Guarantee
-                </h3>
-                <p>
-                  At Zenvia, we stand firmly behind the quality of every product. If your item arrives damaged, defective, or missing accessories, we offer a hassle-free 7-day replacement or doorstep pickup across India.
-                </p>
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-2">
-                  <span className="font-extrabold text-neutral-900 block">
-                    How to initiate a return:
-                  </span>
-                  <ol className="list-decimal list-inside space-y-1 text-neutral-600">
-                    <li>Contact us via support email or Client Concierge in your Account menu.</li>
-                    <li>Share order ID and brief photo/video of the issue.</li>
-                    <li>Our courier partner will arrange a doorstep pick-up within 24-48 hours.</li>
-                  </ol>
+                  <strong>Cash on Delivery (COD) &amp; UPI Available:</strong> Free delivery on all orders above ₹499. Delivery details and tracking updates will be provided as soon as they become available.
                 </div>
               </div>
             )}
@@ -1270,7 +1379,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
           <div className="flex items-center space-x-2 shrink-0">
             <img
-              src={selectedImage}
+              src={product.image}
               alt={product.name}
               referrerPolicy="no-referrer"
               className="w-10 h-10 rounded-lg object-cover border border-neutral-200"
@@ -1304,63 +1413,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       </div>
 
       {/* ========================================================
-          VIDEO DEMONSTRATION IN-PAGE MODAL
-      ======================================================== */}
-      <AnimatePresence>
-        {activeVideoUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative max-w-3xl w-full bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl p-4 sm:p-6"
-            >
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800">
-                <div className="flex items-center space-x-2">
-                  <Video className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">Product Video Demonstration</span>
-                </div>
-                <button
-                  onClick={() => setActiveVideoUrl(null)}
-                  className="p-1.5 rounded-full bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="relative aspect-video rounded-xl bg-black overflow-hidden border border-neutral-800 flex items-center justify-center">
-                <iframe
-                  src={activeVideoUrl}
-                  title="Product Demonstration"
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-
-              <div className="mt-3 flex items-center justify-between text-xs text-neutral-400">
-                <span>Plays directly inside Zenvia • Optimized for Mobile</span>
-                <a
-                  href={activeVideoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-400 hover:text-amber-300 font-bold flex items-center space-x-1"
-                >
-                  <span>Open in YouTube</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ========================================================
           LIGHTBOX IMAGE ZOOM MODAL
       ======================================================== */}
       <AnimatePresence>
@@ -1388,7 +1440,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </button>
 
               <img
-                src={selectedImage}
+                src={currentImage}
                 alt={product.name}
                 referrerPolicy="no-referrer"
                 className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl"

@@ -28,6 +28,16 @@ export interface HowToUseStep {
   image?: string;
 }
 
+export interface QuantityPricingTier {
+  quantity: number;
+  totalPrice: number;
+  perPiecePrice: number;
+  savings?: number;
+  label?: string; // "POPULAR" | "BEST VALUE"
+  isPopular?: boolean;
+  isBestValue?: boolean;
+}
+
 export interface Product {
   id: string;
   slug?: string;
@@ -35,6 +45,7 @@ export interface Product {
   tagline: string;
   price: number;
   originalPrice?: number;
+  pricingTiers?: QuantityPricingTier[];
   rating: number;
   reviewCount: number;
   category: CategoryType;
@@ -152,33 +163,6 @@ export interface CheckoutData {
   lastName?: string;
   address?: string;
   postalCode?: string;
-}
-
-export interface SavedAddress {
-  id: string;
-  label: "Home" | "Work" | "Other" | string;
-  fullName: string;
-  phone: string;
-  email?: string;
-  houseNo: string;
-  street: string;
-  landmark?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  isDefault: boolean;
-  createdAt?: string;
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  fullName: string;
-  phone: string;
-  avatarUrl?: string;
-  authProvider: "google" | "email";
-  createdAt: string;
-  savedAddresses: SavedAddress[];
 }
 
 export type OrderStatus =
