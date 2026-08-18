@@ -76,6 +76,77 @@ export const PRODUCTS: Product[] = [
       "Ultra Lightweight - Fits easily into pockets and backpacks",
       "High Speed Silent Printing in Crisp Monochrome",
     ],
+    whyYouNeedThis: {
+      headline: "Never Run Out of Sticky Notes or Ink Again.",
+      description: "Whether studying for exams, organizing your kitchen jars, or creating cute journal spreads, the Mini Thermal Printer lets you print text, checklists, and photos instantly from your phone.",
+      callout: "Connect via Bluetooth. Choose a template. Print ink-free in 3 seconds.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "WITHOUT THERMAL PRINTER",
+      beforeText: "Messy handwritten study notes, buying expensive printer ink cartridges, and bulky desktop printers tied to a desk.",
+      beforeNote: "Expensive refills and time-consuming handwriting",
+      afterTitle: "WITH MINI THERMAL PRINTER",
+      afterText: "Crisp instant pocket printing anytime, zero ink cartridges needed, and 500+ customizable study and label templates in the app.",
+      afterNote: "100% Inkless, instant Bluetooth printing",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Zero Ink Technology",
+        title: "100% Inkless Thermal Printing",
+        description: "Utilizes advanced thermal heating to create crisp monochrome prints on thermal paper—no messy ink cartridges, toners, or ribbons ever needed.",
+        image: catPrinterMain,
+      },
+      {
+        badge: "02. Pocket-Sized Portability",
+        title: "Fits Right In Your Pocket",
+        description: "Weighing only 160g, it slips effortlessly into your backpack, purse, or desk drawer for on-the-go printing at school, office, or travel.",
+        image: catPrinterDesk,
+      },
+      {
+        badge: "03. Instant App Templates",
+        title: "500+ Free Study & Journal Templates",
+        description: "Companion app for iOS and Android includes hundreds of pre-made checklists, flashcard templates, labels, banner graphics, and OCR text recognition.",
+        image: catPrinterGreen,
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Power On & Load Paper",
+        description: "Hold the power button for 3 seconds to turn on, and ensure thermal paper is loaded with the thermal side facing up.",
+        image: catPrinterMain,
+      },
+      {
+        stepNumber: 2,
+        title: "Connect Bluetooth in App",
+        description: "Open the companion iOS/Android app and tap the printer icon to pair in seconds without passwords.",
+        image: catPrinterDesk,
+      },
+      {
+        stepNumber: 3,
+        title: "Select & Print",
+        description: "Pick any note, label, or picture in the app and tap print for instant high-contrast output.",
+        image: catPrinterBlue,
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need to buy ink or toner?",
+        answer: "No! Thermal printers use heat-reactive paper, so you never need to buy or replace ink cartridges.",
+      },
+      {
+        question: "What kind of paper does it use?",
+        answer: "It uses standard 57mm x 30mm thermal paper rolls, available in white, colored, and adhesive sticker formats.",
+      },
+      {
+        question: "Is it compatible with my iPhone or Android phone?",
+        answer: "Yes, it works smoothly with both iOS (iPhones/iPads) and Android smartphones via Bluetooth.",
+      },
+      {
+        question: "How long does the battery last?",
+        answer: "The built-in 1000mAh battery can print up to 8 full rolls of paper on a single charge.",
+      },
+    ],
     tags: ["Trending", "Printer", "Desk", "Gifting"],
     stockCount: 18,
     isBestseller: true,
@@ -119,6 +190,8 @@ export const PRODUCTS: Product[] = [
     galleryImages: [
       "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Blades", value: "12 Stainless Steel Interchangeable Blades" },
@@ -133,6 +206,73 @@ export const PRODUCTS: Product[] = [
       "12-in-1 Versatile Slicing, Dicing & Grating",
       "Food-Grade BPA-Free Sturdy ABS Plastic",
       "Compact Storage Lid Included",
+    ],
+    whyYouNeedThis: {
+      headline: "Cut Kitchen Prep Time By 70% With Zero Tears.",
+      description: "Chopping onions, dicing potatoes, and slicing vegetables for daily meals takes up the most time in cooking. The 12-in-1 Vegetable Chopper Pro makes prep work effortless and consistent.",
+      callout: "Load blade. Place vegetable. Press down for uniform cuts in 1 second.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "TRADITIONAL KNIFE PREP",
+      beforeText: "Teary eyes from chopping onions, uneven veggie chunks, dangerous knife slips, and messy countertops.",
+      beforeNote: "Slow, tedious, and prone to knife cuts",
+      afterTitle: "WITH VEGETABLE CHOPPER PRO",
+      afterText: "Even dices in 1 second, zero onion tears with the enclosed catch tray, and built-in finger guard protection.",
+      afterNote: "12 interchangeable stainless steel blades",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. 12-in-1 Blades",
+        title: "Heavy-Duty 420 Stainless Steel",
+        description: "Includes small/large dicing grids, julienne slicers, ripple cutters, cheese graters, and egg separators to handle any meal recipe.",
+        image: "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Tear-Free Onions",
+        title: "Enclosed 1.2L Catch Tray",
+        description: "The transparent BPA-free collection container holds sliced ingredients and prevents pungent onion vapors from reaching your eyes.",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Non-Slip Safety Grip",
+        title: "Ergonomic Push Lever & Hand Guard",
+        description: "Rubberized base keeps the chopper stable on kitchen counters while the safety hand guard protects fingertips from sharp blades.",
+        image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Insert Blade",
+        description: "Snap your desired slicing or dicing blade firmly into the top pressing lid frame.",
+        image: "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Place Vegetable",
+        description: "Place sliced onion or vegetable flat on the blade grid with the cut side facing down.",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Press & Collect",
+        description: "Press down the lid firmly in one motion. Diced vegetables drop directly into the 1.2L container.",
+        image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are the blades dishwasher safe?",
+        answer: "Yes, the blades and collection container are top-rack dishwasher safe. A cleaning claw is also included.",
+      },
+      {
+        question: "Can it dice hard vegetables like carrots and potatoes?",
+        answer: "Yes, the hardened 420-grade stainless steel blades easily cut through carrots, potatoes, and beets.",
+      },
+      {
+        question: "Is the plastic container food safe?",
+        answer: "Yes, it is manufactured with 100% BPA-free, food-grade reinforced ABS plastic.",
+      },
     ],
     tags: ["Kitchen", "Chopper", "Bestseller", "Utility"],
     stockCount: 25,
@@ -153,6 +293,8 @@ export const PRODUCTS: Product[] = [
     galleryImages: [
       "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1577803645773-f96470509666?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Lens Type", value: "Blue Light Blocking Anti-Glare Lens" },
@@ -167,6 +309,73 @@ export const PRODUCTS: Product[] = [
       "Featherlight weight for all-day comfortable wear",
       "Includes pastel protective case & microfiber cloth",
       "Durable spring hinges fit all face shapes",
+    ],
+    whyYouNeedThis: {
+      headline: "Protect Your Eyes In Style From Screen Fatigue.",
+      description: "Hours in front of laptops, phones, and tablets cause dry eyes, headaches, and sleep disruption. Pink Bow Glasses block harmful blue rays while elevating your everyday look.",
+      callout: "98% blue light filtering lenses paired with ultra-cute coquette frames.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "UNPROTECTED SCREEN TIME",
+      beforeText: "Eye strain, digital headaches, blurry vision after long study/work sessions, and disrupted sleep cycles.",
+      beforeNote: "Unfiltered HEV blue light fatigue",
+      afterTitle: "WITH PINK BOW GLASSES",
+      afterText: "Relaxed eyes, crystal clear screen clarity, zero color distortion, and stylish aesthetic frames for daily wear.",
+      afterNote: "98% Blue light blocked + 100% UV400",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Blue Light Shield",
+        title: "Filters 98% Harmful Blue Light",
+        description: "Precision-coated optical lenses filter high-energy visible blue light from monitors and phone screens without yellow tint distortion.",
+        image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Ultra-Lightweight TR90",
+        title: "18g Featherlight Comfortable Frame",
+        description: "Engineered with flexible TR90 memory polymer that sits gently on the bridge of your nose without pinching or slipping.",
+        image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Aesthetic Bow Detail",
+        title: "Coquette Accent & Protective Case",
+        description: "Embossed bow accents on both temples with an included protective case and microfiber cloth for daily safeguarding.",
+        image: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Put On During Screen Work",
+        description: "Wear while working on laptops, reading tablets, scrolling phones, or gaming.",
+        image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Clean With Microfiber",
+        description: "Wipe lenses with the included lint-free microfiber cloth to remove dust and smudges.",
+        image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Store In Case",
+        description: "Keep glasses inside the pastel hard case when packing in bags or traveling.",
+        image: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are these prescription glasses?",
+        answer: "These are non-prescription (zero power) blue light blocking glasses designed for everyone who uses screens.",
+      },
+      {
+        question: "Do the lenses have a strong yellow tint?",
+        answer: "No, our multi-layer optical coating maintains true color transparency with subtle anti-reflective properties.",
+      },
+      {
+        question: "Will they fit narrow or wide face shapes?",
+        answer: "Yes, flexible TR90 temple arms with integrated spring hinges adjust comfortably to various face contours.",
+      },
     ],
     tags: ["Coquette", "Fashion", "BlueLight", "New"],
     stockCount: 12,
@@ -187,6 +396,8 @@ export const PRODUCTS: Product[] = [
     galleryImages: [
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Material", value: "BPA-Free Soft Washable Silicone" },
@@ -201,6 +412,73 @@ export const PRODUCTS: Product[] = [
       "Eye-Safe Soft Warm Glow without flicker",
       "Built-in 30min auto timer for peaceful sleep",
       "Type-C Fast Charging cable included",
+    ],
+    whyYouNeedThis: {
+      headline: "A Soothing Warm Glow For Peaceful Nights.",
+      description: "Harsh ceiling lights make winding down difficult. The Light Panda Night Lamp emits a gentle, eye-safe warm glow and 7 color modes with a squishy soft-touch silicone body.",
+      callout: "Squishy BPA-free silicone. Tap to change color. Built-in sleep timer.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "HARSH ROOM LIGHTING",
+      beforeText: "Bright glaring overhead lights, fear of the dark for little ones, and tripping during midnight bathroom trips.",
+      beforeNote: "Glaring lights disrupt melatonin",
+      afterTitle: "WITH PANDA NIGHT LAMP",
+      afterText: "Calming ambient warm light, comforting squishy companion, tap-to-change colors, and 30-min auto sleep timer.",
+      afterNote: "Eye-safe flicker-free 1200mAh glow",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Tap Color Switch",
+        title: "Tap To Cycle 7 Ambient RGB Colors",
+        description: "Sensitive vibration sensor lets you easily cycle between warm white and 7 vibrant soothing colors with a gentle tap or squish.",
+        image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Squishy BPA-Free Silicone",
+        title: "Food-Grade Soft & Safe Material",
+        description: "Crafted from washable soft silicone that is cool to the touch, crush-resistant, and 100% safe for toddlers and children.",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. 12-Hour Battery Life",
+        title: "USB-C Rechargeable with 30m Timer",
+        description: "1200mAh battery provides up to 12 hours of light. Switch on the 30-minute timer for effortless bedtime relaxation.",
+        image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Turn On",
+        description: "Slide the base toggle to ON for soft warm white illumination.",
+        image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Tap to Change Color",
+        description: "Tap the panda head to cycle through relaxing colors or lock your favorite shade.",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Recharge via USB",
+        description: "Connect the included Type-C cable when battery runs low; fully recharges in 2.5 hours.",
+        image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Is the silicone cover washable?",
+        answer: "Yes, the soft silicone outer shell can be wiped down easily with a damp cloth.",
+      },
+      {
+        question: "Does the lamp get warm after long use?",
+        answer: "No, energy-efficient cool LEDs ensure the lamp remains completely cool to the touch even after 10 hours.",
+      },
+      {
+        question: "Can it stay on all night?",
+        answer: "Yes, in standard mode it stays illuminated for up to 12 hours on a full charge.",
+      },
     ],
     tags: ["Lamp", "Cute", "Panda", "Bestseller"],
     stockCount: 30,
@@ -217,9 +495,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 295,
     category: "Personal Care",
     image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
@@ -236,6 +516,73 @@ export const PRODUCTS: Product[] = [
       "Breathable 3D mesh fabric & durable PU leather cover",
       "Includes car adapter & home power charger",
     ],
+    whyYouNeedThis: {
+      headline: "Deep Kneading Pain Relief Whenever You Need It.",
+      description: "Relieve chronic neck stiffness, shoulder knots, and lower back soreness caused by desk work, driving, or intense workouts with 3D Shiatsu kneading.",
+      callout: "8 bi-directional nodes with soothing 42°C infrared heat therapy.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "CHRONIC TENSION & STIFFNESS",
+      beforeText: "Tight neck knots, sore shoulders from computer posture, and expensive weekly clinic visits.",
+      beforeNote: "Muscle fatigue and painful stiffness",
+      afterTitle: "WITH 3D SHIATSU MASSAGER",
+      afterText: "Deep tissue relief at home, soothing warmth to boost blood circulation, and custom hand-rest tension control.",
+      afterNote: "Targeted 8-node kneading + infrared heat",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. 8 Kneading Nodes",
+        title: "3D Bi-Directional Hand Simulation",
+        description: "Eight rotating nodes simulate the firm, rhythmic touch of a professional masseuse with automatic 1-minute direction reversal.",
+        image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Soothing Heat Therapy",
+        title: "42°C Infrared Thermal Warmth",
+        description: "Gentle thermal heating penetrates deep into stiff muscle tissue to improve localized circulation and accelerate recovery.",
+        image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Ergonomic Arm Straps",
+        title: "Custom Pressure & Multi-Zone Use",
+        description: "Slide your arms into the comfort straps to adjust massage intensity manually across neck, back, waist, or thighs.",
+        image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Position on Neck/Shoulders",
+        description: "Place the contoured massager around your neck and slip your forearms through the padded straps.",
+        image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Power On & Select Mode",
+        description: "Press power button to start kneading; press heat button to activate soothing infrared warmth.",
+        image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Relax for 15 Minutes",
+        description: "Sit back and let the massager relieve muscle knots. It shuts off automatically after 15 minutes.",
+        image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I use this in my car?",
+        answer: "Yes, it includes both a standard home wall adapter and a 12V car lighter adapter.",
+      },
+      {
+        question: "Can I turn off the heat function?",
+        answer: "Yes, the heating function is independently controlled and can be turned on or off with one button.",
+      },
+      {
+        question: "Is there an automatic shut-off timer?",
+        answer: "Yes, a 15-minute intelligent auto shut-off prevents over-massaging and ensures safety.",
+      },
+    ],
     tags: ["Massager", "Wellness", "Relaxation", "Bestseller"],
     stockCount: 15,
     isBestseller: true,
@@ -251,9 +598,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 142,
     category: "Personal Care",
     image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Frequency", value: "45,000Hz High-Frequency Sonic Waves" },
@@ -268,6 +617,73 @@ export const PRODUCTS: Product[] = [
       "304 Stainless Steel Interior Tank",
       "Whisper-Quiet Operation with Non-Slip Rubber Base",
     ],
+    whyYouNeedThis: {
+      headline: "Restore Sparkling Shine in 3 Minutes with Tap Water.",
+      description: "Hidden oils, sweat, and dust build up inside watch bands, eyeglasses nose pads, and jewelry crevices. Ultrasonic waves remove stubborn grime gently and thoroughly.",
+      callout: "45,000Hz sonic waves blast away microscopic dirt with zero harsh chemicals.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "DULL, CLOUDED ACCESSORIES",
+      beforeText: "Cloudy eyeglasses, grimy watch links, tarnished jewelry, and scratching delicate surfaces with rough brushes.",
+      beforeNote: "Abrasive scrubbing risks surface scratches",
+      afterTitle: "WITH ULTRASONIC CLEANER",
+      afterText: "Showroom-level sparkle in 3 minutes, 360-degree cavitation reaches every hidden corner using ordinary water.",
+      afterNote: "45,000Hz cavitation bubbles clean safely",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. 45,000Hz Waves",
+        title: "Microscopic Cavitation Cleaning",
+        description: "Generates millions of microscopic vacuum bubbles that implode against surfaces to dislodge oils and dirt safely.",
+        image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. 100% Safe Water Wash",
+        title: "Zero Harsh Chemicals Needed",
+        description: "Achieves immaculate cleaning without requiring expensive chemicals, caustic solutions, or harsh detergents.",
+        image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. 304 Stainless Tank",
+        title: "Durable 350ml Rustproof Basin",
+        description: "Generous tank accommodates large spectacle frames, watch straps, rings, coins, makeup brushes, and razors.",
+        image: "https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Fill Basin with Water",
+        description: "Pour clean tap water into the stainless steel tank up to the MAX line indicator.",
+        image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Place Items Inside",
+        description: "Submerge eyeglasses, jewelry, or watch straps inside the cleaning basin.",
+        image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Press Start & Wait 3 Mins",
+        description: "Press power button. Sonic cavitation removes grime and the machine auto-stops after 3 minutes.",
+        image: "https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I clean smartwatches or regular watches?",
+        answer: "You can clean waterproof watches or suspend the watch band in water keeping the watch dial dry.",
+      },
+      {
+        question: "Can I add dish soap for extra greasy items?",
+        answer: "Yes, adding 1-2 drops of liquid dish soap helps emulsify stubborn grease and fingerprints.",
+      },
+      {
+        question: "Is it noisy during cleaning?",
+        answer: "It produces a quiet, gentle hum (under 50dB) with rubber anti-vibration feet.",
+      },
+    ],
     tags: ["Cleaner", "Jewelry", "Gadget"],
     stockCount: 14,
   },
@@ -281,9 +697,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 215,
     category: "Lifestyle",
     image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1593642532744-e377ab26508f?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Suction", value: "High-Speed 360° Upward Wind Suction" },
@@ -296,6 +714,73 @@ export const PRODUCTS: Product[] = [
       "High Power 360° Upward Suction Design",
       "One-Touch Power Switch & Easy Dust Cup Emptying",
       "Cordless & Portable - Fits in palm of hand",
+    ],
+    whyYouNeedThis: {
+      headline: "Spotless Desks & Keyboards in Seconds.",
+      description: "Eraser dust, snack crumbs, and pet hair always find their way into keyboard keys and study desks. The Mini Desk Vacuum keeps your workspace pristine with strong 360° suction.",
+      callout: "High-speed micro cyclone suction in a cordless palm-sized design.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "CRUMBY & DUSTY WORKSPACE",
+      beforeText: "Sticky keyboard keys, eraser crumbs scattered across notebooks, and blowing dust onto the floor.",
+      beforeNote: "Dust and debris trapped inside keyboard",
+      afterTitle: "WITH MINI DESK VACUUM",
+      afterText: "Effortless desktop cleaning in one pass, reusable nylon filter traps microscopic particles, and empty in 2 seconds.",
+      afterNote: "360° upward vortex suction",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. 360° Upward Suction",
+        title: "High-Speed Micro Turbine",
+        description: "Centrifugal fan and bottom nylon brushes capture dust, pencil shavings, paper shreds, and breadcrumbs efficiently.",
+        image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Cordless Palm Size",
+        title: "Ergonomic & USB Rechargeable",
+        description: "Fits comfortably in the palm of your hand with a built-in 1200mAh rechargeable battery that lasts weeks on typical daily use.",
+        image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Washable Fine Filter",
+        title: "Twist-To-Empty Dust Container",
+        description: "Detachable dust cup twists open smoothly for disposal; washable fine nylon filter prevents exhaust blowback.",
+        image: "https://images.unsplash.com/photo-1593642532744-e377ab26508f?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Switch On",
+        description: "Press top power switch to start high-velocity 360° suction.",
+        image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Glide Over Surface",
+        description: "Move the vacuum smoothly across keyboards, desks, car cup holders, or cushions.",
+        image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Twist & Empty",
+        description: "Twist the bottom housing to dump collected crumbs directly into a dustbin.",
+        image: "https://images.unsplash.com/photo-1593642532744-e377ab26508f?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I charge it?",
+        answer: "Use the included USB cable to connect to any phone charger, laptop port, or power bank.",
+      },
+      {
+        question: "Can it clean inside keyboard crevices?",
+        answer: "Yes, the bottom nylon bristle brush helps dislodge dust from between keyboard keys.",
+      },
+      {
+        question: "Is the filter reusable?",
+        answer: "Yes, the nylon mesh filter is washable with water and reusable indefinitely.",
+      },
     ],
     tags: ["Desk", "Vacuum", "Utility"],
     stockCount: 22,
@@ -310,9 +795,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 530,
     category: "Lifestyle",
     image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Rotation", value: "180-Degree Adjustable Aluminum Head" },
@@ -325,6 +812,73 @@ export const PRODUCTS: Product[] = [
       "Vibrant Sunset & Rainbow Light Effect",
       "Stable Weighted Aluminum Base",
       "Universal USB Powered - Works with Powerbanks & Laptops",
+    ],
+    whyYouNeedThis: {
+      headline: "Bask In The Golden Hour Glow Anytime, Anywhere.",
+      description: "Turn plain walls into artistic sunset gradients. The 180° rotatable USB Sunset Lamp casts a warm, soothing sunset halo ideal for room decor, photography, and relaxing mood lighting.",
+      callout: "HD crystal optical lens with 180° rotatable aluminum head.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "DULL, MONOTONE ROOMS",
+      beforeText: "Sterile white bulbs, cold ambiance, and uninspired photo backgrounds during evening hours.",
+      beforeNote: "Flat, cold indoor lighting",
+      afterTitle: "WITH SUNSET PROJECTION LAMP",
+      afterText: "Warm, aesthetic golden-hour glow across walls and ceiling, perfect aesthetic photos, and soothing night relaxation.",
+      afterNote: "Vibrant optical halo projection",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. HD Crystal Lens",
+        title: "Rich, Saturated Halo Gradient",
+        description: "Thickened crystal optical lens maximizes light refraction, delivering vivid and deep sunset halo rings without distortion.",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. 180° Swivel Joint",
+        title: "Adjustable Angles & Projection Sizes",
+        description: "Durable aluminum hinge rotates 180 degrees so you can project light onto ceilings, walls, corners, and floors.",
+        image: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Universal USB Power",
+        title: "Universal 5V USB Connection",
+        description: "Equipped with a 1.5m cable with in-line switch; power it from phone adapters, laptops, or portable power banks.",
+        image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Plug into USB Power",
+        description: "Connect the USB cable to any 5V USB power adapter, laptop, or power bank.",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Adjust Angle & Distance",
+        description: "Rotate the lens head to your preferred wall angle. Move closer or farther to scale the halo size.",
+        image: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Enjoy Aesthetic Ambiance",
+        description: "Use the in-line power switch to toggle on and create stunning photos or relaxing room mood.",
+        image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I make the projection circle bigger or smaller?",
+        answer: "The further away the lamp is from the wall, the larger the sunset projection halo becomes.",
+      },
+      {
+        question: "Does the lamp overheat?",
+        answer: "The head is constructed from anodized aluminum which dissipates heat efficiently for safe continuous use.",
+      },
+      {
+        question: "Can I take it outdoors?",
+        answer: "Yes, because it runs on standard 5V USB, you can easily power it with any mobile power bank.",
+      },
     ],
     tags: ["Sunset", "Lamp", "Aesthetic", "Bestseller"],
     stockCount: 40,
@@ -343,6 +897,8 @@ export const PRODUCTS: Product[] = [
     alternateImage: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1523362628745-0c100150b504?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Capacity", value: "500ml / 17 oz" },
@@ -357,6 +913,73 @@ export const PRODUCTS: Product[] = [
       "Includes Removable Tea Infuser Strainer Filter",
       "100% Leakproof Silicone Ring Seal",
     ],
+    whyYouNeedThis: {
+      headline: "Never Guess Your Drink's Temperature Again.",
+      description: "Tired of burning your tongue on scalding hot coffee or finding out your cold brew has warmed up? Touch the smart LED lid to see the exact real-time temperature in Celsius.",
+      callout: "Touch-activated HD LED display + 24h double-wall vacuum insulation.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "TRADITIONAL FLASKS",
+      beforeText: "Burned tongue from scalding tea, leaky lids inside backpacks, and tepid beverages after a few hours.",
+      beforeNote: "Uncertain temperature & frequent burns",
+      afterTitle: "WITH SMART TEMPERATURE BOTTLE",
+      afterText: "Instant temperature reading at a light touch, piping hot for 12h, icy cold for 24h, and built-in tea infuser.",
+      afterNote: "Precision LED lid + 304 stainless steel",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Smart LED Display",
+        title: "Instant Real-Time Temp Readout",
+        description: "High-sensitivity temperature sensor in the waterproof lid displays exact liquid temperature in Celsius with a gentle tap.",
+        image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. 24h Thermal Retention",
+        title: "Double-Wall 304 Stainless Steel",
+        description: "Multi-layered vacuum barrier locks in heat for 12 hours and keeps chilled ice water frosty for up to 24 hours.",
+        image: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Stainless Tea Infuser",
+        title: "Removable Fruit & Tea Filter",
+        description: "Includes fine mesh 304 stainless infuser basket for brewing green tea, loose tea leaves, and lemon-infused detox water on the go.",
+        image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Fill with Beverage",
+        description: "Pour your favorite hot tea, coffee, iced water, or fruit infusion and secure the leakproof lid.",
+        image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Touch Lid for Temp",
+        description: "Gently tap the top of the lid with your finger to illuminate the LED temperature readout.",
+        image: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Sip with Confidence",
+        description: "Enjoy your drink at your preferred temperature anytime throughout the day.",
+        image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Does the LED lid need charging or battery replacement?",
+        answer: "No charging needed! The integrated low-power battery lasts for over 50,000 temperature display taps (approx. 2-3 years).",
+      },
+      {
+        question: "Is the bottle leakproof?",
+        answer: "Yes, it features a 360° food-grade silicone airtight seal that prevents leaks even when shaken upside down in a backpack.",
+      },
+      {
+        question: "How should I wash the bottle?",
+        answer: "Rinse the bottle body with warm soapy water. Wipe the lid gently with a damp sponge (do not submerge lid in boiling water).",
+      },
+    ],
     tags: ["Bottle", "Kitchen", "Smart"],
     stockCount: 20,
   },
@@ -370,9 +993,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 168,
     category: "Personal Care",
     image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Heating", value: "MCH Rapid Ceramic Heating (30 Sec)" },
@@ -385,6 +1010,73 @@ export const PRODUCTS: Product[] = [
       "3D Anti-Scald Comb Teeth protect scalp and hands",
       "Negative Ion Tech eliminates static & frizz",
       "Lightweight Cordless USB-C Charging",
+    ],
+    whyYouNeedThis: {
+      headline: "Salon-Straight Silky Hair In 3 Minutes Anywhere.",
+      description: "No need to search for electrical wall sockets or carry heavy flat irons. The Cordless Hair Straightener Brush gives you effortless frizz-free styling on the go with 3D anti-scald ceramic teeth.",
+      callout: "4000mAh cordless battery with rapid ceramic heating & negative ion care.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "FRIZZY HAIR & BULKY IRONS",
+      beforeText: "Frizzy unmanageable hair during humid commutes, tangled cords, and accidental scalp burns from traditional hot flat irons.",
+      beforeNote: "High heat damage and cord restrictions",
+      afterTitle: "WITH CORDLESS STRAIGHTENER",
+      afterText: "Silky smooth hair anywhere in 3 minutes, cord-free freedom, anti-scald safety teeth, and negative ion frizz control.",
+      afterNote: "Cordless 4000mAh battery + ionic shine",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Cordless Freedom",
+        title: "4000mAh Rechargeable Styler",
+        description: "Get up to 45 minutes of continuous cord-free styling on a single charge—ideal for touch-ups before meetings, dates, or travel.",
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. 3D Anti-Scald Matrix",
+        title: "Ceramic Teeth with Scalp Protection",
+        description: "Heated ceramic teeth are surrounded by heat-insulated outer bristles that glide through hair without burning your scalp or fingers.",
+        image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Negative Ion Tech",
+        title: "Tames Frizz & Locks In Moisture",
+        description: "Emits millions of negative ions to neutralize static electricity, close hair cuticles, and deliver a glossy salon finish.",
+        image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Turn On & Select Temp",
+        description: "Press power button to choose between 160°C, 180°C, or 200°C according to your hair texture.",
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Brush Through Dry Hair",
+        description: "Glide slowly through dry hair sections from root to tip just like a standard hairbrush.",
+        image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Style & Store",
+        description: "Turn off and slide the protective cover over the bristles before slipping into your purse.",
+        image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "How fast does it heat up?",
+        answer: "It reaches operating temperature in only 30 seconds thanks to rapid MCH ceramic heating technology.",
+      },
+      {
+        question: "Can I use it on wet hair?",
+        answer: "For best results and hair health, always use on dry or damp hair.",
+      },
+      {
+        question: "Does it have an auto shut-off function?",
+        answer: "Yes, it automatically shuts off after 20 minutes of inactivity for complete peace of mind.",
+      },
     ],
     tags: ["Beauty", "Hair", "Personal Care"],
     stockCount: 16,
@@ -399,9 +1091,11 @@ export const PRODUCTS: Product[] = [
     reviewCount: 480,
     category: "Personal Care",
     image: "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
-    alternateImage: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=1000&auto=format&fit=crop",
+    alternateImage: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1000&auto=format&fit=crop",
     galleryImages: [
       "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=1000&auto=format&fit=crop",
     ],
     specs: [
       { label: "Material", value: "Food-Grade Thick Soft Silicone" },
@@ -414,6 +1108,73 @@ export const PRODUCTS: Product[] = [
       "Soft & Gentle Bristles won't tangle or pull hair",
       "Improves scalp blood flow for healthy hair growth",
       "Easy non-slip grip handle even with soapy hands",
+    ],
+    whyYouNeedThis: {
+      headline: "Deep Scalp Exfoliation & Spa-Like Shampoo Massage.",
+      description: "Washing with fingernails can scratch your scalp and leave shampoo residue. The Silicone Scalp Massager Brush deeply cleanses hair roots, removes dandruff, and stimulates micro-circulation.",
+      callout: "Soft food-grade silicone bristles with ergonomic non-slip grip.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "FINGERNAIL SCRATCHING",
+      beforeText: "Flaky dandruff buildup, broken fingernails, tangled hair, and shampoo residue left behind at the roots.",
+      beforeNote: "Fingernails irritate sensitive scalp",
+      afterTitle: "WITH SILICONE SCALP MASSAGER",
+      afterText: "Deep root stimulation, rich foamy lather, gentle dandruff exfoliation, and promotes healthy hair growth.",
+      afterNote: "Soft flexible silicone bristles",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Soft Silicone Bristles",
+        title: "Gentle Root Stimulation",
+        description: "Flexible, blunt-tipped food-grade silicone spikes massage the scalp gently without tangling long hair or causing irritation.",
+        image: "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "02. Deep Exfoliation",
+        title: "Exfoliates Scalp Buildup",
+        description: "Lathers shampoo into rich micro-foam to lift away dead skin cells, excess sebum, and hair styling product buildup.",
+        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        badge: "03. Ergonomic Non-Slip Grip",
+        title: "Hygienic One-Piece Solid Mold",
+        description: "Ergonomic contour nests snugly between fingers, providing non-slip control in soapy showers with zero mold-trapping crevices.",
+        image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Apply Shampoo or Oil",
+        description: "Distribute your favorite shampoo or scalp nourishment oil evenly across wet or dry hair.",
+        image: "https://images.unsplash.com/photo-1512290900673-700200411788?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 2,
+        title: "Massage in Small Circles",
+        description: "Gently press and massage in small circular motions all over your scalp for 2 to 3 minutes.",
+        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1000&auto=format&fit=crop",
+      },
+      {
+        stepNumber: 3,
+        title: "Rinse & Air Dry",
+        description: "Rinse your hair thoroughly with water and rinse the massager brush; hang to dry.",
+        image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=1000&auto=format&fit=crop",
+      },
+    ],
+    faqs: [
+      {
+        question: "Will it pull or break my hair?",
+        answer: "No! The soft, flexible cone-shaped silicone tips are specifically designed to glide between hair strands without tangling.",
+      },
+      {
+        question: "Can I use it on dry hair for a relaxing massage?",
+        answer: "Yes, it works great on dry hair during work breaks or when applying hair growth serums.",
+      },
+      {
+        question: "How do I clean the massager?",
+        answer: "Simply rinse with warm water after shower use. Its seamless silicone mold prevents water accumulation.",
+      },
     ],
     tags: ["Scalp", "Massager", "PersonalCare"],
     stockCount: 50,

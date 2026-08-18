@@ -84,15 +84,76 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Initial cart items with the top trending products
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    return [
-      { product: PRODUCTS[0], quantity: 1, selectedColor: "Pastel Pink" }, // Mini Thermal Printer
-      { product: PRODUCTS[1], quantity: 1 }, // Vegetable Chopper
-    ];
-  });
+  // Storage keys for customer cart and wishlist persistence
+  const CART_STORAGE_KEY = "zenvia_cart_items_v2";
+  const WISHLIST_STORAGE_KEY = "zenvia_wishlist_ids_v2";
 
-  const [wishlistIds, setWishlistIds] = useState<string[]>(["p3", "p4"]);
+  // Helper to initialize cart safely (empty by default for new visitors)
+  const loadInitialCart = (): CartItem[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item: any) => {
+            const product = PRODUCTS.find((p) => p.id === (item.product?.id || item.productId));
+            if (!product) return null;
+            return {
+              product,
+              quantity: Math.max(1, Number(item.quantity) || 1),
+              selectedColor: item.selectedColor,
+              selectedSize: item.selectedSize,
+            } as CartItem;
+          })
+          .filter((item): item is CartItem => item !== null);
+      }
+    } catch (err) {
+      console.error("Error loading cart from localStorage:", err);
+    }
+    return [];
+  };
+
+  // Helper to initialize wishlist safely (empty by default for new visitors)
+  const loadInitialWishlist = (): string[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (id: any) => typeof id === "string" && PRODUCTS.some((p) => p.id === id)
+        );
+      }
+    } catch (err) {
+      console.error("Error loading wishlist from localStorage:", err);
+    }
+    return [];
+  };
+
+  // Cart & Wishlist state (starts 100% EMPTY for new visitors)
+  const [cartItems, setCartItems] = useState<CartItem[]>(loadInitialCart);
+  const [wishlistIds, setWishlistIds] = useState<string[]>(loadInitialWishlist);
+
+  // Sync cart changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } catch (err) {
+      console.error("Error saving cart to localStorage:", err);
+    }
+  }, [cartItems]);
+
+  // Sync wishlist changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistIds));
+    } catch (err) {
+      console.error("Error saving wishlist to localStorage:", err);
+    }
+  }, [wishlistIds]);
 
   // Direct Buy Now state (bypasses full cart)
   const [directBuyItem, setDirectBuyItem] = useState<CartItem | null>(null);

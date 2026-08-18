@@ -1014,7 +1014,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 Proven Difference
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-neutral-900 mt-2">
-                Before & After Solar Shield Protection
+                {product.id === "p12" ? "Before & After Solar Shield Protection" : `Before & After with ${product.name}`}
               </h2>
             </div>
 
@@ -1032,7 +1032,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
                 <div className="mt-4 pt-3 border-t border-rose-200/80 flex items-center space-x-2 text-[11px] font-extrabold text-rose-800">
                   <ShieldAlert className="w-4 h-4 text-rose-600" />
-                  <span>Cabin Temperature can reach 60°C+ under direct sun</span>
+                  <span>
+                    {product.beforeAfterStory.beforeNote ||
+                      (product.id === "p12"
+                        ? "Cabin Temperature can reach 60°C+ under direct sun"
+                        : "Inefficient and prone to daily friction")}
+                  </span>
                 </div>
               </div>
 
@@ -1049,7 +1054,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
                 <div className="mt-4 pt-3 border-t border-emerald-200/80 flex items-center space-x-2 text-[11px] font-extrabold text-emerald-800">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Protects dashboard, steering wheel & seats from heat damage</span>
+                  <span>
+                    {product.beforeAfterStory.afterNote ||
+                      (product.id === "p12"
+                        ? "Protects dashboard, steering wheel & seats from heat damage"
+                        : "Streamlined, effortless, and reliably protected")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1097,81 +1107,75 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         )}
 
         {/* ========================================================
-            IMAGE + BENEFIT BREAKDOWN SECTIONS
+            IMAGE + BENEFIT BREAKDOWN SECTIONS (Dynamic per Product)
         ======================================================== */}
-        <div className="space-y-6 mb-8">
-          <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-5 sm:p-8 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="relative aspect-4/3 rounded-2xl overflow-hidden border border-neutral-200">
-                <img
-                  src="https://m.media-amazon.com/images/I/71+Fd3P0SUL._SL1500_.jpg"
-                  alt="Blocks harsh sunlight"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute top-3 left-3 px-3 py-1 bg-amber-500 text-neutral-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-md">
-                  01. Solar Shield
-                </span>
+        {((product.featureSpotlights && product.featureSpotlights.length > 0) || product.id === "p12") && (
+          <div className="space-y-6 mb-8">
+            {(product.featureSpotlights && product.featureSpotlights.length > 0
+              ? product.featureSpotlights
+              : [
+                  {
+                    badge: "01. Solar Shield",
+                    title: "Blocks Harsh Sunlight & UV Rays",
+                    description:
+                      "The multi-layered composite canopy reflects intense solar radiation before it enters your car, keeping dashboard temperature drastically lower and protecting electronics.",
+                    image: "https://m.media-amazon.com/images/I/71+Fd3P0SUL._SL1500_.jpg",
+                  },
+                  {
+                    badge: "02. Rapid Setup",
+                    title: "5-Second Push-Up Installation",
+                    description:
+                      "No suction cups or messy marks. Simply press open like a pocket umbrella, place against the inner windshield, and lower your car's sun visors to hold it firmly in position.",
+                    image: "https://m.media-amazon.com/images/I/61gphzv6IRL._SL1024_.jpg",
+                  },
+                  {
+                    badge: "03. Compact Storage",
+                    title: "Folds Away into Door Pocket",
+                    description:
+                      "When ready to drive, collapse the umbrella with one press, wrap the velcro strap, and slide it into the leatherette storage sleeve. Fits easily inside your driver door pocket.",
+                    image: "https://m.media-amazon.com/images/I/61PEd4JPXzL._SL1024_.jpg",
+                  },
+                ]
+            ).map((spotlight, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-5 sm:p-8 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div
+                    className={`relative aspect-4/3 rounded-2xl overflow-hidden border border-neutral-200 ${
+                      idx % 2 === 1 ? "order-1 md:order-2" : "order-1 md:order-1"
+                    }`}
+                  >
+                    <img
+                      src={spotlight.image}
+                      alt={spotlight.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                    {spotlight.badge && (
+                      <span className="absolute top-3 left-3 px-3 py-1 bg-amber-500 text-neutral-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-md">
+                        {spotlight.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className={`space-y-2 ${
+                      idx % 2 === 1 ? "order-2 md:order-1" : "order-2 md:order-2"
+                    }`}
+                  >
+                    <h3 className="text-lg sm:text-xl font-black text-neutral-900">
+                      {spotlight.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed">
+                      {spotlight.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg sm:text-xl font-black text-neutral-900">
-                  Blocks Harsh Sunlight & UV Rays
-                </h3>
-                <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed">
-                  The multi-layered composite canopy reflects intense solar radiation before it enters your car, keeping dashboard temperature drastically lower and protecting electronics.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
-
-          <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-5 sm:p-8 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="order-2 md:order-1 space-y-2">
-                <h3 className="text-lg sm:text-xl font-black text-neutral-900">
-                  5-Second Push-Up Installation
-                </h3>
-                <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed">
-                  No suction cups or messy marks. Simply press open like a pocket umbrella, place against the inner windshield, and lower your car's sun visors to hold it firmly in position.
-                </p>
-              </div>
-              <div className="order-1 md:order-2 relative aspect-4/3 rounded-2xl overflow-hidden border border-neutral-200">
-                <img
-                  src="https://m.media-amazon.com/images/I/61gphzv6IRL._SL1024_.jpg"
-                  alt="Easy to install"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute top-3 left-3 px-3 py-1 bg-amber-500 text-neutral-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-md">
-                  02. Rapid Setup
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-5 sm:p-8 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="relative aspect-4/3 rounded-2xl overflow-hidden border border-neutral-200">
-                <img
-                  src="https://m.media-amazon.com/images/I/61PEd4JPXzL._SL1024_.jpg"
-                  alt="Folds away easily"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute top-3 left-3 px-3 py-1 bg-amber-500 text-neutral-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-md">
-                  03. Compact Storage
-                </span>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg sm:text-xl font-black text-neutral-900">
-                  Folds Away into Door Pocket
-                </h3>
-                <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed">
-                  When ready to drive, collapse the umbrella with one press, wrap the velcro strap, and slide it into the leatherette storage sleeve. Fits easily inside your driver door pocket.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* ========================================================
             CUSTOMER REVIEWS & SOCIAL PROOF SECTION
