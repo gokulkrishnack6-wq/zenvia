@@ -39,6 +39,11 @@ import {
   PincodeValidationResult,
 } from "../lib/pincodeService";
 import { ZenviaLogo } from "./ZenviaLogo";
+declare global {
+  interface Window {
+    fbq?: (...args: any[]) => void;
+  }
+}
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -412,6 +417,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const fullAddress = `${formData.houseNo}, ${formData.street}${
       formData.landmark ? `, ${formData.landmark}` : ""
     }, ${formData.city}, ${formData.state} - ${formData.pincode}`;
+    // Meta Pixel — InitiateCheckout
+if (window.fbq) {
+  window.fbq("track", "InitiateCheckout", {
+    content_ids: activeItems.map((item) => item.product.id),
+    contents: activeItems.map((item) => ({
+      id: item.product.id,
+      quantity: item.quantity,
+    })),
+    content_type: "product",
+    num_items: totalItemCount,
+    value: currentPayableAmount,
+    currency: currency === "INR" ? "INR" : currency,
+  });
+}
 
     // ==========================================
     // 1. CASH ON DELIVERY (COD) FLOW
@@ -450,6 +469,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         const codData = await codRes.json();
 
         if (codRes.ok && codData.success) {
+          // Meta Pixel — Purchase
+if (window.fbq) {
+  window.fbq("track", "Purchase", {
+    content_ids: activeItems.map((item) => item.product.id),
+    contents: activeItems.map((item) => ({
+      id: item.product.id,
+      quantity: item.quantity,
+    })),
+    content_type: "product",
+    num_items: totalItemCount,
+    value: codData.total ?? currentPayableAmount,
+    currency: currency === "INR" ? "INR" : currency,
+  });
+}
           setProcessingMessage("Confirming Order...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -603,7 +636,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             const verifyData = await verifyRes.json();
 
-            if (verifyRes.ok && verifyData.verified) {
+            if (verifyRes.ok && verifyData.verified) {// Meta Pixel — Purchase
+if (window.fbq) {
+  window.fbq("track", "Purchase", {
+    content_ids: activeItems.map((item) => item.product.id),
+    contents: activeItems.map((item) => ({
+      id: item.product.id,
+      quantity: item.quantity,
+    })),
+    content_type: "product",
+    num_items: totalItemCount,
+    value: currentPayableAmount,
+    currency: currency === "INR" ? "INR" : currency,
+  });
+}
               setProcessingMessage("Confirming Your Order...");
               await new Promise((resolve) => setTimeout(resolve, 500));
 
