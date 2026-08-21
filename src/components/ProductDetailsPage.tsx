@@ -37,6 +37,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+declare global {
+  interface Window {
+    fbq?: (...args: any[]) => void;
+  }
+}
 import { Product, ProductVideo, Currency, CategoryType } from "../types";
 import { formatRupee, formatRupeeExact } from "../lib/currency";
 import {
@@ -180,10 +185,21 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [variantError, setVariantError] = useState<string | null>(null);
 
   // Reset selected image and quantity when product changes
-  useEffect(() => {
-    setAllImagesReset();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [product.id]);
+ useEffect(() => {
+  setAllImagesReset();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Meta Pixel — ViewContent
+  if (window.fbq) {
+    window.fbq("track", "ViewContent", {
+      content_ids: [product.id],
+      content_type: "product",
+      content_name: product.name,
+      value: product.price,
+      currency: currency === "INR" ? "INR" : currency,
+    });
+  }
+}, [product.id]);
 
   const setAllImagesReset = () => {
     setSelectedMediaIndex(0);
@@ -229,9 +245,23 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       if (el) el.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    setVariantError(null);
-    onAddToCart(product, selectedColor, selectedSize, quantity);
-    setAddedSuccess(true);
+   setVariantError(null);
+
+onAddToCart(product, selectedColor, selectedSize, quantity);
+
+// Meta Pixel — AddToCart
+if (window.fbq) {
+  window.fbq("track", "AddToCart", {
+    content_ids: [product.id],
+    content_type: "product",
+    content_name: product.name,
+    value: currentItemSubtotal,
+    currency: currency === "INR" ? "INR" : currency,
+    num_items: quantity,
+  });
+}
+
+setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 2500);
   };
 
