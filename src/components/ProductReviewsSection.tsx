@@ -135,6 +135,14 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         "Strong alloy multi-rib skeleton",
       ];
     }
+    if (product.id === "p13") {
+      return [
+        "Keeps sink counter dry & clean",
+        "Tool-free faucet clamp installation",
+        "Thickened stainless steel construction",
+        "360° rotatable basket with towel bar",
+      ];
+    }
     if (productReviews.length > 0) {
       return [
         "High quality build and materials",

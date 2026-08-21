@@ -19,7 +19,7 @@ export const CATEGORIES: { id: CategoryType; name: string; tagline: string; imag
     name: "Home & Kitchen",
     tagline: "Smart prep tools, LED temperature bottles, & kitchen hacks.",
     image: "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?q=80&w=1200&auto=format&fit=crop",
-    itemCount: 3,
+    itemCount: 4,
   },
   {
     id: "Personal Care",
@@ -1186,28 +1186,28 @@ export const PRODUCTS: Product[] = [
     tagline: "Beat the Heat. Protect Your Car. Drive More Comfortably.",
     price: 499,
     originalPrice: 999,
-    pricingTiers: [
+    quantityOffers: [
       {
         quantity: 1,
         totalPrice: 499,
-        perPiecePrice: 499,
+        label: "1 UNIT",
         savings: 0,
       },
       {
         quantity: 2,
         totalPrice: 899,
-        perPiecePrice: 449.5,
-        savings: 99,
-        label: "MOST POPULAR",
+        label: "2 UNITS",
+        badge: "MOST POPULAR",
         isPopular: true,
+        savings: 99,
       },
       {
         quantity: 3,
         totalPrice: 1199,
-        perPiecePrice: 399.67,
-        savings: 298,
-        label: "BEST VALUE",
+        label: "3 UNITS",
+        badge: "BEST VALUE",
         isBestValue: true,
+        savings: 298,
       },
     ],
     rating: 4.8,
@@ -1316,6 +1316,177 @@ export const PRODUCTS: Product[] = [
     ],
     tags: ["New", "Car Accessories", "Sunshade", "Lifestyle", "Utility"],
     stockCount: 25,
+    isNew: true,
+    isBestseller: true,
+    isFeatured: true,
+  },
+  {
+    id: "p13",
+    slug: "adjustable-stainless-steel-sink-caddy",
+    name: "Adjustable Stainless Steel Sink Caddy",
+    tagline: "Keep your sink area clean, organized, and clutter-free",
+    price: 299,
+    originalPrice: 599,
+    quantityOffers: [
+      {
+        quantity: 1,
+        totalPrice: 299,
+        label: "1 UNIT",
+        savings: 0,
+      },
+      {
+        quantity: 2,
+        totalPrice: 549,
+        label: "2 UNITS",
+        badge: "MOST POPULAR",
+        isPopular: true,
+        savings: 49,
+      },
+      {
+        quantity: 3,
+        totalPrice: 749,
+        label: "3 UNITS",
+        badge: "BEST VALUE",
+        isBestValue: true,
+        savings: 148,
+      },
+    ],
+    rating: 4.8,
+    reviewCount: 185,
+    category: "Home & Kitchen",
+    image: "https://res.cloudinary.com/vgl84jqo/image/upload/v1787247251/Codex_Image_Aug_20_2026_11_03_50_PM.png",
+    alternateImage: "https://m.media-amazon.com/images/I/61Boe-yze0L._SL1444_.jpg",
+    galleryImages: [
+      "https://res.cloudinary.com/vgl84jqo/image/upload/v1787247251/Codex_Image_Aug_20_2026_11_03_50_PM.png",
+      "https://m.media-amazon.com/images/I/61Boe-yze0L._SL1444_.jpg",
+      "https://m.media-amazon.com/images/I/612fBpFYDdL._SL1177_.jpg",
+      "https://m.media-amazon.com/images/I/71nGZ8JZcAL._SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/71CMXXxF3UL._SL1200_.jpg",
+      "https://m.media-amazon.com/images/I/71+yiOEW31L._SL1200_.jpg",
+      "https://m.media-amazon.com/images/I/71cMeldHQxL._SL1494_.jpg",
+      "https://m.media-amazon.com/images/I/61sCt2dINzL._SL1000_.jpg",
+    ],
+    specs: [
+      { label: "Product Type", value: "Sink Faucet Stand – Sink Caddy Organizer" },
+      { label: "Material", value: "Thickened Stainless Steel" },
+      { label: "Weight", value: "200 g" },
+      { label: "Colour", value: "Multicolour (Metallic Silver / Matte Finish)" },
+      { label: "Mounting Type", value: "Faucet Clamp / Tool-Free Clip-on" },
+      { label: "Quantity", value: "1 Piece" },
+      { label: "Compatibility", value: "Fits most round and square kitchen sink faucets" },
+      { label: "In the Box", value: "1 x Stainless Steel Sink Caddy, 1 x Sizing Adapter Clip, 1 x Tightening Screw Cap" },
+    ],
+    description:
+      "Keep your sink area clean, organized, and clutter-free with the Adjustable Stainless Steel Sink Caddy. Its adjustable faucet-fit design provides a convenient place to keep sponges, soaps, scrubbers, dishcloths, and towels within easy reach while allowing excess water to drain away.",
+    craftsmanshipStory:
+      "Made from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion. The open-grid design allows excess water to drain away easily, helping stored items dry faster.",
+    features: [
+      "Adjustable Faucet Fit - Fits most round and square kitchen sink faucets for convenient everyday use",
+      "Multi-Utility Storage - Designed to hold sponges, soaps, scrubbers, dishcloths, and small towels in one organized space",
+      "Stainless Steel Construction - Made from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion",
+      "360° Rotatable Design - The organizer can be rotated for convenient positioning on either side of the sink",
+      "Fast Water Drainage - The open-grid design allows excess water to drain away easily, helping stored items dry faster",
+      "Built-In Towel Clip - Includes a clip for hanging dishcloths or small towels securely",
+      "Tool-Free Installation - Clip-on installation requires no drilling or complicated tools",
+      "Kitchen & Bathroom Use - Suitable for kitchen sinks, bathroom sinks, RVs, and rental spaces",
+      "Compact Organization - Keeps frequently used sink essentials within easy reach while reducing countertop clutter",
+    ],
+    whyYouNeedThis: {
+      headline: "Keep Countertops Dry and Cleaning Essentials Within Reach.",
+      description:
+        "Soggy sponges left around the sink leave water rings, soap scum, and countertop mess. The Adjustable Stainless Steel Sink Caddy mounts directly to your faucet neck, allowing excess water to drain cleanly into the sink basin.",
+      callout: "Clip-on clamp. Rust-resistant stainless steel. 360° rotatable basket with towel bar.",
+    },
+    beforeAfterStory: {
+      beforeTitle: "CLUTTERED SINK COUNTER",
+      beforeText:
+        "Wet sponges sitting in puddles on the countertop, soap scum stains around the tap, and nowhere to hang wet dishcloths.",
+      beforeNote: "Countertop puddles & damp sponges",
+      afterTitle: "WITH ADJUSTABLE SINK CADDY",
+      afterText:
+        "Sponges and scrubbers stay elevated with fast open-grid drainage directly into the sink bowl, and towels hang neatly on the built-in rail.",
+      afterNote: "Clutter-free sink & fast drainage",
+    },
+    featureSpotlights: [
+      {
+        badge: "01. Adjustable Faucet Fit",
+        title: "Fits Most Round & Square Faucets",
+        description:
+          "Easily attaches to standard round and square kitchen or bathroom faucets with a secure tool-free clamp.",
+        image: "https://m.media-amazon.com/images/I/612fBpFYDdL._SL1177_.jpg",
+      },
+      {
+        badge: "02. Fast Water Drainage",
+        title: "Open-Grid Quick-Drying Design",
+        description:
+          "Open bottom hollow grid channels excess water straight into the sink basin, preventing water accumulation and helping sponges dry faster.",
+        image: "https://m.media-amazon.com/images/I/71nGZ8JZcAL._SL1500_.jpg",
+      },
+      {
+        badge: "03. Stainless Steel & 360° Swivel",
+        title: "Rust-Resistant & 360° Rotatable",
+        description:
+          "Made from thickened stainless steel designed for durability and everyday moisture resistance. Rotates 360 degrees for flexible positioning.",
+        image: "https://m.media-amazon.com/images/I/71CMXXxF3UL._SL1200_.jpg",
+      },
+    ],
+    howToUse: [
+      {
+        stepNumber: 1,
+        title: "Snap Clamp to Faucet",
+        description:
+          "Place the sizing adapter and clamp collar around your faucet pipe at your preferred height.",
+        image: "https://m.media-amazon.com/images/I/71+yiOEW31L._SL1200_.jpg",
+      },
+      {
+        stepNumber: 2,
+        title: "Hand-Tighten Cap",
+        description:
+          "Turn the threaded locking knob clockwise by hand until firmly fastened—no screws, drills, or tools needed.",
+        image: "https://m.media-amazon.com/images/I/71cMeldHQxL._SL1494_.jpg",
+      },
+      {
+        stepNumber: 3,
+        title: "Organize & Rotate",
+        description:
+          "Place sponges, scrubbers, and dish soaps in the basket and hang dishcloths on the side rail. Rotate to either side of the sink as needed.",
+        image: "https://m.media-amazon.com/images/I/61sCt2dINzL._SL1000_.jpg",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is the Adjustable Stainless Steel Sink Caddy used for?",
+        answer:
+          "It provides a convenient faucet-mounted organizer for sponges, soaps, scrubbers, dishcloths, and towels, keeping your countertop clear and allowing excess water to drain directly into the sink.",
+      },
+      {
+        question: "Will it fit my faucet?",
+        answer:
+          "It is designed to fit most round and square kitchen and bathroom sink faucets with standard tube diameters using the included adapter clip.",
+      },
+      {
+        question: "Is installation difficult?",
+        answer:
+          "Not at all. It features a tool-free clamp design. Simply clip it around the faucet tube and hand-tighten the screw cap.",
+      },
+      {
+        question: "Is the material rust-resistant?",
+        answer:
+          "Yes, it is constructed from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion.",
+      },
+      {
+        question: "Can it be rotated after installation?",
+        answer:
+          "Yes, the 360° rotatable design allows you to swivel the caddy to either side of the sink basin easily.",
+      },
+      {
+        question: "Can it hold dishcloths or towels?",
+        answer:
+          "Yes, it includes a dedicated side hanging bar/clip to hold dishcloths, hand towels, or peeling tools.",
+      },
+    ],
+    tags: ["New", "Sink Caddy", "Kitchen Organizer", "Stainless Steel", "Home & Kitchen"],
+    stockCount: 40,
     isNew: true,
     isBestseller: true,
     isFeatured: true,

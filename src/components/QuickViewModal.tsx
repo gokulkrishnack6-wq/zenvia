@@ -19,7 +19,13 @@ import {
 } from "lucide-react";
 import { Product, Currency } from "../types";
 import { formatRupee, formatRupeeExact } from "../lib/currency";
-import { calculateItemSubtotal, calculateBundleSavings, calculatePerPiecePrice } from "../lib/pricing";
+import {
+  calculateItemSubtotal,
+  calculateBundleSavings,
+  calculatePerPiecePrice,
+  getProductQuantityOffers,
+  hasQuantityOffers,
+} from "../lib/pricing";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 
 interface QuickViewModalProps {
@@ -66,6 +72,9 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   }, [product]);
 
   if (!product) return null;
+
+  const quantityOffers = getProductQuantityOffers(product);
+  const isOfferConfigured = hasQuantityOffers(product);
 
   const currentSubtotal = calculateItemSubtotal(product, quantity);
   const bundleSavings = calculateBundleSavings(product, quantity);
@@ -305,18 +314,18 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                 {/* Quantity & Bulk Tier Selector */}
                 <div className="mb-4">
-                  {product.pricingTiers && product.pricingTiers.length > 0 && (
+                  {isOfferConfigured && quantityOffers && quantityOffers.length > 0 && (
                     <div className="mb-3">
                       <span className="text-xs font-bold text-neutral-800 flex items-center space-x-1.5 mb-2">
                         <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                         <span>Select Bundle Quantity Offer:</span>
                       </span>
                       <div className="grid grid-cols-3 gap-2">
-                        {product.pricingTiers.map((tier) => {
+                        {quantityOffers.map((tier) => {
                           const isSelected = quantity === tier.quantity;
-                          const tierPrice = tier.totalPrice || (tier as any).price;
+                          const tierPrice = tier.totalPrice;
                           const perPiece = formatRupeeExact(tier.perPiecePrice || tierPrice / tier.quantity);
-                          const tierBadge = tier.label || (tier as any).badge;
+                          const tierBadge = tier.badge || (tier.isBestValue ? "BEST VALUE" : tier.isPopular ? "MOST POPULAR" : tier.label);
                           return (
                             <button
                               key={tier.quantity}
@@ -330,7 +339,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                             >
                               {tierBadge && (
                                 <span className={`absolute -top-2 left-2 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                                  tier.isBestValue || tierBadge === "BEST VALUE"
+                                  tier.isBestValue || tierBadge.toUpperCase().includes("VALUE")
                                     ? "bg-emerald-600 text-white"
                                     : "bg-amber-600 text-white"
                                 }`}>
@@ -338,7 +347,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                 </span>
                               )}
                               <div className="text-xs font-black text-neutral-900 mt-1">
-                                Buy {tier.quantity}
+                                {tier.label || (tier.quantity === 1 ? "1 Unit" : `${tier.quantity} Units`)}
                               </div>
                               <div className="text-sm font-black text-amber-800">
                                 {formatRupee(tierPrice)}

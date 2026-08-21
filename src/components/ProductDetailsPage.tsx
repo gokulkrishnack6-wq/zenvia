@@ -43,6 +43,8 @@ import {
   calculateItemSubtotal,
   calculateBundleSavings,
   calculatePerPiecePrice,
+  getProductQuantityOffers,
+  hasQuantityOffers,
 } from "../lib/pricing";
 import { getProductSlug } from "../lib/slug";
 import { checkPincodeServiceability, PincodeValidationResult } from "../lib/pincodeService";
@@ -190,6 +192,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setQuantity(1);
     setVariantError(null);
   };
+
+  const quantityOffers = getProductQuantityOffers(product);
+  const isOfferConfigured = hasQuantityOffers(product);
 
   const currentItemSubtotal = calculateItemSubtotal(product, quantity);
   const formattedPrice = formatRupee(currentItemSubtotal);
@@ -742,23 +747,26 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </div>
                 ) : null}
 
-                {/* QUANTITY-BASED BUNDLE OFFERS (BUY 1, BUY 2, BUY 3) */}
-                {product.pricingTiers && product.pricingTiers.length > 0 && (
+                {/* UNIVERSAL QUANTITY-BASED BUNDLE OFFERS (BUY MORE, SAVE MORE) */}
+                {isOfferConfigured && quantityOffers && quantityOffers.length > 0 && (
                   <div className="mb-6 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-900 flex items-center space-x-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span>Special Quantity Offers</span>
+                        <span>Buy More, Save More</span>
                       </label>
                       <span className="text-[11px] font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-md">
-                        Buy More, Save More
+                        Special Quantity Offer
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {product.pricingTiers.map((tier) => {
+                      {quantityOffers.map((tier) => {
                         const isSelected = quantity === tier.quantity;
-                        const perPieceFormatted = formatRupeeExact(tier.perPiecePrice);
+                        const perPieceFormatted = formatRupeeExact(tier.perPiecePrice || (tier.totalPrice / tier.quantity));
+                        const unitLabel = tier.label || (tier.quantity === 1 ? "1 UNIT" : `${tier.quantity} UNITS`);
+                        const badgeText = tier.badge || (tier.isBestValue ? "BEST VALUE" : tier.isPopular ? "MOST POPULAR" : undefined);
+
                         return (
                           <div
                             key={tier.quantity}
@@ -774,17 +782,17 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                             }`}
                           >
                             {/* Prominent Badge for strongest offers */}
-                            {tier.label && (
+                            {badgeText && (
                               <div className="absolute -top-2.5 right-2.5">
                                 <span
                                   className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1 ${
-                                    tier.isBestValue
+                                    tier.isBestValue || badgeText.toUpperCase().includes("VALUE")
                                       ? "bg-emerald-600 text-white ring-1 ring-white"
                                       : "bg-amber-600 text-white ring-1 ring-white"
                                   }`}
                                 >
                                   <Sparkles className="w-2.5 h-2.5 fill-white" />
-                                  <span>{tier.label}</span>
+                                  <span>{badgeText}</span>
                                 </span>
                               </div>
                             )}
@@ -793,7 +801,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                               {/* Header & Radio */}
                               <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-xs font-black uppercase tracking-wider text-neutral-900">
-                                  BUY {tier.quantity}
+                                  {unitLabel}
                                 </span>
                                 <div
                                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -812,9 +820,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                               </div>
 
                               {/* Per-piece breakdown */}
-                              <div className="text-[11px] font-semibold text-neutral-600 mt-0.5">
-                                {perPieceFormatted} per item
-                              </div>
+                              {tier.quantity > 1 ? (
+                                <div className="text-[11px] font-semibold text-neutral-600 mt-0.5">
+                                  {perPieceFormatted} per item
+                                </div>
+                              ) : (
+                                <div className="text-[11px] font-semibold text-neutral-500 mt-0.5">
+                                  Standard Pack
+                                </div>
+                              )}
                             </div>
 
                             {/* Savings callout */}

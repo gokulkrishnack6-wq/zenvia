@@ -36,7 +36,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((p) => {
       // Category filter
-      if (selectedCategory !== "All" && p.category !== selectedCategory) return false;
+      if (selectedCategory !== "All") {
+        if (selectedCategory === "Best Sellers") {
+          if (!p.isBestseller && p.category !== "Best Sellers") return false;
+        } else if (p.category !== selectedCategory) {
+          return false;
+        }
+      }
       // Price filter
       if (p.price > priceMax) return false;
       // Search query
@@ -53,8 +59,16 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       if (sortBy === "price-low") return a.price - b.price;
       if (sortBy === "price-high") return b.price - a.price;
       if (sortBy === "rating") return b.rating - a.rating;
-      // default bestseller
-      return (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0);
+      // Default bestseller sorting order:
+      // 1. Car Shade Umbrella (p12)
+      // 2. Adjustable Stainless Steel Sink Caddy (p13)
+      // 3. Other Bestsellers
+      const getBestsellerPriority = (product: Product) => {
+        if (product.id === "p12") return 100;
+        if (product.id === "p13") return 90;
+        return product.isBestseller ? 10 : 0;
+      };
+      return getBestsellerPriority(b) - getBestsellerPriority(a);
     });
   }, [selectedCategory, searchQuery, sortBy, priceMax]);
 
@@ -116,7 +130,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         </button>
 
         {CATEGORIES.map((cat) => {
-          const count = PRODUCTS.filter((p) => p.category === cat.id).length;
+          const count = PRODUCTS.filter((p) =>
+            cat.id === "Best Sellers"
+              ? p.isBestseller || p.category === "Best Sellers"
+              : p.category === cat.id
+          ).length;
           return (
             <button
               key={cat.id}

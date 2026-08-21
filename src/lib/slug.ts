@@ -23,6 +23,9 @@ const ALIAS_MAP: Record<string, string> = {
   "silicone-scalp-massager-brush": "p11",
   "retractable-car-sunshade-umbrella": "p12",
   "car-sunshade-umbrella": "p12",
+  "adjustable-stainless-steel-sink-caddy": "p13",
+  "stainless-steel-sink-caddy": "p13",
+  "sink-caddy-organizer": "p13",
 };
 
 /**

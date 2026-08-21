@@ -1,46 +1,114 @@
-import { Product, CartItem } from "../types";
+import { Product, CartItem, QuantityPricingTier } from "../types";
 
 /**
- * Calculates the exact subtotal for an item based on its quantity and any quantity-based pricing tiers.
- * For example, Retractable Car Sunshade Umbrella (p12):
- * 1 piece  = ₹699
- * 2 pieces = ₹1,299 (saves ₹99 compared to 2 × ₹699 = ₹1,398)
- * 3 pieces = ₹1,799 (saves ₹298 compared to 3 × ₹699 = ₹2,097)
+ * Universal Quantity Offer Normalizer:
+ * Retrieves and standardizes quantity offers from either `product.quantityOffers` or `product.pricingTiers`.
+ * Automatically computes perPiecePrice, savings, labels, and badges if not explicitly set.
+ */
+export function getProductQuantityOffers(product: Product): QuantityPricingTier[] | undefined {
+  const rawOffers = product.quantityOffers || product.pricingTiers;
+  if (!rawOffers || !Array.isArray(rawOffers) || rawOffers.length === 0) {
+    return undefined;
+  }
+
+  // Sort by quantity ascending
+  const sorted = [...rawOffers].sort((a, b) => a.quantity - b.quantity);
+
+  return sorted.map((tier) => {
+    const qty = Math.max(1, tier.quantity);
+    const totalPrice = Number(tier.totalPrice ?? tier.price ?? product.price * qty);
+    const perPiecePrice =
+      tier.perPiecePrice !== undefined
+        ? Number(tier.perPiecePrice)
+        : Math.round((totalPrice / qty) * 100) / 100;
+    const savings =
+      tier.savings !== undefined
+        ? Number(tier.savings)
+        : Math.max(0, product.price * qty - totalPrice);
+
+    const defaultLabel = qty === 1 ? "1 UNIT" : `${qty} UNITS`;
+    const label = tier.label || defaultLabel;
+
+    const badge =
+      tier.badge ||
+      (tier.isBestValue ? "BEST VALUE" : tier.isPopular ? "MOST POPULAR" : undefined);
+
+    const isPopular = Boolean(
+      tier.isPopular ||
+      (badge && badge.toUpperCase().includes("POPULAR"))
+    );
+
+    const isBestValue = Boolean(
+      tier.isBestValue ||
+      (badge && badge.toUpperCase().includes("VALUE"))
+    );
+
+    return {
+      quantity: qty,
+      totalPrice,
+      price: totalPrice,
+      perPiecePrice,
+      savings,
+      label,
+      badge,
+      isPopular,
+      isBestValue,
+    };
+  });
+}
+
+/**
+ * Checks if a product has a special quantity offer configured (with 2+ units and discount).
+ */
+export function hasQuantityOffers(product: Product): boolean {
+  const offers = getProductQuantityOffers(product);
+  if (!offers || offers.length === 0) return false;
+  // Has at least one multi-unit offer
+  return offers.some((o) => o.quantity > 1);
+}
+
+/**
+ * Calculates the exact subtotal for an item based on its quantity and any quantity-based offers.
+ * Automatically checks universal product offers.
+ * If no offer is configured, falls back to standard single-unit price * quantity.
  */
 export function calculateItemSubtotal(product: Product, quantity: number): number {
   const qty = Math.max(1, Math.floor(quantity) || 1);
+  const offers = getProductQuantityOffers(product);
 
-  // If product has specific pricing tiers defined
-  if (product.pricingTiers && product.pricingTiers.length > 0) {
-    // Look for exact tier match
-    const exactTier = product.pricingTiers.find((t) => t.quantity === qty);
+  // If product has specific quantity offers configured
+  if (offers && offers.length > 0) {
+    // 1. Look for exact tier match (e.g. 1 unit, 2 units, 3 units)
+    const exactTier = offers.find((t) => t.quantity === qty);
     if (exactTier) {
       return exactTier.totalPrice;
     }
 
-    // For quantities greater than 3, calculate using 3-pack bundles + remainder
-    const tier3 = product.pricingTiers.find((t) => t.quantity === 3);
-    const tier2 = product.pricingTiers.find((t) => t.quantity === 2);
-    const tier1 = product.pricingTiers.find((t) => t.quantity === 1);
+    // 2. For quantities greater than highest defined tier, optimize with largest bundle + remainder
+    const highestTier = offers[offers.length - 1];
+    if (highestTier && qty > highestTier.quantity && highestTier.quantity > 1) {
+      const maxBundleQty = highestTier.quantity;
+      const bundles = Math.floor(qty / maxBundleQty);
+      const remainder = qty % maxBundleQty;
 
-    const price3 = tier3 ? tier3.totalPrice : product.price * 3;
-    const price2 = tier2 ? tier2.totalPrice : product.price * 2;
-    const price1 = tier1 ? tier1.totalPrice : product.price;
+      let remainderCost = 0;
+      if (remainder > 0) {
+        // Recursively evaluate subtotal for remainder
+        remainderCost = calculateItemSubtotal(product, remainder);
+      }
 
-    const bundlesOf3 = Math.floor(qty / 3);
-    const remainder = qty % 3;
-
-    let remainderCost = 0;
-    if (remainder === 2) {
-      remainderCost = price2;
-    } else if (remainder === 1) {
-      remainderCost = price1;
+      return bundles * highestTier.totalPrice + remainderCost;
     }
 
-    return bundlesOf3 * price3 + remainderCost;
+    // 3. Fallback for intermediate undefined quantities (e.g. qty 2 when only 1 and 3 are defined)
+    const lowerTier = [...offers].reverse().find((t) => t.quantity <= qty);
+    if (lowerTier) {
+      const remainder = qty - lowerTier.quantity;
+      return lowerTier.totalPrice + remainder * product.price;
+    }
   }
 
-  // Fallback / standard multiplication for regular items
+  // Fallback / standard multiplication for regular items without quantity offers
   return product.price * qty;
 }
 
@@ -78,7 +146,6 @@ export const COD_HANDLING_PERCENT = 5;
 /**
  * Calculates the 5% COD handling charge on the base payable online amount.
  * Returns exact amount rounded to 2 decimal places.
- * Example: for ₹699 -> ₹34.95
  */
 export function calculateCODCharge(baseAmount: number): number {
   if (baseAmount <= 0) return 0;
@@ -88,7 +155,6 @@ export function calculateCODCharge(baseAmount: number): number {
 /**
  * Calculates the final total for Cash on Delivery (baseAmount + 5% COD handling charge).
  * Returns exact amount rounded to 2 decimal places.
- * Example: for ₹699 -> ₹733.95
  */
 export function calculateCODTotal(baseAmount: number): number {
   if (baseAmount <= 0) return 0;

@@ -28,15 +28,27 @@ export interface HowToUseStep {
   image?: string;
 }
 
+export interface FeatureSpotlight {
+  badge?: string;
+  title: string;
+  description: string;
+  image: string;
+}
+
 export interface QuantityPricingTier {
   quantity: number;
-  totalPrice: number;
-  perPiecePrice: number;
-  savings?: number;
-  label?: string; // "POPULAR" | "BEST VALUE"
+  totalPrice?: number; // Total bundle price for this tier (e.g. 549 for 2 units)
+  price?: number; // Reusable alias for totalPrice
+  perPiecePrice?: number; // Calculated or overridden per-piece price
+  savings?: number; // Savings in ₹ vs single unit price * quantity
+  label?: string; // e.g. "1 UNIT", "2 UNITS", "3 UNITS"
+  badge?: string; // e.g. "MOST POPULAR", "BEST VALUE"
   isPopular?: boolean;
   isBestValue?: boolean;
 }
+
+// Reusable alias for quantity offers
+export type QuantityOffer = QuantityPricingTier;
 
 export interface Product {
   id: string;
@@ -46,6 +58,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   pricingTiers?: QuantityPricingTier[];
+  quantityOffers?: QuantityPricingTier[]; // Universal quantity offers configuration
   rating: number;
   reviewCount: number;
   category: CategoryType;
@@ -63,9 +76,12 @@ export interface Product {
   beforeAfterStory?: {
     beforeTitle: string;
     beforeText: string;
+    beforeNote?: string;
     afterTitle: string;
     afterText: string;
+    afterNote?: string;
   };
+  featureSpotlights?: FeatureSpotlight[];
   howToUse?: HowToUseStep[];
   faqs?: FAQItem[];
   specs: ProductSpec[];
