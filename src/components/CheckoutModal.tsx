@@ -39,6 +39,7 @@ import {
   PincodeValidationResult,
 } from "../lib/pincodeService";
 import { ZenviaLogo } from "./ZenviaLogo";
+
 declare global {
   interface Window {
     fbq?: (...args: any[]) => void;
@@ -417,20 +418,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const fullAddress = `${formData.houseNo}, ${formData.street}${
       formData.landmark ? `, ${formData.landmark}` : ""
     }, ${formData.city}, ${formData.state} - ${formData.pincode}`;
-    // Meta Pixel — InitiateCheckout
-if (window.fbq) {
-  window.fbq("track", "InitiateCheckout", {
-    content_ids: activeItems.map((item) => item.product.id),
-    contents: activeItems.map((item) => ({
-      id: item.product.id,
-      quantity: item.quantity,
-    })),
-    content_type: "product",
-    num_items: totalItemCount,
-    value: currentPayableAmount,
-    currency: currency === "INR" ? "INR" : currency,
-  });
-}
+
+    // Meta Pixel InitiateCheckout event
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "InitiateCheckout", {
+        content_ids: activeItems.map((item) => item.product.id),
+        contents: activeItems.map((item) => ({
+          id: item.product.id,
+          quantity: item.quantity,
+        })),
+        content_type: "product",
+        num_items: totalItemCount,
+        value: currentPayableAmount,
+        currency: "INR",
+      });
+    }
 
     // ==========================================
     // 1. CASH ON DELIVERY (COD) FLOW
@@ -469,20 +471,21 @@ if (window.fbq) {
         const codData = await codRes.json();
 
         if (codRes.ok && codData.success) {
-          // Meta Pixel — Purchase
-if (window.fbq) {
-  window.fbq("track", "Purchase", {
-    content_ids: activeItems.map((item) => item.product.id),
-    contents: activeItems.map((item) => ({
-      id: item.product.id,
-      quantity: item.quantity,
-    })),
-    content_type: "product",
-    num_items: totalItemCount,
-    value: codData.total ?? currentPayableAmount,
-    currency: currency === "INR" ? "INR" : currency,
-  });
-}
+          // Meta Pixel Purchase event for COD
+          if (typeof window !== "undefined" && window.fbq) {
+            window.fbq("track", "Purchase", {
+              content_ids: activeItems.map((item) => item.product.id),
+              contents: activeItems.map((item) => ({
+                id: item.product.id,
+                quantity: item.quantity,
+              })),
+              content_type: "product",
+              num_items: totalItemCount,
+              value: codData.total ?? currentPayableAmount,
+              currency: "INR",
+            });
+          }
+
           setProcessingMessage("Confirming Order...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -636,20 +639,22 @@ if (window.fbq) {
 
             const verifyData = await verifyRes.json();
 
-            if (verifyRes.ok && verifyData.verified) {// Meta Pixel — Purchase
-if (window.fbq) {
-  window.fbq("track", "Purchase", {
-    content_ids: activeItems.map((item) => item.product.id),
-    contents: activeItems.map((item) => ({
-      id: item.product.id,
-      quantity: item.quantity,
-    })),
-    content_type: "product",
-    num_items: totalItemCount,
-    value: currentPayableAmount,
-    currency: currency === "INR" ? "INR" : currency,
-  });
-}
+            if (verifyRes.ok && verifyData.verified) {
+              // Meta Pixel Purchase event for Razorpay
+              if (typeof window !== "undefined" && window.fbq) {
+                window.fbq("track", "Purchase", {
+                  content_ids: activeItems.map((item) => item.product.id),
+                  contents: activeItems.map((item) => ({
+                    id: item.product.id,
+                    quantity: item.quantity,
+                  })),
+                  content_type: "product",
+                  num_items: totalItemCount,
+                  value: currentPayableAmount,
+                  currency: "INR",
+                });
+              }
+
               setProcessingMessage("Confirming Your Order...");
               await new Promise((resolve) => setTimeout(resolve, 500));
 
