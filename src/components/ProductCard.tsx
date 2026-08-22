@@ -72,6 +72,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Badges Overlay */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
+          {product.pricingTiers && product.pricingTiers.length > 0 && (
+            <span className="px-2.5 py-1 rounded-md bg-amber-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
+              PACK OFFERS AVAILABLE
+            </span>
+          )}
           {product.isBestseller && (
             <span className="px-2.5 py-1 rounded-md bg-amber-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
               BESTSELLER
@@ -151,10 +156,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </p>
         </div>
 
-        {/* Delivery badge */}
-        <div className="flex items-center space-x-1.5 text-[11px] text-emerald-700 font-medium mb-3">
-          <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span>Free Express Shipping Across India</span>
+        {/* Dynamic Free Delivery Message */}
+        <div className="flex items-center space-x-1.5 text-[11px] font-bold mb-3">
+          {product.price >= 499 ? (
+            <span className="text-emerald-800 flex items-center space-x-1">
+              <span>🎉 FREE delivery unlocked!</span>
+            </span>
+          ) : (
+            <span className="text-amber-950 flex items-center space-x-1">
+              <span>🚚 Spend ₹{499 - product.price} more for FREE delivery</span>
+            </span>
+          )}
         </div>
 
         {/* Price & Action Buttons */}

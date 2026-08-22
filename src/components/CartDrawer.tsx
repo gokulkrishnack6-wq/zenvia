@@ -1,8 +1,16 @@
 import React, { useState } from "react";
-import { X, ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight, ShieldCheck, Truck } from "lucide-react";
+import { X, ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight, ShieldCheck, Truck, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, Currency } from "../types";
 import { formatRupee } from "../lib/currency";
+import {
+  calculateCartSubtotal,
+  calculateItemSubtotal,
+  calculateBundleSavings,
+  calculateDeliveryFee,
+  FREE_DELIVERY_THRESHOLD,
+  STANDARD_DELIVERY_FEE,
+} from "../lib/pricing";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -32,14 +40,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [couponInput, setCouponInput] = useState(couponCode || "");
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
 
-  const rawSubtotal = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  const rawSubtotal = calculateCartSubtotal(cartItems);
 
-  // Free shipping threshold = ₹499 in INR
-  const freeShippingThreshold = 499;
-  const standardShippingCost = 49;
-  const shippingCost = rawSubtotal >= freeShippingThreshold || cartItems.length === 0 ? 0 : standardShippingCost;
+  const shippingCost = cartItems.length === 0 ? 0 : calculateDeliveryFee(rawSubtotal);
+  const amountNeededForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - rawSubtotal);
+  const isFreeDelivery = rawSubtotal >= FREE_DELIVERY_THRESHOLD && cartItems.length > 0;
 
-  const discountAmount = (rawSubtotal * discountPercent) / 100;
+  const discountAmount = Math.round((rawSubtotal * discountPercent) / 100);
   const finalTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
 
   const formattedSubtotal = formatRupee(rawSubtotal);
@@ -47,7 +54,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const formattedShipping = shippingCost === 0 ? "FREE" : formatRupee(shippingCost);
   const formattedTotal = formatRupee(finalTotal);
 
-  const freeShippingProgress = Math.min(100, (rawSubtotal / freeShippingThreshold) * 100);
+  const freeShippingProgress = Math.min(100, (rawSubtotal / FREE_DELIVERY_THRESHOLD) * 100);
 
   const handleCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,15 +111,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Free Shipping Meter */}
             <div className="px-5 py-3 bg-amber-50/80 border-b border-amber-200/60 text-xs">
-              {rawSubtotal >= freeShippingThreshold ? (
-                <p className="text-emerald-800 font-bold flex items-center space-x-1">
-                  <Truck className="w-4 h-4 text-emerald-600" />
-                  <span>✓ You unlocked Free Express Delivery Across India!</span>
-                </p>
+              {rawSubtotal >= 499 ? (
+                <div className="flex items-center space-x-1.5 text-emerald-800 font-bold">
+                  <span>🎉 FREE delivery unlocked!</span>
+                </div>
               ) : (
-                <p className="text-amber-900 font-medium">
-                  Add <strong className="text-amber-800">{formatRupee(freeShippingThreshold - rawSubtotal)}</strong> more for FREE Express Delivery!
-                </p>
+                <div className="text-amber-950 font-medium flex items-center space-x-1.5">
+                  <span>🚚 Spend ₹{499 - rawSubtotal} more for FREE delivery</span>
+                </div>
               )}
 
               <div className="mt-2 h-1.5 w-full bg-amber-200/80 rounded-full overflow-hidden">
@@ -127,6 +133,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {cartItems.length > 0 ? (
                 cartItems.map((item) => {
+                  const itemSubtotal = calculateItemSubtotal(item.product, item.quantity);
+                  const itemSavings = calculateBundleSavings(item.product, item.quantity);
                   return (
                     <motion.div
                       key={item.product.id}
@@ -177,9 +185,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-sm font-bold text-neutral-900 block">
-                          {formatRupee(item.product.price * item.quantity)}
+                        <span className="text-sm font-black text-neutral-900 block">
+                          {formatRupee(itemSubtotal)}
                         </span>
+                        {itemSavings > 0 && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded block mt-1">
+                            Save ₹{itemSavings}
+                          </span>
+                        )}
                         <button
                           onClick={() => onRemoveItem(item.product.id)}
                           className="text-neutral-400 hover:text-rose-600 p-1 mt-2 transition-colors cursor-pointer"
@@ -233,9 +246,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {cartItems.length > 0 && (
               <div className="p-5 border-t border-neutral-200 bg-white space-y-3">
                 <div className="space-y-1.5 text-xs text-neutral-600">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span className="text-neutral-900 font-bold">{formattedSubtotal}</span>
+                  <div>
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span className="text-neutral-900 font-bold">{formattedSubtotal}</span>
+                    </div>
+                    <div className="mt-1">
+                      {rawSubtotal >= 499 ? (
+                        <span className="text-[11px] font-extrabold text-emerald-800 flex items-center space-x-1">
+                          <span>🎉 FREE delivery unlocked!</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-bold text-amber-950 flex items-center space-x-1">
+                          <span>🚚 Spend ₹{499 - rawSubtotal} more for FREE delivery</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {discountAmount > 0 && (
@@ -245,9 +271,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   )}
 
-                  <div className="flex justify-between">
-                    <span>Express Shipping</span>
-                    <span className="text-neutral-900 font-bold">{formattedShipping}</span>
+                  <div className="flex justify-between items-center">
+                    <span>Delivery</span>
+                    <span className={`font-bold ${shippingCost === 0 ? "text-emerald-700" : "text-neutral-900"}`}>
+                      {formattedShipping}
+                    </span>
                   </div>
 
                   <div className="flex justify-between text-base text-neutral-900 pt-2 border-t border-neutral-200 font-extrabold">

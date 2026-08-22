@@ -88,6 +88,7 @@ export interface Product {
   description: string;
   craftsmanshipStory: string;
   features: string[];
+  keyHighlights?: string[];
   tags: string[];
   stockCount: number;
   isNew?: boolean;

@@ -266,20 +266,33 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </p>
 
                 {/* Price in ₹ & Savings */}
-                <div className="flex items-baseline space-x-3 mb-4 pb-4 border-b border-neutral-200">
-                  <span className="text-3xl font-extrabold text-neutral-900">
-                    {formattedPrice}
-                  </span>
-                  {formattedOriginal && (
-                    <span className="text-sm text-neutral-400 line-through font-medium">
-                      {formattedOriginal}
+                <div className="mb-4 pb-4 border-b border-neutral-200">
+                  <div className="flex items-baseline space-x-3">
+                    <span className="text-3xl font-extrabold text-neutral-900">
+                      {formattedPrice}
                     </span>
-                  )}
-                  {product.originalPrice && (
-                    <span className="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-md border border-emerald-200">
-                      Save {formattedPrice}
-                    </span>
-                  )}
+                    {formattedOriginal && (
+                      <span className="text-sm text-neutral-400 line-through font-medium">
+                        {formattedOriginal}
+                      </span>
+                    )}
+                    {product.originalPrice && (
+                      <span className="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-md border border-emerald-200">
+                        Save {formattedPrice}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 text-xs">
+                    {currentSubtotal >= 499 ? (
+                      <span className="text-emerald-800 font-extrabold flex items-center space-x-1">
+                        <span>🎉 FREE delivery unlocked!</span>
+                      </span>
+                    ) : (
+                      <span className="text-amber-950 font-bold flex items-center space-x-1">
+                        <span>🚚 Spend ₹{499 - currentSubtotal} more for FREE delivery</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Short Product Description */}

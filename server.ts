@@ -7,7 +7,12 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { PRODUCTS } from "./src/data/products";
-import { calculateItemSubtotal, calculateCODCharge, calculateCODTotal } from "./src/lib/pricing";
+import {
+  calculateItemSubtotal,
+  calculateCODCharge,
+  calculateCODTotal,
+  calculateDeliveryFee,
+} from "./src/lib/pricing";
 import { formatRupeeExact } from "./src/lib/currency";
 import { findProductBySlugOrId, getProductSlug } from "./src/lib/slug";
 import {
@@ -279,7 +284,7 @@ app.post("/api/razorpay/create-order", async (req, res) => {
 
     const numericDiscount = Math.max(0, Number(discountPercent) || 0);
     const discountAmount = Math.round((rawSubtotal * numericDiscount) / 100);
-    const shippingCost = rawSubtotal >= 499 ? 0 : 49;
+    const shippingCost = calculateDeliveryFee(rawSubtotal);
     const finalTotalRupees = Math.max(1, rawSubtotal - discountAmount + shippingCost);
     const amountInPaise = Math.round(finalTotalRupees * 100);
 
@@ -439,7 +444,7 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
     }
 
     const verifiedDiscount = Math.round((verifiedSubtotal * (Math.max(0, Number(discountPercent)) || 0)) / 100);
-    const verifiedShipping = verifiedSubtotal >= 499 ? 0 : 49;
+    const verifiedShipping = calculateDeliveryFee(verifiedSubtotal);
     const verifiedTotalRupees = Math.max(1, verifiedSubtotal - verifiedDiscount + verifiedShipping);
     const verifiedAmountPaise = Math.round(verifiedTotalRupees * 100);
 
@@ -651,7 +656,7 @@ app.post("/api/orders/cod", async (req, res) => {
 
     const numericDiscount = Math.max(0, Number(discountPercent) || 0);
     const discountAmount = Math.round((rawSubtotal * numericDiscount) / 100);
-    const shippingCost = rawSubtotal >= 499 ? 0 : 49;
+    const shippingCost = calculateDeliveryFee(rawSubtotal);
     const baseOnlineTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
     const codCharge = calculateCODCharge(baseOnlineTotal);
     const finalTotal = calculateCODTotal(baseOnlineTotal);

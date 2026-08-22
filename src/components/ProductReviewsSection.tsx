@@ -127,6 +127,9 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
 
   // Review Highlights extraction
   const getReviewHighlights = (): string[] => {
+    if (product.keyHighlights && product.keyHighlights.length > 0) {
+      return product.keyHighlights;
+    }
     if (product.id === "p12") {
       return [
         "Easy 5-second deploy & fold mechanism",
@@ -331,7 +334,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         <div className="md:col-span-2 flex flex-col justify-center space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
             const count = starCounts[star as keyof typeof starCounts] || 0;
-            const percentage = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
+            const percentage = totalReviewsCount > 0 ? (count / totalReviewsCount) * 100 : 0;
             return (
               <button
                 key={star}
@@ -382,40 +385,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </div>
       )}
 
-      {/* Customer Photos Gallery */}
-      {customerPhotos.length > 0 && (
-        <div className="pt-2 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-extrabold text-neutral-900 uppercase tracking-wider flex items-center space-x-1.5">
-              <Camera className="w-4 h-4 text-amber-600" />
-              <span>Customer Photos ({customerPhotos.length})</span>
-            </h3>
-            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
-              Verified Customer Photos
-            </span>
-          </div>
 
-          <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin">
-            {customerPhotos.map((photo, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImageModal(photo)}
-                className="relative w-24 h-24 rounded-xl overflow-hidden border border-neutral-200 group shrink-0 shadow-sm hover:ring-2 hover:ring-amber-500 transition-all cursor-pointer"
-              >
-                <img
-                  src={photo.url}
-                  alt={photo.caption}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
-                  View
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Filter and Sort Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-2 border-y border-neutral-200">
@@ -624,6 +594,10 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                         src={rev.customerImage}
                         alt="Customer review photo"
                         referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const target = e.currentTarget.closest(".group");
+                          if (target) (target as HTMLElement).style.display = "none";
+                        }}
                         onClick={() =>
                           setSelectedImageModal({
                             url: rev.customerImage!,
@@ -631,7 +605,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                             caption: rev.headline,
                           })
                         }
-                        className="w-24 h-24 object-cover rounded-xl border border-neutral-200 cursor-pointer hover:opacity-95 transition-opacity"
+                        className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl border border-neutral-200 cursor-pointer hover:opacity-95 hover:ring-2 hover:ring-amber-500 transition-all"
                       />
                       <span className="mt-1 block text-[10px] text-emerald-700 font-bold flex items-center space-x-1">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />

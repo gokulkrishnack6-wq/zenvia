@@ -31,7 +31,14 @@ import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
 import { CartItem, Currency } from "../types";
 import { formatRupee, formatRupeeExact } from "../lib/currency";
-import { calculateItemSubtotal, calculateCODCharge, calculateCODTotal } from "../lib/pricing";
+import {
+  calculateItemSubtotal,
+  calculateCODCharge,
+  calculateCODTotal,
+  calculateDeliveryFee,
+  FREE_DELIVERY_THRESHOLD,
+  STANDARD_DELIVERY_FEE,
+} from "../lib/pricing";
 import { loadRazorpayScript } from "../lib/loadRazorpay";
 import {
   checkPincodeServiceability,
@@ -225,7 +232,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     0
   );
   const discountAmount = Math.round((rawSubtotal * discountPercent) / 100);
-  const shippingCost = rawSubtotal >= 499 ? 0 : 49;
+  const shippingCost = calculateDeliveryFee(rawSubtotal);
+  const isFreeDelivery = rawSubtotal >= FREE_DELIVERY_THRESHOLD;
+  const amountNeededForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - rawSubtotal);
   const baseOnlineTotal = Math.max(0, rawSubtotal - discountAmount + shippingCost);
 
   // Cash on Delivery 5% Handling Fee
@@ -727,6 +736,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           ondismiss: function () {
             setIsProcessing(false);
             setProcessingMessage("");
+            setPaymentError(
+              "Payment was cancelled. You can try again or choose Cash on Delivery below."
+            );
           },
         },
       };
@@ -736,8 +748,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       rzp.on("payment.failed", function (response: any) {
         setIsProcessing(false);
         setProcessingMessage("");
-        const desc = response.error?.description || "Transaction failed or was declined by bank.";
-        setPaymentError(`Payment Failed: ${desc}`);
+        const desc =
+          response.error?.description || "Transaction failed or was declined by bank.";
+        setPaymentError(
+          `Payment could not be completed: ${desc}. You can try again or choose Cash on Delivery below.`
+        );
       });
 
       rzp.open();
@@ -886,6 +901,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
                 </button>
 
+                {/* Delivery Upsell / Unlocked Banner */}
+                {isFreeDelivery ? (
+                  <div className="px-4 py-2 bg-emerald-50/90 border-t border-emerald-100 flex items-center justify-between text-xs text-emerald-900 font-bold">
+                    <span className="flex items-center space-x-1.5">
+                      <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>🎉 FREE DELIVERY UNLOCKED</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      🚚 FREE DELIVERY
+                    </span>
+                  </div>
+                ) : (
+                  <div className="px-4 py-2 bg-amber-50/90 border-t border-amber-200/60 flex items-center justify-between text-xs text-amber-950">
+                    <span className="flex items-center space-x-1.5">
+                      <Truck className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <span>
+                        Add <strong className="text-amber-900 font-bold font-mono">₹{amountNeededForFreeDelivery}</strong> more to unlock FREE delivery
+                      </span>
+                    </span>
+                    <span className="text-[11px] font-bold text-neutral-900 bg-amber-100/80 px-2 py-0.5 rounded-full font-mono">
+                      🚚 Delivery: ₹{shippingCost}
+                    </span>
+                  </div>
+                )}
+
                 {/* Expanded items & price breakdown */}
                 <AnimatePresence initial={false}>
                   {isOrderSummaryExpanded && (
@@ -940,29 +980,39 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       {/* Pricing Breakdown */}
                       <div className="pt-2 border-t border-neutral-200/80 space-y-1.5 text-neutral-600 text-xs">
                         <div className="flex justify-between">
-                          <span>Subtotal:</span>
-                          <span className="font-semibold text-neutral-900">{formatRupeeExact(rawSubtotal)}</span>
+                          <span>Subtotal</span>
+                          <span className="font-semibold text-neutral-900 font-mono">{formatRupeeExact(rawSubtotal)}</span>
                         </div>
                         {discountAmount > 0 && (
                           <div className="flex justify-between text-emerald-700 font-semibold">
-                            <span>Coupon Discount ({discountPercent}%):</span>
-                            <span>-{formatRupeeExact(discountAmount)}</span>
+                            <span>Coupon Discount ({discountPercent}%)</span>
+                            <span className="font-mono">-{formatRupeeExact(discountAmount)}</span>
                           </div>
                         )}
                         <div className="flex justify-between items-center">
-                          <span>Shipping & Delivery:</span>
-                          <span className="font-bold text-emerald-700">
-                            {shippingCost === 0 ? "FREE (Pan-India)" : formatRupeeExact(shippingCost)}
+                          <span>Delivery</span>
+                          <span className={`font-bold ${shippingCost === 0 ? "text-emerald-700 font-sans" : "text-neutral-900 font-mono"}`}>
+                            {shippingCost === 0 ? "FREE" : formatRupeeExact(shippingCost)}
                           </span>
                         </div>
-                        {isCOD && (
+                        {isCOD ? (
                           <div className="flex justify-between items-center text-amber-900 font-semibold bg-amber-50/80 -mx-1 px-1.5 py-1 rounded">
-                            <span>COD Handling Charge (5%):</span>
+                            <span>COD Handling Charge (5%)</span>
                             <span className="font-bold font-mono text-amber-950">+{formattedCodCharge}</span>
                           </div>
+                        ) : (
+                          codHandlingCharge > 0 && (
+                            <div className="flex justify-between items-center text-emerald-800 font-semibold bg-emerald-50/80 -mx-1 px-1.5 py-1 rounded">
+                              <span className="flex items-center space-x-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span>Prepaid Savings (No COD fee):</span>
+                              </span>
+                              <span className="font-bold font-mono text-emerald-700">Save {formattedCodCharge}</span>
+                            </div>
+                          )
                         )}
                         <div className="flex justify-between items-center pt-2 border-t border-neutral-200 text-neutral-900 font-extrabold text-sm">
-                          <span>Total Payable:</span>
+                          <span>{isCOD ? "Total (COD):" : "Total (Prepaid):"}</span>
                           <span className="text-amber-800 font-black font-mono text-base">
                             {formattedTotal}
                           </span>
@@ -977,11 +1027,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   B. CUSTOMER DETAILS (DELIVERY DETAILS)
               =================================================== */}
               <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 shadow-2xs space-y-3.5">
-                <div className="flex items-center space-x-2 border-b border-neutral-100 pb-2.5">
-                  <User className="w-4 h-4 text-amber-600 shrink-0" />
-                  <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900">
-                    DELIVERY DETAILS
-                  </h3>
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-amber-600 shrink-0" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                      DELIVERY DETAILS
+                    </h3>
+                  </div>
+                  <div className="flex items-center space-x-1.5 text-xs font-bold">
+                    {isFreeDelivery ? (
+                      <span className="text-emerald-800 bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full flex items-center space-x-1 text-[11px]">
+                        <Truck className="w-3 h-3 text-emerald-600" />
+                        <span>🚚 FREE DELIVERY</span>
+                      </span>
+                    ) : (
+                      <span className="text-neutral-800 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-full flex items-center space-x-1 text-[11px] font-mono">
+                        <Truck className="w-3 h-3 text-neutral-600" />
+                        <span>🚚 Delivery: ₹{shippingCost}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3 text-xs">
@@ -1269,7 +1334,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               {/* ===================================================
-                  D. PAYMENT METHOD SELECTION
+                  D. PAYMENT METHOD SELECTION (PREPAID-FIRST DESIGN)
               =================================================== */}
               <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 shadow-2xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
@@ -1280,21 +1345,37 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-emerald-700 flex items-center space-x-1">
-                    <Lock className="w-3 h-3" />
-                    <span>Safe & Encrypted</span>
+                    <Lock className="w-3 h-3 text-emerald-600" />
+                    <span>256-Bit SSL Encrypted</span>
+                  </span>
+                </div>
+
+                {/* Honest Prepaid Benefit Callout */}
+                <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center space-x-2.5 text-xs text-amber-950">
+                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    <strong>Prepaid Advantage:</strong> Zero COD handling charges (save{" "}
+                    <strong>{formattedCodCharge}</strong>) and enjoy faster processing.
                   </span>
                 </div>
 
                 <div className="space-y-3">
-                  {/* Option 1: Razorpay (UPI, Cards, Net Banking) */}
+                  {/* Option 1: Prepaid Payment (Razorpay UPI, Cards, Net Banking) - RECOMMENDED */}
                   <div
                     onClick={() => setFormData({ ...formData, paymentMethod: "razorpay" })}
-                    className={`p-3.5 sm:p-4 rounded-xl border-2 transition-all cursor-pointer select-none flex items-start space-x-3.5 ${
+                    id="payment-option-prepaid"
+                    className={`relative p-3.5 sm:p-4 rounded-xl border-2 transition-all cursor-pointer select-none flex items-start space-x-3.5 ${
                       formData.paymentMethod === "razorpay"
-                        ? "border-amber-600 bg-amber-50/50 shadow-xs"
+                        ? "border-amber-600 bg-amber-50/40 shadow-xs ring-1 ring-amber-600/30"
                         : "border-neutral-200 bg-white hover:border-neutral-300"
                     }`}
                   >
+                    {/* Recommended Tag */}
+                    <div className="absolute -top-2.5 right-4 bg-amber-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs flex items-center space-x-1">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      <span>RECOMMENDED</span>
+                    </div>
+
                     {/* Radio circle */}
                     <div className="mt-0.5">
                       <div
@@ -1311,32 +1392,46 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <span className="text-sm font-extrabold text-neutral-900 block">
-                          UPI / Cards / Net Banking
+                          Prepaid Payment (Online)
                         </span>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-black text-neutral-900 font-mono">
                             {formattedOnlineTotal}
                           </span>
-                          <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded">
-                            Fastest Checkout
+                          <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded">
+                            Save {formattedCodCharge}
                           </span>
                         </div>
                       </div>
+
                       <p className="text-xs text-neutral-600 mt-1">
-                        Direct switch to Google Pay, PhonePe, Paytm, BHIM, or use Credit/Debit Cards & Net Banking.
+                        Pay securely online via UPI, Credit/Debit Cards, or Net Banking. Powered by Razorpay.
                       </p>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+
+                      {/* Benefit Bullet Points */}
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-semibold text-neutral-700">
+                        <div className="flex items-center space-x-1.5 text-emerald-800">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>No {formattedCodCharge} COD courier fee</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5 text-neutral-700">
+                          <Zap className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>Instant payment confirmation</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-amber-200/50">
                         <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                          GPay
+                          Google Pay
                         </span>
                         <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
                           PhonePe
                         </span>
                         <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                          Paytm
+                          Paytm / UPI
                         </span>
                         <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                          Cards / NetBanking
+                          Cards & NetBanking
                         </span>
                       </div>
                     </div>
@@ -1345,9 +1440,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   {/* Option 2: Cash on Delivery */}
                   <div
                     onClick={() => setFormData({ ...formData, paymentMethod: "cod" })}
+                    id="payment-option-cod"
                     className={`p-3.5 sm:p-4 rounded-xl border-2 transition-all cursor-pointer select-none flex items-start space-x-3.5 ${
                       formData.paymentMethod === "cod"
-                        ? "border-emerald-600 bg-emerald-50/50 shadow-xs"
+                        ? "border-neutral-800 bg-neutral-50 shadow-xs"
                         : "border-neutral-200 bg-white hover:border-neutral-300"
                     }`}
                   >
@@ -1356,7 +1452,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <div
                         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                           formData.paymentMethod === "cod"
-                            ? "border-emerald-600 bg-emerald-600 text-white"
+                            ? "border-neutral-900 bg-neutral-900 text-white"
                             : "border-neutral-300 bg-white"
                         }`}
                       >
@@ -1373,16 +1469,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           <span className="text-sm font-black text-neutral-900 font-mono">
                             {formattedCodTotal}
                           </span>
-                          <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-extrabold text-neutral-700 bg-neutral-200/80 px-2 py-0.5 rounded">
                             Pay on Arrival
                           </span>
                         </div>
                       </div>
                       <p className="text-xs text-neutral-600 mt-1">
-                        Pay cash or scan UPI directly to the courier executive upon doorstep arrival.
+                        Pay cash or scan courier UPI QR code directly upon doorstep arrival.
                       </p>
-                      <p className="text-[11px] font-bold text-amber-800 mt-1 flex items-center space-x-1">
-                        <span>• Includes {formattedCodCharge} COD handling charge</span>
+                      <p className="text-[11px] font-semibold text-neutral-500 mt-1.5 flex items-center space-x-1">
+                        <span>• Includes {formattedCodCharge} courier COD handling fee</span>
                       </p>
                     </div>
                   </div>
@@ -1398,7 +1494,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   id="desktop-checkout-submit-btn"
                   className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center space-x-2 ${
                     formData.paymentMethod === "cod"
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.99]"
+                      ? "bg-neutral-900 hover:bg-neutral-950 text-white active:scale-[0.99]"
                       : "bg-amber-500 hover:bg-amber-600 text-neutral-950 active:scale-[0.99]"
                   } disabled:opacity-75 disabled:cursor-not-allowed`}
                 >
@@ -1410,15 +1506,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   ) : formData.paymentMethod === "cod" ? (
                     <>
                       <CheckCircle2 className="w-5 h-5 text-white" />
-                      <span>Place Order — {formattedTotal}</span>
+                      <span>Place COD Order — {formattedTotal}</span>
                     </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 fill-neutral-950" />
-                      <span>Pay {formattedTotal} Securely</span>
+                      <span>PAY {formattedTotal} SECURELY</span>
                     </>
                   )}
                 </button>
+                <div className="mt-2 flex items-center justify-center space-x-2 text-[11px] text-neutral-500 font-medium">
+                  {formData.paymentMethod === "razorpay" ? (
+                    <>
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Processed securely via Razorpay (UPI, Cards, Net Banking)</span>
+                    </>
+                  ) : (
+                    <span>Pay with Cash or UPI directly to delivery agent</span>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1599,11 +1705,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <div className="flex items-center justify-between gap-3">
               <div className="shrink-0">
                 <span className="text-[10px] uppercase font-bold text-neutral-500 block leading-tight">
-                  Total
+                  {formData.paymentMethod === "razorpay" ? "Prepaid Total" : "COD Total"}
                 </span>
                 <span className="text-lg font-black text-neutral-900 font-mono leading-tight">
                   {formattedTotal}
                 </span>
+                {formData.paymentMethod === "razorpay" && codHandlingCharge > 0 && (
+                  <span className="text-[9px] font-bold text-emerald-700 block leading-tight">
+                    Saved {formattedCodCharge} fee
+                  </span>
+                )}
               </div>
 
               <button
@@ -1613,7 +1724,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 id="mobile-checkout-submit-btn"
                 className={`flex-1 min-h-[52px] h-[52px] py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-[0.98] ${
                   formData.paymentMethod === "cod"
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    ? "bg-neutral-900 hover:bg-neutral-950 text-white"
                     : "bg-amber-500 hover:bg-amber-600 text-neutral-950"
                 } disabled:opacity-75 disabled:cursor-not-allowed`}
               >
@@ -1630,12 +1741,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 ) : formData.paymentMethod === "cod" ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
-                    <span className="truncate">Place Order — {formattedTotal}</span>
+                    <span className="truncate">Place COD Order — {formattedTotal}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-3.5 h-3.5 fill-current shrink-0" />
-                    <span className="truncate">Pay {formattedTotal} Securely</span>
+                    <span className="truncate">PAY {formattedTotal} SECURELY</span>
                   </>
                 )}
               </button>

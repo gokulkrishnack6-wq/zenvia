@@ -76,6 +76,12 @@ export const PRODUCTS: Product[] = [
       "Ultra Lightweight - Fits easily into pockets and backpacks",
       "High Speed Silent Printing in Crisp Monochrome",
     ],
+    keyHighlights: [
+      "100% inkless heat-sensitive thermal printing",
+      "Bluetooth 5.0 wireless sync for iOS & Android",
+      "Free app with 500+ study & label templates",
+      "Ultra-compact 160g pocket-sized design",
+    ],
     whyYouNeedThis: {
       headline: "Never Run Out of Sticky Notes or Ink Again.",
       description: "Whether studying for exams, organizing your kitchen jars, or creating cute journal spreads, the Mini Thermal Printer lets you print text, checklists, and photos instantly from your phone.",
@@ -207,6 +213,12 @@ export const PRODUCTS: Product[] = [
       "Food-Grade BPA-Free Sturdy ABS Plastic",
       "Compact Storage Lid Included",
     ],
+    keyHighlights: [
+      "12 heavy-duty stainless steel interchangeable blades",
+      "Fast tear-free onion & vegetable dicing",
+      "Enclosed 1.2L BPA-free transparent catch container",
+      "Non-slip rubber base with safety finger guard",
+    ],
     whyYouNeedThis: {
       headline: "Cut Kitchen Prep Time By 70% With Zero Tears.",
       description: "Chopping onions, dicing potatoes, and slicing vegetables for daily meals takes up the most time in cooking. The 12-in-1 Vegetable Chopper Pro makes prep work effortless and consistent.",
@@ -309,6 +321,12 @@ export const PRODUCTS: Product[] = [
       "Featherlight weight for all-day comfortable wear",
       "Includes pastel protective case & microfiber cloth",
       "Durable spring hinges fit all face shapes",
+    ],
+    keyHighlights: [
+      "Filters 98% harmful screen blue light & 100% UV400",
+      "Ultra-lightweight 18g TR90 comfortable frame",
+      "Chic coquette bow accents on temples",
+      "Includes protective pastel case & microfiber cloth",
     ],
     whyYouNeedThis: {
       headline: "Protect Your Eyes In Style From Screen Fatigue.",
@@ -413,6 +431,12 @@ export const PRODUCTS: Product[] = [
       "Built-in 30min auto timer for peaceful sleep",
       "Type-C Fast Charging cable included",
     ],
+    keyHighlights: [
+      "Tap-activated 7 vibrant ambient RGB color modes",
+      "Eye-safe flicker-free soothing warm night glow",
+      "Squishy, food-grade BPA-free washable silicone",
+      "USB-C rechargeable with 30-min auto sleep timer",
+    ],
     whyYouNeedThis: {
       headline: "A Soothing Warm Glow For Peaceful Nights.",
       description: "Harsh ceiling lights make winding down difficult. The Light Panda Night Lamp emits a gentle, eye-safe warm glow and 7 color modes with a squishy soft-touch silicone body.",
@@ -516,6 +540,12 @@ export const PRODUCTS: Product[] = [
       "Breathable 3D mesh fabric & durable PU leather cover",
       "Includes car adapter & home power charger",
     ],
+    keyHighlights: [
+      "8 deep-kneading bi-directional Shiatsu nodes",
+      "Soothing 42°C infrared heat therapy",
+      "Comfort arm straps to control massage pressure",
+      "15-Minute intelligent auto shut-off safety timer",
+    ],
     whyYouNeedThis: {
       headline: "Deep Kneading Pain Relief Whenever You Need It.",
       description: "Relieve chronic neck stiffness, shoulder knots, and lower back soreness caused by desk work, driving, or intense workouts with 3D Shiatsu kneading.",
@@ -617,6 +647,12 @@ export const PRODUCTS: Product[] = [
       "304 Stainless Steel Interior Tank",
       "Whisper-Quiet Operation with Non-Slip Rubber Base",
     ],
+    keyHighlights: [
+      "45,000Hz high-frequency sonic cavitation waves",
+      "Chemical-free 3-minute deep cleaning with tap water",
+      "Rustproof 304 stainless steel 350ml basin",
+      "Whisper-quiet operation with anti-vibration feet",
+    ],
     whyYouNeedThis: {
       headline: "Restore Sparkling Shine in 3 Minutes with Tap Water.",
       description: "Hidden oils, sweat, and dust build up inside watch bands, eyeglasses nose pads, and jewelry crevices. Ultrasonic waves remove stubborn grime gently and thoroughly.",
@@ -715,6 +751,12 @@ export const PRODUCTS: Product[] = [
       "One-Touch Power Switch & Easy Dust Cup Emptying",
       "Cordless & Portable - Fits in palm of hand",
     ],
+    keyHighlights: [
+      "High-speed 360° upward vortex cyclone suction",
+      "Cleans eraser dust, snack crumbs & keyboard grit",
+      "Cordless 1200mAh USB rechargeable battery",
+      "Twist-to-empty dust cup with washable nylon filter",
+    ],
     whyYouNeedThis: {
       headline: "Spotless Desks & Keyboards in Seconds.",
       description: "Eraser dust, snack crumbs, and pet hair always find their way into keyboard keys and study desks. The Mini Desk Vacuum keeps your workspace pristine with strong 360° suction.",
@@ -812,6 +854,12 @@ export const PRODUCTS: Product[] = [
       "Vibrant Sunset & Rainbow Light Effect",
       "Stable Weighted Aluminum Base",
       "Universal USB Powered - Works with Powerbanks & Laptops",
+    ],
+    keyHighlights: [
+      "Vibrant golden-hour halo gradient projection",
+      "Thickened HD crystal optical glass lens",
+      "180° rotatable aluminum head for custom angles",
+      "Universal 5V USB powered with in-line switch",
     ],
     whyYouNeedThis: {
       headline: "Bask In The Golden Hour Glow Anytime, Anywhere.",
@@ -913,6 +961,12 @@ export const PRODUCTS: Product[] = [
       "Includes Removable Tea Infuser Strainer Filter",
       "100% Leakproof Silicone Ring Seal",
     ],
+    keyHighlights: [
+      "Touch-activated waterproof LED temperature lid",
+      "Double-wall 304 stainless steel vacuum insulation",
+      "Keeps drinks hot for 12h or cold for 24h",
+      "Includes removable 304 stainless steel tea infuser",
+    ],
     whyYouNeedThis: {
       headline: "Never Guess Your Drink's Temperature Again.",
       description: "Tired of burning your tongue on scalding hot coffee or finding out your cold brew has warmed up? Touch the smart LED lid to see the exact real-time temperature in Celsius.",
@@ -1011,6 +1065,12 @@ export const PRODUCTS: Product[] = [
       "Negative Ion Tech eliminates static & frizz",
       "Lightweight Cordless USB-C Charging",
     ],
+    keyHighlights: [
+      "3D anti-scald ceramic teeth protect scalp & hands",
+      "Negative ion technology eliminates static & frizz",
+      "Rapid 30-second heating with 3 temperature levels",
+      "Cordless 4000mAh USB-C rechargeable styling",
+    ],
     whyYouNeedThis: {
       headline: "Salon-Straight Silky Hair In 3 Minutes Anywhere.",
       description: "No need to search for electrical wall sockets or carry heavy flat irons. The Cordless Hair Straightener Brush gives you effortless frizz-free styling on the go with 3D anti-scald ceramic teeth.",
@@ -1108,6 +1168,12 @@ export const PRODUCTS: Product[] = [
       "Soft & Gentle Bristles won't tangle or pull hair",
       "Improves scalp blood flow for healthy hair growth",
       "Easy non-slip grip handle even with soapy hands",
+    ],
+    keyHighlights: [
+      "Soft food-grade silicone bristles stimulate hair roots",
+      "Exfoliates scalp buildup & creates rich shampoo lather",
+      "Ergonomic non-slip grip handle for wet or dry use",
+      "Hygienic one-piece solid mold prevents mold buildup",
     ],
     whyYouNeedThis: {
       headline: "Deep Scalp Exfoliation & Spa-Like Shampoo Massage.",
@@ -1253,6 +1319,12 @@ export const PRODUCTS: Product[] = [
       "Reinforced Alloy Skeleton - Strong multi-rib construction built for daily commuting and travel",
       "Car-Friendly Scratch-Free Tip - Frosted handle and padded tip protect your windshield and dashboard",
     ],
+    keyHighlights: [
+      "Reduces direct sunlight & cabin heat buildup",
+      "Protects dashboard, steering wheel & seats",
+      "Compact umbrella fold fits car door pocket",
+      "5-Second quick open & push-up installation",
+    ],
     whyYouNeedThis: {
       headline: "Your Car Doesn't Have to Feel Like an Oven.",
       description: "Parked under the Indian sun? Getting into a hot car can be uncomfortable, especially during summer. The Retractable Car Sunshade Umbrella provides a simple way to reduce direct sunlight entering your car while parked.",
@@ -1351,8 +1423,8 @@ export const PRODUCTS: Product[] = [
         savings: 148,
       },
     ],
-    rating: 4.8,
-    reviewCount: 185,
+    rating: 4.3,
+    reviewCount: 884,
     category: "Home & Kitchen",
     image: "https://res.cloudinary.com/vgl84jqo/image/upload/v1787247251/Codex_Image_Aug_20_2026_11_03_50_PM.png",
     alternateImage: "https://m.media-amazon.com/images/I/61Boe-yze0L._SL1444_.jpg",
@@ -1390,6 +1462,12 @@ export const PRODUCTS: Product[] = [
       "Tool-Free Installation - Clip-on installation requires no drilling or complicated tools",
       "Kitchen & Bathroom Use - Suitable for kitchen sinks, bathroom sinks, RVs, and rental spaces",
       "Compact Organization - Keeps frequently used sink essentials within easy reach while reducing countertop clutter",
+    ],
+    keyHighlights: [
+      "Tool-free clamp fits most round & square faucets",
+      "Open-grid fast water drainage prevents standing water",
+      "Thickened rustproof stainless steel with 360° swivel",
+      "Multi-utility storage for sponges, soaps & dishcloths",
     ],
     whyYouNeedThis: {
       headline: "Keep Countertops Dry and Cleaning Essentials Within Reach.",

@@ -23,7 +23,7 @@ export const PRODUCT_RATING_STATS: Record<string, RatingDistribution> = {
   p10: { star5: 145, star4: 21, star3: 5, star2: 2, star1: 1, total: 174, average: 4.7 },
   p11: { star5: 98, star4: 14, star3: 3, star2: 1, star1: 0, total: 116, average: 4.8 },
   p12: { star5: 321, star4: 235, star3: 56, star2: 21, star1: 8, total: 641, average: 4.3 },
-  p13: { star5: 148, star4: 28, star3: 6, star2: 2, star1: 1, total: 185, average: 4.8 },
+  p13: { star5: 467, star4: 299, star3: 89, star2: 16, star1: 13, total: 884, average: 4.3 },
 };
 
 export const INITIAL_PRODUCT_REVIEWS: Review[] = [
@@ -617,8 +617,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Clamped onto our kitchen tap neck in 20 seconds without any tools. Sponges and Scotch-Brite dry so quickly because all excess water drips straight into the sink instead of making puddles on our granite counter.",
     verified: false,
     location: "Bengaluru, KA",
-    customerImage: "https://res.cloudinary.com/vgl84jqo/image/upload/v1787247251/Codex_Image_Aug_20_2026_11_03_50_PM.png",
-    customerImageCaption: "Faucet mount and sponge drainage",
     helpfulCount: 28,
   },
   {
@@ -631,6 +629,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Solid stainless steel build that doesn't bend under the weight of liquid dish wash bottles and steel wool scrubbers. Really solid clamp grip.",
     verified: false,
     location: "Ahmedabad, GJ",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7332366415/7369493448/7332366415_7369493448_253dd3a72d108.avif?width=512",
     helpfulCount: 16,
   },
   {
@@ -643,6 +642,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "When washing heavy kadais and pressure cookers in our sink, I just swivel the basket to the side so it doesn't get in the way. Very thoughtful design.",
     verified: false,
     location: "Chennai, TN",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7547499658/7585488047/7547499658_7585488047_8280f5fb945ca.avif?width=512",
     helpfulCount: 14,
   },
   {
@@ -655,8 +655,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "In our 2BHK flat kitchen, countertop space around the washbasin is tight. Mounting this on the tap cleared up the whole side slab.",
     verified: false,
     location: "Kolkata, WB",
-    customerImage: "https://images.meesho.com/images/ratings_reviews/6179543748/6212072402/6179543748_6212072402_7646f481889c0.avif?width=512",
-    customerImageCaption: "Kitchen tap installation",
     helpfulCount: 22,
   },
   {
@@ -669,6 +667,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Fits our standard round tap pipe nicely with the provided plastic collar. Keeps Vim bar dish box and scrub sponge neat.",
     verified: false,
     location: "Pune, MH",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/8016979648/8056778153/8016979648_8056778153_36dee7e5b206c.avif?width=512",
     helpfulCount: 9,
   },
   {
@@ -681,6 +680,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Took less than 30 seconds to clip on and hand-tighten the screw cap. No drills, glue, or wall modifications required, which my landlord appreciates.",
     verified: false,
     location: "Chandigarh, PB",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7322786969/7359875090/7322786969_7359875090_9a0f9c87b7156.avif?width=512",
     helpfulCount: 18,
   },
   {
@@ -693,6 +693,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "The built-in hanging rail is perfect for hanging our microfiber drying cloth right next to the tap where it dries without getting smelly.",
     verified: false,
     location: "Kochi, KL",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7462003074/7499660942/7462003074_7499660942_56674ac10ddd8.avif?width=512",
     helpfulCount: 12,
   },
   {
@@ -705,8 +706,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Sponges dry much faster because of the hollow grid basket. No slimy water accumulating underneath the soap or sponges.",
     verified: false,
     location: "Hyderabad, TS",
-    customerImage: "https://images.meesho.com/images/ratings_reviews/6753100561/6787872920/6753100561_6787872920_6be0edcc7786b.avif?width=512",
-    customerImageCaption: "Open-grid drainage view",
     helpfulCount: 19,
   },
   {
@@ -719,6 +718,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Holds two sponges and a 250ml dish soap dispenser securely. The polished metallic finish blends nicely with our stainless steel faucet.",
     verified: false,
     location: "Jaipur, RJ",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7090299823/7126439227/7090299823_7126439227_68ebf0a88c834.avif?width=512",
     helpfulCount: 7,
   },
   {
@@ -731,6 +731,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Since it doesn't need wall drilling or adhesive tape, it's ideal for rented houses. Can be adjusted or moved anytime without leaving marks.",
     verified: false,
     location: "Mumbai, MH",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7703030521/7741650992/7703030521_7741650992_8db781959b32c.avif?width=512",
     helpfulCount: 15,
   },
   {
@@ -743,6 +744,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Water droplets and soapy froth no longer leave ugly marks around our sink basin. Everything drips directly into the drain.",
     verified: false,
     location: "Coimbatore, TN",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7397979577/7435364062/7397979577_7435364062_680b0f12b9cfe.avif?width=512",
     helpfulCount: 11,
   },
   {
@@ -755,6 +757,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Doesn't slide down the faucet neck even when loaded with a heavy brush and wet scrubber once you tighten the adapter properly.",
     verified: false,
     location: "Indore, MP",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/8665470521/8708367061/8665470521_8708367061_bbb5070b5b3be.avif?width=512",
     helpfulCount: 8,
   },
   {
@@ -767,8 +770,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Attached neatly onto our high-arc tap neck. Keeps the whole washing area tidy and clutter-free.",
     verified: false,
     location: "Visakhapatnam, AP",
-    customerImage: "https://images.meesho.com/images/ratings_reviews/6581996097/6616274775/6581996097_6616274775_400e658fd58a0.avif?width=512",
-    customerImageCaption: "Kitchen sink installation view",
     helpfulCount: 25,
   },
   {
@@ -781,6 +782,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Stainless steel quality is genuine. Even with everyday water splashing during dishwashing, no rust spots have appeared.",
     verified: false,
     location: "Nagpur, MH",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/8579250025/8621809674/8579250025_8621809674_342babab1270c.avif?width=512",
     helpfulCount: 6,
   },
   {
@@ -793,6 +795,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Elevating wet sponges allows natural air circulation. They dry out quickly without catching bad smells or mildew.",
     verified: false,
     location: "Calicut, KL",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7821826388/7860884240/7821826388_7860884240_21f62ed006cc0.avif?width=512",
     helpfulCount: 13,
   },
   {
@@ -805,6 +808,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Good machining with smooth rounded wire edges so no accidental cuts. Holds our scrubbing brush and sponge securely.",
     verified: false,
     location: "Lucknow, UP",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7460631336/7498280870/7460631336_7498280870_d316440b0eed0.avif?width=512",
     helpfulCount: 5,
   },
   {
@@ -817,6 +821,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Cleans up the sink area after cooking oily Indian meals. Sponges, steel scrubbers, and brush all stay in one convenient spot.",
     verified: false,
     location: "Noida, UP",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7445674433/7483262897/7445674433_7483262897_b1d62bdb43aea.avif?width=512",
     helpfulCount: 10,
   },
   {
@@ -829,6 +834,7 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Whenever cleaning the sink, just give it a quick wipe. The stainless steel shines up easily with normal water.",
     verified: false,
     location: "Howrah, WB",
+    customerImage: "https://images.meesho.com/images/ratings_reviews/7442166438/7479742271/7442166438_7479742271_44f0ab402a55c.avif?width=512",
     helpfulCount: 14,
   },
   {
@@ -841,8 +847,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "The adapter collar fit our tap pipe with zero play. You can adjust the height anytime with just a twist of the knob.",
     verified: false,
     location: "Mangaluru, KA",
-    customerImage: "https://images.meesho.com/images/ratings_reviews/6208993094/6241657567/6208993094_6241657567_13f1e354e4fce.avif?width=512",
-    customerImageCaption: "Faucet collar clamp detail",
     helpfulCount: 21,
   },
   {
@@ -915,8 +919,6 @@ export const INITIAL_PRODUCT_REVIEWS: Review[] = [
     comment: "Clean sink setup. Keeps sponge elevated and our black granite countertop completely dry and spot-free.",
     verified: false,
     location: "Gurugram, HR",
-    customerImage: "https://images.meesho.com/images/ratings_reviews/6131308905/6163607216/6131308905_6163607216_90fbe99919ba1.avif?width=512",
-    customerImageCaption: "Countertop organization overview",
     helpfulCount: 17,
   },
   {

@@ -28,6 +28,7 @@ import {
   Sun,
   Flame,
   ShieldAlert,
+  Smartphone,
   Video,
   ChevronDown,
   MapPin,
@@ -50,6 +51,7 @@ import { getProductSlug } from "../lib/slug";
 import { checkPincodeServiceability, PincodeValidationResult } from "../lib/pincodeService";
 import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
+import { SinkCaddySocialProofGallery } from "./SinkCaddySocialProofGallery";
 import { ProductCard } from "./ProductCard";
 
 declare global {
@@ -71,6 +73,121 @@ interface ProductDetailsPageProps {
   onToggleWishlist: (p: Product) => void;
   onQuickView?: (p: Product) => void;
 }
+
+const DEFAULT_PRODUCT_HIGHLIGHTS: string[] = [
+  "Practical and easy to use",
+  "Designed for everyday convenience",
+  "Compact and user-friendly",
+  "Suitable for everyday use",
+];
+
+const getHighlightIcon = (text: string, index: number) => {
+  const lower = text.toLowerCase();
+  if (lower.includes("sun") || lower.includes("light") || lower.includes("glow") || lower.includes("halo")) {
+    return <Sun className="w-4 h-4 text-amber-600 shrink-0" />;
+  }
+  if (
+    lower.includes("shield") ||
+    lower.includes("protect") ||
+    lower.includes("safe") ||
+    lower.includes("scald") ||
+    lower.includes("rustproof") ||
+    lower.includes("bpa-free") ||
+    lower.includes("timer") ||
+    lower.includes("guard")
+  ) {
+    return <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />;
+  }
+  if (
+    lower.includes("fold") ||
+    lower.includes("pocket") ||
+    lower.includes("compact") ||
+    lower.includes("box") ||
+    lower.includes("case") ||
+    lower.includes("storage") ||
+    lower.includes("caddy") ||
+    lower.includes("organize") ||
+    lower.includes("strap") ||
+    lower.includes("infuser") ||
+    lower.includes("blade") ||
+    lower.includes("container")
+  ) {
+    return <Package className="w-4 h-4 text-blue-600 shrink-0" />;
+  }
+  if (
+    lower.includes("quick") ||
+    lower.includes("instant") ||
+    lower.includes("fast") ||
+    lower.includes("speed") ||
+    lower.includes("second") ||
+    lower.includes("minute") ||
+    lower.includes("rapid") ||
+    lower.includes("vortex") ||
+    lower.includes("suction") ||
+    lower.includes("500+") ||
+    lower.includes("45,000")
+  ) {
+    return <Zap className="w-4 h-4 text-amber-500 shrink-0" />;
+  }
+  if (
+    lower.includes("heat") ||
+    lower.includes("thermal") ||
+    lower.includes("infrared") ||
+    lower.includes("temp") ||
+    lower.includes("warm") ||
+    lower.includes("hot")
+  ) {
+    return <Flame className="w-4 h-4 text-rose-500 shrink-0" />;
+  }
+  if (
+    lower.includes("clean") ||
+    lower.includes("shine") ||
+    lower.includes("sparkl") ||
+    lower.includes("exfoliat") ||
+    lower.includes("drain") ||
+    lower.includes("wash") ||
+    lower.includes("shampoo") ||
+    lower.includes("ion")
+  ) {
+    return <Sparkles className="w-4 h-4 text-teal-600 shrink-0" />;
+  }
+  if (
+    lower.includes("bluetooth") ||
+    lower.includes("app") ||
+    lower.includes("wireless") ||
+    lower.includes("cordless") ||
+    lower.includes("usb") ||
+    lower.includes("battery") ||
+    lower.includes("recharge") ||
+    lower.includes("screen") ||
+    lower.includes("led") ||
+    lower.includes("touch")
+  ) {
+    return <Smartphone className="w-4 h-4 text-indigo-600 shrink-0" />;
+  }
+  if (
+    lower.includes("comfort") ||
+    lower.includes("relax") ||
+    lower.includes("massage") ||
+    lower.includes("gentle") ||
+    lower.includes("soft") ||
+    lower.includes("relief") ||
+    lower.includes("care") ||
+    lower.includes("scalp") ||
+    lower.includes("eye") ||
+    lower.includes("sleep")
+  ) {
+    return <Heart className="w-4 h-4 text-rose-600 shrink-0" />;
+  }
+
+  const defaultIcons = [
+    <Sun key="0" className="w-4 h-4 text-amber-600 shrink-0" />,
+    <ShieldCheck key="1" className="w-4 h-4 text-emerald-600 shrink-0" />,
+    <Package key="2" className="w-4 h-4 text-blue-600 shrink-0" />,
+    <Zap key="3" className="w-4 h-4 text-amber-500 shrink-0" />,
+  ];
+  return defaultIcons[index % defaultIcons.length];
+};
 
 export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   product,
@@ -577,36 +694,47 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     )}
                   </div>
 
-                  <p className="text-[11px] font-medium text-neutral-700 flex items-center space-x-1.5 mt-1">
+                  {/* Dynamic FREE DELIVERY Progress Message */}
+                  <div className="mt-2 pt-2 border-t border-amber-200/60">
+                    {currentItemSubtotal >= 499 ? (
+                      <div className="text-xs sm:text-sm font-extrabold text-emerald-800 flex items-center space-x-1.5">
+                        <span>🎉 FREE delivery unlocked!</span>
+                      </div>
+                    ) : (
+                      <div className="text-xs sm:text-sm font-bold text-amber-950 flex items-center space-x-1.5">
+                        <span>🚚 Spend ₹{499 - currentItemSubtotal} more for FREE delivery</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] font-medium text-neutral-700 flex items-center space-x-1.5 mt-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Inclusive of all taxes • Free Express Shipping across India</span>
+                    <span>Inclusive of all taxes • Fast dispatch across India</span>
                   </p>
                 </div>
 
-                {/* VALUE PROPOSITION: 3-5 Concise Benefit Bullets with Simple Icons */}
-                <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 mb-4 space-y-2 text-xs">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-500 block mb-1">
-                    Key Highlights
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-neutral-800 font-bold">
-                    <div className="flex items-center space-x-2">
-                      <Sun className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>Reduces direct sunlight & heat</span>
+                {/* VALUE PROPOSITION: 4 Product-Specific Benefit Bullets with Icons */}
+                {(() => {
+                  const activeHighlights =
+                    product.keyHighlights && product.keyHighlights.length > 0
+                      ? product.keyHighlights
+                      : DEFAULT_PRODUCT_HIGHLIGHTS;
+                  return (
+                    <div id="product-key-highlights" className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 mb-4 space-y-2 text-xs">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-500 block mb-1">
+                        Key Highlights
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-neutral-800 font-bold">
+                        {activeHighlights.map((highlight, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            {getHighlightIcon(highlight, idx)}
+                            <span className="leading-snug">{highlight}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Protects dashboard, steering & seats</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Package className="w-4 h-4 text-blue-600 shrink-0" />
-                      <span>Compact umbrella fold fits door pocket</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                      <span>5-Second quick open & push setup</span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* TRUST STRIP - Compact Mobile Trust Indicators */}
                 <div className="grid grid-cols-3 gap-2 mb-4 text-[11px] font-bold text-neutral-700">
@@ -1221,6 +1349,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         )}
 
         {/* ========================================================
+            VISUAL SOCIAL-PROOF GALLERY (Kitchen Sink Caddy Only)
+        ======================================================== */}
+        {(product.id === "p13" || product.slug?.includes("sink-caddy") || product.name.toLowerCase().includes("sink caddy")) && (
+          <div className="mb-8">
+            <SinkCaddySocialProofGallery />
+          </div>
+        )}
+
+        {/* ========================================================
             CUSTOMER REVIEWS & SOCIAL PROOF SECTION
         ======================================================== */}
         <div id="product-reviews-section" className="scroll-mt-24 mb-10 bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-6 sm:p-8">
@@ -1461,10 +1598,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               )}
             </div>
             <div className="flex items-center space-x-1 mt-0.5">
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
-                <Truck className="w-2.5 h-2.5 text-emerald-600 inline shrink-0" />
-                <span>Free Delivery</span>
-              </span>
+              {currentItemSubtotal >= 499 ? (
+                <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
+                  <span>🎉 FREE delivery unlocked!</span>
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-950 uppercase tracking-tight flex items-center space-x-0.5">
+                  <span>🚚 Spend ₹{499 - currentItemSubtotal} more for FREE delivery</span>
+                </span>
+              )}
               {bundleSavings > 0 && (
                 <>
                   <span className="text-neutral-300 text-[10px]">•</span>

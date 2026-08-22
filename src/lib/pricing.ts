@@ -139,6 +139,26 @@ export function calculatePerPiecePrice(product: Product, quantity: number): numb
 }
 
 /**
+ * Free Delivery threshold in INR (orders with subtotal >= ₹499 qualify for FREE delivery)
+ */
+export const FREE_DELIVERY_THRESHOLD = 499;
+
+/**
+ * Standard Delivery fee in INR for orders below ₹499
+ */
+export const STANDARD_DELIVERY_FEE = 49;
+
+/**
+ * Calculates delivery fee based on cart/order subtotal.
+ * If subtotal >= FREE_DELIVERY_THRESHOLD (₹499), delivery is free (₹0).
+ * Otherwise, applies STANDARD_DELIVERY_FEE (₹49).
+ */
+export function calculateDeliveryFee(subtotal: number): number {
+  if (subtotal <= 0) return 0;
+  return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+}
+
+/**
  * Standard Cash on Delivery (COD) Handling Charge Percentage (5%)
  */
 export const COD_HANDLING_PERCENT = 5;
