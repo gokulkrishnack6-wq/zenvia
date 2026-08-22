@@ -61,7 +61,6 @@ interface CheckoutModalProps {
   discountPercent: number;
   onClose: () => void;
   onOrderComplete: () => void;
-  onOpenAccount?: () => void;
 }
 
 const INDIAN_STATES = [
