@@ -49,10 +49,12 @@ import {
 } from "../lib/pricing";
 import { getProductSlug } from "../lib/slug";
 import { checkPincodeServiceability, PincodeValidationResult } from "../lib/pincodeService";
+import { trackFunnelEvent } from "../lib/analytics";
 import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { SinkCaddySocialProofGallery } from "./SinkCaddySocialProofGallery";
 import { ProductCard } from "./ProductCard";
+import { PromotionCountdownBadge } from "./PromotionCountdownBadge";
 
 declare global {
   interface Window {
@@ -295,6 +297,39 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setSelectedMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
 
+  // Mobile Touch Swipe Handling (Smooth Left/Right swipe navigation)
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const minSwipeDistance = 40; // in px
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const diffX = touchStartXRef.current - touchEndX;
+    const diffY = touchStartYRef.current - touchEndY;
+
+    // Detect horizontal swipe intent (horizontal distance exceeds vertical distance)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDistance) {
+      if (diffX > 0) {
+        // Swiped Left -> Next Image
+        handleNextMedia();
+      } else {
+        // Swiped Right -> Previous Image
+        handlePrevMedia();
+      }
+    }
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   // Share modal & feedback state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -307,16 +342,14 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setAllImagesReset();
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Meta Pixel ViewContent event
-    if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "ViewContent", {
-        content_ids: [product.id],
-        content_type: "product",
-        content_name: product.name,
-        value: product.price,
-        currency: "INR",
-      });
-    }
+    // Funnel event: product_view
+    trackFunnelEvent("product_view", {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      price: product.price,
+      value: product.price,
+    });
   }, [product.id]);
 
   const setAllImagesReset = () => {
@@ -368,17 +401,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 2500);
 
-    // Meta Pixel AddToCart event
-    if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "AddToCart", {
-        content_ids: [product.id],
-        content_type: "product",
-        content_name: product.name,
-        value: currentItemSubtotal,
-        currency: "INR",
-        num_items: quantity,
-      });
-    }
+    // Funnel event: add_to_cart
+    trackFunnelEvent("add_to_cart", {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      value: currentItemSubtotal,
+      price: product.price,
+      quantity,
+    });
   };
 
   const handleBuyNowClick = () => {
@@ -395,6 +426,25 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       return;
     }
     setVariantError(null);
+
+    // Funnel event: begin_checkout
+    trackFunnelEvent("begin_checkout", {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      value: currentItemSubtotal,
+      price: product.price,
+      quantity,
+      items: [
+        {
+          id: product.id,
+          name: product.name,
+          quantity,
+          price: currentItemSubtotal,
+        },
+      ],
+    });
+
     onBuyNow(product, quantity, selectedColor, selectedSize);
   };
 
@@ -485,11 +535,19 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             {/* LEFT COLUMN: Mobile-Optimized Image & Video Gallery & Carousel */}
             <div className="lg:col-span-6 flex flex-col space-y-3">
               {/* Main Media View box with touch controls */}
-              <div className="relative aspect-square sm:aspect-4/3 lg:aspect-square rounded-2xl bg-neutral-950 overflow-hidden border border-neutral-200 group flex items-center justify-center">
+              <div
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className="relative aspect-square sm:aspect-4/3 lg:aspect-square rounded-2xl bg-neutral-950 overflow-hidden border border-neutral-200 group flex items-center justify-center touch-pan-y select-none"
+              >
                 {currentMedia.type === "image" ? (
                   <img
+                    key={currentMedia.url}
                     src={currentMedia.url}
                     alt={product.name}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover object-center transition-transform duration-300 cursor-pointer select-none"
                     onClick={() => setIsZoomOpen(true)}
@@ -531,26 +589,59 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   )}
                 </div>
 
-                {/* Media Counter Badge e.g. "1 / 11" */}
+                {/* Numerical Slide Counter Badge e.g. "1 / 6" */}
                 {mediaList.length > 1 && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-mono font-bold tracking-widest shadow-md z-10">
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-mono font-bold tracking-widest shadow-md z-10 select-none">
                     {selectedMediaIndex + 1} / {mediaList.length}
                   </div>
                 )}
 
-                {/* Left/Right Carousel Nav Controls */}
+                {/* Interactive Slide Indicator Dots (Mobile & Desktop) */}
+                {mediaList.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md z-10 shadow-md">
+                    {mediaList.map((_, dotIdx) => {
+                      const isDotActive = selectedMediaIndex === dotIdx;
+                      return (
+                        <button
+                          key={dotIdx}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMediaIndex(dotIdx);
+                          }}
+                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                            isDotActive
+                              ? "w-5 bg-amber-400"
+                              : "w-1.5 bg-white/60 hover:bg-white"
+                          }`}
+                          aria-label={`Go to slide ${dotIdx + 1}`}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Left/Right Desktop & Touch Nav Arrows */}
                 {mediaList.length > 1 && (
                   <>
                     <button
-                      onClick={handlePrevMedia}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevMedia();
+                      }}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
                       aria-label="Previous Media"
                     >
                       <ChevronLeft className="w-5 h-5 text-neutral-800" />
                     </button>
                     <button
-                      onClick={handleNextMedia}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextMedia();
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-neutral-800 shadow-md border border-neutral-200/80 transition-all cursor-pointer z-10 active:scale-90"
                       aria-label="Next Media"
                     >
                       <ChevronRight className="w-5 h-5 text-neutral-800" />
@@ -590,6 +681,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                           <img
                             src={item.url}
                             alt={`${product.name} thumbnail ${idx + 1}`}
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover object-center"
                           />
@@ -598,6 +691,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                             <img
                               src={product.image}
                               alt={item.title || "Video thumbnail"}
+                              loading="lazy"
+                              decoding="async"
                               referrerPolicy="no-referrer"
                               className="w-full h-full object-cover opacity-40"
                             />
@@ -692,6 +787,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         Save {savingsAmount} {bundleSavings > 0 ? `(Includes ₹${bundleSavings} Bulk Off)` : `(${discountPercent}% OFF)`}
                       </span>
                     )}
+                  </div>
+
+                  {/* 🔥 LIMITED-TIME DEAL Countdown Timer */}
+                  <div className="my-2.5">
+                    <PromotionCountdownBadge variant="product-page" />
                   </div>
 
                   {/* Dynamic FREE DELIVERY Progress Message */}
@@ -1534,9 +1634,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         </div>
 
         {/* ========================================================
-            RELATED PRODUCTS / YOU MAY ALSO LIKE
+            RELATED PRODUCTS / YOU MAY ALSO LIKE (Suppressed on Kitchen Sink Caddy page)
         ======================================================== */}
-        {relatedProducts.length > 0 && (
+        {relatedProducts.length > 0 && product.id !== "prod-kitchen-sink-caddy" && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <div>

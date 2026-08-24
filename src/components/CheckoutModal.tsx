@@ -45,7 +45,9 @@ import {
   validatePincodeFormat,
   PincodeValidationResult,
 } from "../lib/pincodeService";
+import { trackFunnelEvent } from "../lib/analytics";
 import { ZenviaLogo } from "./ZenviaLogo";
+import { PromotionCountdownBadge } from "./PromotionCountdownBadge";
 
 declare global {
   interface Window {
@@ -218,6 +220,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleCloseModal = () => {
     if (isProcessing) return;
+    if (step === 1) {
+      trackFunnelEvent("checkout_abandoned", {
+        step: 1,
+        paymentMethod: formData.paymentMethod,
+        value: currentPayableAmount,
+        currency: "INR",
+      });
+    }
     onClose();
   };
 
@@ -427,20 +437,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       formData.landmark ? `, ${formData.landmark}` : ""
     }, ${formData.city}, ${formData.state} - ${formData.pincode}`;
 
-    // Meta Pixel InitiateCheckout event
-    if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "InitiateCheckout", {
-        content_ids: activeItems.map((item) => item.product.id),
-        contents: activeItems.map((item) => ({
-          id: item.product.id,
-          quantity: item.quantity,
-        })),
-        content_type: "product",
-        num_items: totalItemCount,
-        value: currentPayableAmount,
-        currency: "INR",
-      });
-    }
+    // Funnel event: begin_checkout
+    trackFunnelEvent("begin_checkout", {
+      items: activeItems.map((item) => ({
+        id: item.product.id,
+        name: item.product.name,
+        quantity: item.quantity,
+        price: calculateItemSubtotal(item.product, item.quantity),
+      })),
+      value: currentPayableAmount,
+      currency: "INR",
+      paymentMethod: formData.paymentMethod,
+    });
 
     // ==========================================
     // 1. CASH ON DELIVERY (COD) FLOW
@@ -479,20 +487,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         const codData = await codRes.json();
 
         if (codRes.ok && codData.success) {
-          // Meta Pixel Purchase event for COD
-          if (typeof window !== "undefined" && window.fbq) {
-            window.fbq("track", "Purchase", {
-              content_ids: activeItems.map((item) => item.product.id),
-              contents: activeItems.map((item) => ({
-                id: item.product.id,
-                quantity: item.quantity,
-              })),
-              content_type: "product",
-              num_items: totalItemCount,
-              value: codData.total ?? currentPayableAmount,
-              currency: "INR",
-            });
-          }
+          // Funnel event: purchase (COD)
+          trackFunnelEvent("purchase", {
+            orderId: codData.orderId,
+            items: activeItems.map((item) => ({
+              id: item.product.id,
+              name: item.product.name,
+              quantity: item.quantity,
+              price: calculateItemSubtotal(item.product, item.quantity),
+            })),
+            value: codData.total ?? currentPayableAmount,
+            currency: "INR",
+            paymentMethod: "COD",
+          });
 
           setProcessingMessage("Confirming Order...");
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -648,20 +655,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             const verifyData = await verifyRes.json();
 
             if (verifyRes.ok && verifyData.verified) {
-              // Meta Pixel Purchase event for Razorpay
-              if (typeof window !== "undefined" && window.fbq) {
-                window.fbq("track", "Purchase", {
-                  content_ids: activeItems.map((item) => item.product.id),
-                  contents: activeItems.map((item) => ({
-                    id: item.product.id,
-                    quantity: item.quantity,
-                  })),
-                  content_type: "product",
-                  num_items: totalItemCount,
-                  value: currentPayableAmount,
-                  currency: "INR",
-                });
-              }
+              // Funnel event: purchase (Razorpay)
+              trackFunnelEvent("purchase", {
+                orderId: verifyData.orderId,
+                items: activeItems.map((item) => ({
+                  id: item.product.id,
+                  name: item.product.name,
+                  quantity: item.quantity,
+                  price: calculateItemSubtotal(item.product, item.quantity),
+                })),
+                value: currentPayableAmount,
+                currency: "INR",
+                paymentMethod: "Razorpay",
+              });
 
               setProcessingMessage("Confirming Your Order...");
               await new Promise((resolve) => setTimeout(resolve, 500));
@@ -749,9 +755,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         setProcessingMessage("");
         const desc =
           response.error?.description || "Transaction failed or was declined by bank.";
+        
+        // Funnel event: payment_failed
+        trackFunnelEvent("payment_failed", {
+          errorMessage: desc,
+          paymentMethod: "Razorpay",
+          value: currentPayableAmount,
+          currency: "INR",
+        });
+
         setPaymentError(
           `Payment could not be completed: ${desc}. You can try again or choose Cash on Delivery below.`
         );
+      });
+
+      // Funnel event: razorpay_checkout_opened
+      trackFunnelEvent("razorpay_checkout_opened", {
+        orderId: orderData.orderId,
+        value: currentPayableAmount,
+        currency: "INR",
       });
 
       rzp.open();
@@ -761,6 +783,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setIsProcessing(false);
       setProcessingMessage("");
       console.error("Razorpay error:", err);
+
+      // Funnel event: payment_failed
+      trackFunnelEvent("payment_failed", {
+        errorMessage: err.message || "An unexpected error occurred",
+        paymentMethod: "Razorpay",
+        value: currentPayableAmount,
+        currency: "INR",
+      });
+
       setPaymentError(err.message || "An unexpected error occurred during Razorpay checkout.");
     }
   };
@@ -865,7 +896,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               STEP 1: CHECKOUT FORM (DELIVERY & PAYMENT)
           =================================================== */}
           {step === 1 && (
-            <div className="max-w-2xl mx-auto space-y-5">
+            <div className="max-w-2xl mx-auto space-y-4">
+              {/* Promotion / Urgency Notification */}
+              <PromotionCountdownBadge variant="checkout" />
+
               {/* ===================================================
                   A. COMPACT EXPANDABLE ORDER SUMMARY
               =================================================== */}
@@ -1361,7 +1395,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div className="space-y-3">
                   {/* Option 1: Prepaid Payment (Razorpay UPI, Cards, Net Banking) - RECOMMENDED */}
                   <div
-                    onClick={() => setFormData({ ...formData, paymentMethod: "razorpay" })}
+                    onClick={() => {
+                      if (formData.paymentMethod !== "razorpay") {
+                        setFormData({ ...formData, paymentMethod: "razorpay" });
+                        trackFunnelEvent("payment_method_selected", {
+                          paymentMethod: "Razorpay",
+                          value: baseOnlineTotal,
+                          currency: "INR",
+                        });
+                      }
+                    }}
                     id="payment-option-prepaid"
                     className={`relative p-3.5 sm:p-4 rounded-xl border-2 transition-all cursor-pointer select-none flex items-start space-x-3.5 ${
                       formData.paymentMethod === "razorpay"
@@ -1438,7 +1481,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                   {/* Option 2: Cash on Delivery */}
                   <div
-                    onClick={() => setFormData({ ...formData, paymentMethod: "cod" })}
+                    onClick={() => {
+                      if (formData.paymentMethod !== "cod") {
+                        setFormData({ ...formData, paymentMethod: "cod" });
+                        trackFunnelEvent("payment_method_selected", {
+                          paymentMethod: "COD",
+                          value: codTotal,
+                          currency: "INR",
+                        });
+                      }
+                    }}
                     id="payment-option-cod"
                     className={`p-3.5 sm:p-4 rounded-xl border-2 transition-all cursor-pointer select-none flex items-start space-x-3.5 ${
                       formData.paymentMethod === "cod"

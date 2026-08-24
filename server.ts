@@ -108,6 +108,15 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+// Authoritative Server Time & Promotion Sync
+app.get("/api/time", (_req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.json({
+    serverTime: Date.now(),
+    iso: new Date().toISOString(),
+  });
+});
+
 // Real PIN Code Serviceability Cache & Validator
 const serverPincodeCache = new Map<string, any>();
 const SERVER_DUMMY_PINS = new Set([

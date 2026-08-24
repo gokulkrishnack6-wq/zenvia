@@ -458,8 +458,10 @@ export default function App() {
         />
       )}
 
-      {/* Corner Toast for Recent Indian Orders */}
-      <RecentlyPurchasedPopup onQuickView={handleSelectProduct} />
+      {/* Corner Toast for Recent Orders (Suppressed on Kitchen Sink Caddy page to eliminate other-product distraction) */}
+      {(!activeProduct || activeProduct.id !== "prod-kitchen-sink-caddy") && (
+        <RecentlyPurchasedPopup onQuickView={handleSelectProduct} />
+      )}
     </div>
   );
 }
