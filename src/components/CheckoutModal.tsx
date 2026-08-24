@@ -1743,6 +1743,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
               </div>
 
+              {/* Order Support Card */}
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 text-xs text-neutral-600 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[11px]">Need help with this order?</span>
+                <a
+                  href="mailto:zenviashopindia@gmail.com"
+                  className="font-bold text-neutral-900 hover:text-amber-700 text-[11px] underline underline-offset-2 transition-colors"
+                >
+                  zenviashopindia@gmail.com
+                </a>
+              </div>
+
               {/* Continue Shopping */}
               <div className="pt-2">
                 <button

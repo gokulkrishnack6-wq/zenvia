@@ -1735,7 +1735,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-medium text-neutral-700">
               <span className="flex items-center space-x-1.5">
                 <Mail className="w-3.5 h-3.5 text-amber-700" />
-                <strong className="text-neutral-900">support@zenvia.in</strong>
+                <a
+                  href="mailto:zenviashopindia@gmail.com"
+                  className="font-bold text-neutral-900 hover:text-amber-800 transition-colors underline decoration-neutral-300 underline-offset-2"
+                >
+                  zenviashopindia@gmail.com
+                </a>
               </span>
               <span className="text-neutral-400">•</span>
               <span>Mon – Sat, 9:00 AM – 6:00 PM IST</span>

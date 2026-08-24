@@ -220,7 +220,14 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ isOpen, defaultTab = "
                 <div className="p-3.5 rounded-xl bg-neutral-800/80 border border-neutral-700/60 space-y-2">
                   <span className="text-white font-semibold block text-xs">Order Cancellation</span>
                   <p className="text-neutral-400 text-[11px]">
-                    You can request to cancel your order prior to dispatch by emailing support@zenvia.in with your Order ID. Once shipped, orders cannot be cancelled mid-transit.
+                    You can request to cancel your order prior to dispatch by emailing{" "}
+                    <a
+                      href="mailto:zenviashopindia@gmail.com"
+                      className="text-amber-400 hover:underline font-medium"
+                    >
+                      zenviashopindia@gmail.com
+                    </a>{" "}
+                    with your Order ID. Once shipped, orders cannot be cancelled mid-transit.
                   </p>
                 </div>
 
@@ -367,7 +374,12 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ isOpen, defaultTab = "
                     <Mail className="w-4 h-4" />
                     <span>Email Support</span>
                   </div>
-                  <p className="text-white font-medium text-xs">support@zenvia.in</p>
+                  <a
+                    href="mailto:zenviashopindia@gmail.com"
+                    className="text-white hover:text-amber-400 font-medium text-xs block transition-colors underline decoration-neutral-600 underline-offset-2"
+                  >
+                    zenviashopindia@gmail.com
+                  </a>
                   <p className="text-neutral-400 text-[11px]">We typically respond within 24 business hours.</p>
                 </div>
 

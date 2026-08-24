@@ -42,7 +42,12 @@ export const Footer: React.FC<FooterProps> = ({
             <Mail className="w-5 h-5 text-amber-400 shrink-0" />
             <div>
               <span className="text-white font-bold block">Customer Support</span>
-              <span className="text-neutral-400 text-[11px]">support@zenvia.in (Mon–Sat 9AM–6PM)</span>
+              <a
+                href="mailto:zenviashopindia@gmail.com"
+                className="text-neutral-400 hover:text-amber-400 transition-colors text-[11px] block"
+              >
+                zenviashopindia@gmail.com (Mon–Sat 9AM–6PM)
+              </a>
             </div>
           </div>
         </div>
@@ -76,7 +81,12 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="pt-1 text-xs text-neutral-300 space-y-1">
               <div className="flex items-center space-x-2">
                 <Mail className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>support@zenvia.in</span>
+                <a
+                  href="mailto:zenviashopindia@gmail.com"
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  zenviashopindia@gmail.com
+                </a>
               </div>
               <div className="flex items-center space-x-2 text-[11px] text-neutral-400">
                 <span>Support Hours: Mon – Sat, 9:00 AM – 6:00 PM IST</span>
