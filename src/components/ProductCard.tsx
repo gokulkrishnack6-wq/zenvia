@@ -156,17 +156,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </p>
         </div>
 
-        {/* Dynamic Free Delivery Message */}
+        {/* Free Delivery Message */}
         <div className="flex items-center space-x-1.5 text-[11px] font-bold mb-3">
-          {product.price >= 499 ? (
-            <span className="text-emerald-800 flex items-center space-x-1">
-              <span>🎉 FREE delivery unlocked!</span>
-            </span>
-          ) : (
-            <span className="text-amber-950 flex items-center space-x-1">
-              <span>🚚 Spend ₹{499 - product.price} more for FREE delivery</span>
-            </span>
-          )}
+          <span className="text-emerald-800 flex items-center space-x-1">
+            <span>Free Delivery Across India 🚚</span>
+          </span>
         </div>
 
         {/* Price & Action Buttons */}

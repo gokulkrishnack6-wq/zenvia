@@ -283,15 +283,9 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     )}
                   </div>
                   <div className="mt-2 text-xs">
-                    {currentSubtotal >= 499 ? (
-                      <span className="text-emerald-800 font-extrabold flex items-center space-x-1">
-                        <span>🎉 FREE delivery unlocked!</span>
-                      </span>
-                    ) : (
-                      <span className="text-amber-950 font-bold flex items-center space-x-1">
-                        <span>🚚 Spend ₹{499 - currentSubtotal} more for FREE delivery</span>
-                      </span>
-                    )}
+                    <span className="text-emerald-800 font-extrabold flex items-center space-x-1">
+                      <span>Free Delivery Across India 🚚</span>
+                    </span>
                   </div>
                 </div>
 

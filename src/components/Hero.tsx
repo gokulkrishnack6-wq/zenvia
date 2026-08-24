@@ -29,7 +29,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onExploreClick }) => {
               className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium mb-6 shadow-sm"
             >
               <MapPin className="w-3.5 h-3.5 text-amber-600" />
-              <span>Ships Express Across India • Free Delivery Above ₹499</span>
+              <span>Ships Express Across India • Free Delivery Across India 🚚</span>
             </motion.div>
 
             {/* Headline */}
@@ -50,7 +50,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onExploreClick }) => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg sm:text-xl text-neutral-600 max-w-xl leading-relaxed mb-8 font-normal"
             >
-              Discover useful, trendy and affordable products, delivered across India with cash on delivery and easy 7-day returns.
+              Discover useful, trendy and affordable products, delivered reliably across India with verified quality and cash on delivery.
             </motion.p>
 
             {/* CTAs */}

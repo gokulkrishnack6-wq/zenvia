@@ -799,17 +799,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     <PromotionCountdownBadge variant="product-page" />
                   </div>
 
-                  {/* Dynamic FREE DELIVERY Progress Message */}
+                  {/* Free Delivery Across India Badge */}
                   <div className="mt-2 pt-2 border-t border-amber-200/60">
-                    {currentItemSubtotal >= 499 ? (
-                      <div className="text-xs sm:text-sm font-extrabold text-emerald-800 flex items-center space-x-1.5">
-                        <span>🎉 FREE delivery unlocked!</span>
-                      </div>
-                    ) : (
-                      <div className="text-xs sm:text-sm font-bold text-amber-950 flex items-center space-x-1.5">
-                        <span>🚚 Spend ₹{499 - currentItemSubtotal} more for FREE delivery</span>
-                      </div>
-                    )}
+                    <div className="text-xs sm:text-sm font-extrabold text-emerald-800 flex items-center space-x-1.5">
+                      <span>Free Delivery Across India 🚚</span>
+                    </div>
                   </div>
 
                   <p className="text-[11px] font-medium text-neutral-700 flex items-center space-x-1.5 mt-2">
@@ -1652,7 +1646,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
 
                 <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-medium">
-                  <strong>Cash on Delivery (COD) &amp; UPI Available:</strong> Free delivery on all orders above ₹499. Delivery details and tracking updates will be provided as soon as they become available.
+                  <strong>Cash on Delivery (COD) &amp; UPI Available:</strong> Free Delivery Across India 🚚 on all orders. Delivery details and tracking updates will be provided as soon as they become available.
                 </div>
               </div>
             )}
@@ -1821,15 +1815,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               )}
             </div>
             <div className="flex items-center space-x-1 mt-0.5">
-              {currentItemSubtotal >= 499 ? (
-                <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
-                  <span>🎉 FREE delivery unlocked!</span>
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-950 uppercase tracking-tight flex items-center space-x-0.5">
-                  <span>🚚 Spend ₹{499 - currentItemSubtotal} more for FREE delivery</span>
-                </span>
-              )}
+              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
+                <span>Free Delivery Across India 🚚</span>
+              </span>
               {bundleSavings > 0 && (
                 <>
                   <span className="text-neutral-300 text-[10px]">•</span>

@@ -110,22 +110,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             </div>
 
             {/* Free Shipping Meter */}
-            <div className="px-5 py-3 bg-amber-50/80 border-b border-amber-200/60 text-xs">
-              {rawSubtotal >= 499 ? (
-                <div className="flex items-center space-x-1.5 text-emerald-800 font-bold">
-                  <span>🎉 FREE delivery unlocked!</span>
-                </div>
-              ) : (
-                <div className="text-amber-950 font-medium flex items-center space-x-1.5">
-                  <span>🚚 Spend ₹{499 - rawSubtotal} more for FREE delivery</span>
-                </div>
-              )}
-
-              <div className="mt-2 h-1.5 w-full bg-amber-200/80 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-600 transition-all duration-500"
-                  style={{ width: `${freeShippingProgress}%` }}
-                />
+            <div className="px-5 py-3 bg-emerald-50/80 border-b border-emerald-200/60 text-xs">
+              <div className="flex items-center space-x-1.5 text-emerald-800 font-bold">
+                <span>Free Delivery Across India 🚚</span>
               </div>
             </div>
 
@@ -252,15 +239,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <span className="text-neutral-900 font-bold">{formattedSubtotal}</span>
                     </div>
                     <div className="mt-1">
-                      {rawSubtotal >= 499 ? (
-                        <span className="text-[11px] font-extrabold text-emerald-800 flex items-center space-x-1">
-                          <span>🎉 FREE delivery unlocked!</span>
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-bold text-amber-950 flex items-center space-x-1">
-                          <span>🚚 Spend ₹{499 - rawSubtotal} more for FREE delivery</span>
-                        </span>
-                      )}
+                      <span className="text-[11px] font-extrabold text-emerald-800 flex items-center space-x-1">
+                        <span>Free Delivery Across India 🚚</span>
+                      </span>
                     </div>
                   </div>
 

@@ -935,30 +935,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
                 </button>
 
-                {/* Delivery Upsell / Unlocked Banner */}
-                {isFreeDelivery ? (
-                  <div className="px-4 py-2 bg-emerald-50/90 border-t border-emerald-100 flex items-center justify-between text-xs text-emerald-900 font-bold">
-                    <span className="flex items-center space-x-1.5">
-                      <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>🎉 FREE DELIVERY UNLOCKED</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
-                      🚚 FREE DELIVERY
-                    </span>
-                  </div>
-                ) : (
-                  <div className="px-4 py-2 bg-amber-50/90 border-t border-amber-200/60 flex items-center justify-between text-xs text-amber-950">
-                    <span className="flex items-center space-x-1.5">
-                      <Truck className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                      <span>
-                        Add <strong className="text-amber-900 font-bold font-mono">₹{amountNeededForFreeDelivery}</strong> more to unlock FREE delivery
-                      </span>
-                    </span>
-                    <span className="text-[11px] font-bold text-neutral-900 bg-amber-100/80 px-2 py-0.5 rounded-full font-mono">
-                      🚚 Delivery: ₹{shippingCost}
-                    </span>
-                  </div>
-                )}
+                {/* Free Delivery Across India Banner */}
+                <div className="px-4 py-2 bg-emerald-50/90 border-t border-emerald-100 flex items-center justify-between text-xs text-emerald-900 font-bold">
+                  <span className="flex items-center space-x-1.5">
+                    <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Free Delivery Across India 🚚</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
 
                 {/* Expanded items & price breakdown */}
                 <AnimatePresence initial={false}>
@@ -1014,7 +1000,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       {/* Pricing Breakdown */}
                       <div className="pt-2 border-t border-neutral-200/80 space-y-1.5 text-neutral-600 text-xs">
                         <div className="flex justify-between">
-                          <span>Subtotal</span>
+                          <span>Product</span>
                           <span className="font-semibold text-neutral-900 font-mono">{formatRupeeExact(rawSubtotal)}</span>
                         </div>
                         {discountAmount > 0 && (
@@ -1025,28 +1011,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         )}
                         <div className="flex justify-between items-center">
                           <span>Delivery</span>
-                          <span className={`font-bold ${shippingCost === 0 ? "text-emerald-700 font-sans" : "text-neutral-900 font-mono"}`}>
-                            {shippingCost === 0 ? "FREE" : formatRupeeExact(shippingCost)}
+                          <span className="font-bold text-emerald-700 font-sans">
+                            FREE
                           </span>
                         </div>
-                        {isCOD ? (
-                          <div className="flex justify-between items-center text-amber-900 font-semibold bg-amber-50/80 -mx-1 px-1.5 py-1 rounded">
-                            <span>COD Handling Charge (5%)</span>
-                            <span className="font-bold font-mono text-amber-950">+{formattedCodCharge}</span>
-                          </div>
-                        ) : (
-                          codHandlingCharge > 0 && (
-                            <div className="flex justify-between items-center text-emerald-800 font-semibold bg-emerald-50/80 -mx-1 px-1.5 py-1 rounded">
-                              <span className="flex items-center space-x-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                <span>Prepaid Savings (No COD fee):</span>
-                              </span>
-                              <span className="font-bold font-mono text-emerald-700">Save {formattedCodCharge}</span>
-                            </div>
-                          )
-                        )}
+                        <div className="flex justify-between items-center">
+                          <span>COD fee</span>
+                          {isCOD ? (
+                            <span className="font-bold text-amber-900 font-mono bg-amber-50 px-1.5 py-0.5 rounded">
+                              5% (+{formattedCodCharge})
+                            </span>
+                          ) : (
+                            <span className="font-bold text-emerald-700 font-mono">
+                              ₹0
+                            </span>
+                          )}
+                        </div>
                         <div className="flex justify-between items-center pt-2 border-t border-neutral-200 text-neutral-900 font-extrabold text-sm">
-                          <span>{isCOD ? "Total (COD):" : "Total (Prepaid):"}</span>
+                          <span>{isCOD ? "Total (COD)" : "Total (Prepaid)"}</span>
                           <span className="text-amber-800 font-black font-mono text-base">
                             {formattedTotal}
                           </span>
@@ -1069,17 +1051,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </h3>
                   </div>
                   <div className="flex items-center space-x-1.5 text-xs font-bold">
-                    {isFreeDelivery ? (
-                      <span className="text-emerald-800 bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full flex items-center space-x-1 text-[11px]">
-                        <Truck className="w-3 h-3 text-emerald-600" />
-                        <span>🚚 FREE DELIVERY</span>
-                      </span>
-                    ) : (
-                      <span className="text-neutral-800 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-full flex items-center space-x-1 text-[11px] font-mono">
-                        <Truck className="w-3 h-3 text-neutral-600" />
-                        <span>🚚 Delivery: ₹{shippingCost}</span>
-                      </span>
-                    )}
+                    <span className="text-emerald-800 bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full flex items-center space-x-1 text-[11px]">
+                      <Truck className="w-3 h-3 text-emerald-600" />
+                      <span>Free Delivery Across India 🚚</span>
+                    </span>
                   </div>
                 </div>
 

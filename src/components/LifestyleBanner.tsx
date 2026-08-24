@@ -26,22 +26,18 @@ export const LifestyleBanner: React.FC = () => {
             We scour trending utility innovations to bring you high-value products that simplify study, home organization, personal care, and work desk setups.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-neutral-800 font-medium pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-neutral-800 font-medium pt-2">
             <div className="flex items-center space-x-2.5">
               <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>100% Quality Checked Before Dispatch</span>
             </div>
             <div className="flex items-center space-x-2.5">
               <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>Free Express Delivery Above ₹499</span>
+              <span>Free Express Delivery Across India 🚚</span>
             </div>
             <div className="flex items-center space-x-2.5">
               <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>GPay, PhonePe, UPI & COD Accepted</span>
-            </div>
-            <div className="flex items-center space-x-2.5">
-              <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>7-Day Easy Doorstep Replacement</span>
             </div>
           </div>
 

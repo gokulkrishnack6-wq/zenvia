@@ -181,9 +181,9 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ isOpen, defaultTab = "
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-neutral-800/80 border border-neutral-700/60 space-y-1">
-                  <span className="text-white font-semibold block text-xs">Free Delivery Above ₹499</span>
+                  <span className="text-white font-semibold block text-xs">Free Delivery Across India 🚚</span>
                   <p className="text-neutral-400 text-[11px]">
-                    Orders above ₹499 qualify for free standard shipping. For orders below ₹499, standard shipping is ₹49.
+                    All orders qualify for 100% free delivery across India with zero hidden shipping fees.
                   </p>
                 </div>
 

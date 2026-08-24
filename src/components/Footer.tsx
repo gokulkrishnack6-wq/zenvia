@@ -26,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({
             <Truck className="w-5 h-5 text-amber-400 shrink-0" />
             <div>
               <span className="text-white font-bold block">Pan-India Delivery</span>
-              <span className="text-neutral-400 text-[11px]">Free delivery on orders over ₹499</span>
+              <span className="text-neutral-400 text-[11px]">Free delivery across India 🚚</span>
             </div>
           </div>
 
