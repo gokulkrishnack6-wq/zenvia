@@ -1453,21 +1453,20 @@ export const PRODUCTS: Product[] = [
     craftsmanshipStory:
       "Made from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion. The open-grid design allows excess water to drain away easily, helping stored items dry faster.",
     features: [
-      "Adjustable Faucet Fit - Fits most round and square kitchen sink faucets for convenient everyday use",
-      "Multi-Utility Storage - Designed to hold sponges, soaps, scrubbers, dishcloths, and small towels in one organized space",
-      "Stainless Steel Construction - Made from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion",
-      "360° Rotatable Design - The organizer can be rotated for convenient positioning on either side of the sink",
-      "Fast Water Drainage - The open-grid design allows excess water to drain away easily, helping stored items dry faster",
-      "Built-In Towel Clip - Includes a clip for hanging dishcloths or small towels securely",
-      "Tool-Free Installation - Clip-on installation requires no drilling or complicated tools",
-      "Kitchen & Bathroom Use - Suitable for kitchen sinks, bathroom sinks, RVs, and rental spaces",
-      "Compact Organization - Keeps frequently used sink essentials within easy reach while reducing countertop clutter",
+      "Heavy-duty stainless steel construction built for everyday kitchen durability",
+      "Rust-resistant design engineered to withstand constant water exposure",
+      "Fast open-grid drainage prevents water pooling and speeds drying",
+      "Space-saving storage holds sponges, soaps, and scrubbers neatly",
+      "Secure faucet hanging clamp fits round and square faucet necks firmly",
+      "Easy to remove and clean in seconds without tools",
     ],
     keyHighlights: [
-      "Tool-free clamp fits most round & square faucets",
-      "Open-grid fast water drainage prevents standing water",
-      "Thickened rustproof stainless steel with 360° swivel",
-      "Multi-utility storage for sponges, soaps & dishcloths",
+      "Heavy-duty stainless steel",
+      "Rust-resistant design",
+      "Fast open-grid drainage",
+      "Space-saving storage",
+      "Secure faucet hanging clamp",
+      "Easy to remove and clean",
     ],
     whyYouNeedThis: {
       headline: "Keep Countertops Dry and Cleaning Essentials Within Reach.",
@@ -1533,34 +1532,24 @@ export const PRODUCTS: Product[] = [
     ],
     faqs: [
       {
-        question: "What is the Adjustable Stainless Steel Sink Caddy used for?",
-        answer:
-          "It provides a convenient faucet-mounted organizer for sponges, soaps, scrubbers, dishcloths, and towels, keeping your countertop clear and allowing excess water to drain directly into the sink.",
+        question: "What is the product made of?",
+        answer: "Heavy-duty stainless steel designed for durability and daily moisture resistance.",
       },
       {
-        question: "Will it fit my faucet?",
-        answer:
-          "It is designed to fit most round and square kitchen and bathroom sink faucets with standard tube diameters using the included adapter clip.",
+        question: "Where can it be used?",
+        answer: "It is designed for kitchen sinks and can also be used in suitable bathroom setups with standard faucet pipes.",
       },
       {
-        question: "Is installation difficult?",
-        answer:
-          "Not at all. It features a tool-free clamp design. Simply clip it around the faucet tube and hand-tighten the screw cap.",
+        question: "How does it attach?",
+        answer: "It uses the faucet-hanging clamp design described in the product specifications. No drilling or wall mounting required.",
       },
       {
-        question: "Is the material rust-resistant?",
-        answer:
-          "Yes, it is constructed from thickened stainless steel designed for durability and resistance to everyday moisture and corrosion.",
+        question: "Does it require a suction cup?",
+        answer: "No. It securely clamps directly onto the faucet tube so it will not slip, peel, or lose suction.",
       },
       {
-        question: "Can it be rotated after installation?",
-        answer:
-          "Yes, the 360° rotatable design allows you to swivel the caddy to either side of the sink basin easily.",
-      },
-      {
-        question: "Can it hold dishcloths or towels?",
-        answer:
-          "Yes, it includes a dedicated side hanging bar/clip to hold dishcloths, hand towels, or peeling tools.",
+        question: "How do I clean it?",
+        answer: "It can be detached and cleaned easily under running water with standard dishwashing soap.",
       },
     ],
     tags: ["New", "Sink Caddy", "Kitchen Organizer", "Stainless Steel", "Home & Kitchen"],

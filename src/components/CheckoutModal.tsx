@@ -26,6 +26,7 @@ import {
   Package,
   CreditCard,
   Building,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
@@ -1534,6 +1535,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Subtle UPI Recipient Name Trust Notice */}
+                {formData.paymentMethod === "razorpay" && (
+                  <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 text-[11px] text-neutral-600 flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                    <p className="leading-relaxed">
+                      <strong className="text-neutral-900 font-bold">Payment Notice:</strong> During UPI app or gateway checkout, the payee name may display our registered business entity name. This is standard and 100% secure.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Desktop embedded submit button */}

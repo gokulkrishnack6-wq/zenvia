@@ -62,10 +62,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           : "bg-white border-b border-neutral-200 py-3"
       }`}
     >
-      {/* Top Shipping Bar */}
-      <div className="bg-neutral-900 text-white text-[11px] py-1 px-4 text-center font-medium tracking-wide flex items-center justify-center space-x-2">
-        <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
-        <span>🚚 Express Delivery Across India • Free Delivery Above ₹499 • UPI & COD Available</span>
+      {/* Top Announcement Bar */}
+      <div className="bg-neutral-900 text-white text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center space-x-2">
+        <span>🚚 Delivery Available Across India</span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 flex items-center justify-between gap-4">

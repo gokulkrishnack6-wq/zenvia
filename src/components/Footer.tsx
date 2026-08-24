@@ -1,14 +1,14 @@
 import React from "react";
 import { CategoryType } from "../types";
 import { CATEGORIES } from "../data/products";
-import { ShieldCheck, Truck, Phone, Mail, RotateCcw, MapPin, Heart } from "lucide-react";
+import { ShieldCheck, Truck, Phone, Mail, MapPin, Heart, Lock, HelpCircle } from "lucide-react";
 import { ZenviaLogo } from "./ZenviaLogo";
+import { PolicyTab } from "./PolicyModal";
 
 interface FooterProps {
   onSelectCategory: (cat: CategoryType) => void;
-  onOpenAccount?: () => void;
   onOpenAISearch: () => void;
-  onOpenPolicy: () => void;
+  onOpenPolicy: (tab?: PolicyTab) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -17,153 +17,222 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPolicy,
 }) => {
   return (
-    <footer className="bg-neutral-900 text-neutral-300 pt-16 pb-24 sm:pb-12 border-t border-neutral-800">
+    <footer className="bg-neutral-950 text-neutral-300 pt-14 pb-24 sm:pb-12 border-t border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Trust Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pb-12 border-b border-neutral-800 text-xs">
-          <div className="flex items-center space-x-3 bg-neutral-800/60 p-3.5 rounded-xl border border-neutral-700/50">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-10 border-b border-neutral-800 text-xs">
+          <div className="flex items-center space-x-3 bg-neutral-900/80 p-3.5 rounded-xl border border-neutral-800">
             <Truck className="w-5 h-5 text-amber-400 shrink-0" />
             <div>
-              <span className="text-white font-bold block">Ships Across India</span>
-              <span className="text-neutral-400 text-[11px]">Free delivery over ₹499</span>
+              <span className="text-white font-bold block">Pan-India Delivery</span>
+              <span className="text-neutral-400 text-[11px]">Free delivery on orders over ₹499</span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 bg-neutral-800/60 p-3.5 rounded-xl border border-neutral-700/50">
-            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div className="flex items-center space-x-3 bg-neutral-900/80 p-3.5 rounded-xl border border-neutral-800">
+            <Lock className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <span className="text-white font-bold block">100% Quality Verified</span>
-              <span className="text-neutral-400 text-[11px]">Every product checked</span>
+              <span className="text-white font-bold block">Secure Checkout</span>
+              <span className="text-neutral-400 text-[11px]">256-bit encrypted SSL payment</span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 bg-neutral-800/60 p-3.5 rounded-xl border border-neutral-700/50">
-            <RotateCcw className="w-5 h-5 text-blue-400 shrink-0" />
+          <div className="flex items-center space-x-3 bg-neutral-900/80 p-3.5 rounded-xl border border-neutral-800">
+            <Mail className="w-5 h-5 text-amber-400 shrink-0" />
             <div>
-              <span className="text-white font-bold block">7-Day Easy Returns</span>
-              <span className="text-neutral-400 text-[11px]">Instant UPI refunds</span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3 bg-neutral-800/60 p-3.5 rounded-xl border border-neutral-700/50">
-            <Phone className="w-5 h-5 text-amber-400 shrink-0" />
-            <div>
-              <span className="text-white font-bold block">Helpline & WhatsApp</span>
-              <span className="text-neutral-400 text-[11px]">1800-ZENVIA-IN</span>
+              <span className="text-white font-bold block">Customer Support</span>
+              <span className="text-neutral-400 text-[11px]">support@zenvia.in (Mon–Sat 9AM–6PM)</span>
             </div>
           </div>
         </div>
 
-        {/* Main Footer Column Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 py-12 border-b border-neutral-800">
+        {/* Main Footer Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-10 border-b border-neutral-800">
           
           {/* Brand Col */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onSelectCategory("All");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="inline-block hover:opacity-90 transition-opacity"
-                title="Zenvia Official Store"
-              >
-                <ZenviaLogo variant="gold" className="h-12 w-auto" />
-              </a>
-            </div>
+          <div className="space-y-3.5">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                onSelectCategory("All");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-block hover:opacity-90 transition-opacity"
+              title="Zenvia Official Store"
+            >
+              <ZenviaLogo variant="gold" className="h-10 w-auto" />
+            </a>
 
-            <p className="text-xs text-neutral-400 leading-relaxed max-w-sm">
-              Discover affordable, useful, trendy and giftable smart products delivered across India. High quality shopping made simple and reliable.
+            <p className="text-xs text-neutral-300 font-medium leading-relaxed">
+              "Zenvia — Smart products for a better everyday life."
             </p>
 
-            <div className="space-y-1.5 text-xs text-neutral-300">
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Practical, high-utility home and lifestyle essentials delivered to your doorstep across India.
+            </p>
+
+            <div className="pt-1 text-xs text-neutral-300 space-y-1">
               <div className="flex items-center space-x-2">
-                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <Mail className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>support@zenvia.in</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>Mumbai • Delhi • Bengaluru • Hyderabad</span>
+              <div className="flex items-center space-x-2 text-[11px] text-neutral-400">
+                <span>Support Hours: Mon – Sat, 9:00 AM – 6:00 PM IST</span>
               </div>
             </div>
           </div>
 
-          {/* Categories Col */}
+          {/* Navigation Links */}
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">
-              Product Categories
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">
+              Navigation
             </h3>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-xs text-neutral-400">
               <li>
-                <button onClick={() => onSelectCategory("All")} className="hover:text-amber-400 transition-colors">
-                  All Products
+                <button
+                  onClick={() => {
+                    onSelectCategory("All");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Home
                 </button>
               </li>
-              {CATEGORIES.map((c) => (
-                <li key={c.id}>
-                  <button onClick={() => onSelectCategory(c.id)} className="hover:text-amber-400 transition-colors">
-                    {c.name}
-                  </button>
-                </li>
-              ))}
+              <li>
+                <button
+                  onClick={() => {
+                    onSelectCategory("All");
+                    const el = document.getElementById("catalog-section") || document.getElementById("featured-products");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                    else window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Shop
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onOpenPolicy("about")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  About Us
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onOpenPolicy("contact")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Contact Us
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={onOpenAISearch}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Search Products
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Policies & Trust */}
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">
-              Customer Care
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">
+              Customer Policies
             </h3>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-xs text-neutral-400">
               <li>
-                <button onClick={onOpenPolicy} className="hover:text-amber-400 transition-colors">
-                  Shipping & Delivery Info
+                <button
+                  onClick={() => onOpenPolicy("shipping")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Shipping Policy
                 </button>
               </li>
               <li>
-                <button onClick={onOpenPolicy} className="hover:text-amber-400 transition-colors">
-                  7-Day Return & Refund Policy
+                <button
+                  onClick={() => onOpenPolicy("refund")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Refund & Cancellation Policy
                 </button>
               </li>
               <li>
-                <button onClick={onOpenAISearch} className="hover:text-amber-400 transition-colors">
-                  Product Finder & Search
+                <button
+                  onClick={() => onOpenPolicy("privacy")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onOpenPolicy("terms")}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  Terms & Conditions
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Accepted Payments in India */}
+          {/* Accepted Payment Options */}
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">
-              Accepted Payments
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">
+              Payment Options
             </h3>
-            <p className="text-xs text-neutral-400 mb-3">
-              We accept all popular payment methods across India:
+            <p className="text-[11px] text-neutral-400 mb-3">
+              Safe & secure payment options available at checkout:
             </p>
-            <div className="flex flex-wrap gap-2 text-[10px] font-bold text-neutral-300">
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">UPI / GPay</span>
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">PhonePe</span>
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">Paytm</span>
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">Cash on Delivery</span>
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">RuPay Cards</span>
-              <span className="px-2 py-1 rounded bg-neutral-800 border border-neutral-700">Net Banking</span>
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold text-neutral-300">
+              <span className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800">UPI (GPay / PhonePe / Paytm)</span>
+              <span className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800">Credit / Debit Cards</span>
+              <span className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800">Net Banking</span>
+              <span className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800">Cash on Delivery</span>
+            </div>
+            <div className="mt-3 flex items-center space-x-1.5 text-[11px] text-neutral-400">
+              <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>SSL 256-Bit Encrypted</span>
             </div>
           </div>
 
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-4">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 gap-3">
           <p>© {new Date().getFullYear()} ZENVIA India. All rights reserved.</p>
 
-          <div className="flex items-center space-x-2 text-neutral-400">
-            <span>Made with</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>for Indian Shoppers</span>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => onOpenPolicy("privacy")}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+            <button
+              onClick={() => onOpenPolicy("terms")}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <button
+              onClick={() => onOpenPolicy("shipping")}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Shipping
+            </button>
+            <button
+              onClick={() => onOpenPolicy("contact")}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Support
+            </button>
           </div>
         </div>
 

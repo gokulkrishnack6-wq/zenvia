@@ -25,7 +25,7 @@ import { WishlistDrawer } from "./components/WishlistDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { AISearchModal } from "./components/AISearchModal";
 import { RecentlyPurchasedPopup } from "./components/RecentlyPurchasedPopup";
-import { PolicyModal } from "./components/PolicyModal";
+import { PolicyModal, PolicyTab } from "./components/PolicyModal";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 
 import { Product, Currency, CategoryType, CartItem } from "./types";
@@ -164,7 +164,13 @@ export default function App() {
   const [aiSearchOpen, setAISearchOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [policyDefaultTab, setPolicyDefaultTab] = useState<PolicyTab>("shipping");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+
+  const handleOpenPolicy = (tab: PolicyTab = "shipping") => {
+    setPolicyDefaultTab(tab);
+    setPolicyOpen(true);
+  };
 
   // Discount
   const [couponCode, setCouponCode] = useState("");
@@ -289,6 +295,7 @@ export default function App() {
             onBuyNow={handleBuyNow}
             onToggleWishlist={handleToggleWishlist}
             onQuickView={handleSelectProduct}
+            onOpenPolicy={handleOpenPolicy}
           />
         ) : (
           <>
@@ -362,7 +369,7 @@ export default function App() {
           handleGoHome();
         }}
         onOpenAISearch={() => setAISearchOpen(true)}
-        onOpenPolicy={() => setPolicyOpen(true)}
+        onOpenPolicy={handleOpenPolicy}
       />
 
       {/* Quick View Modal */}
@@ -440,6 +447,7 @@ export default function App() {
       {/* Customer Policy & Help Modal */}
       <PolicyModal
         isOpen={policyOpen}
+        defaultTab={policyDefaultTab}
         onClose={() => setPolicyOpen(false)}
       />
 
