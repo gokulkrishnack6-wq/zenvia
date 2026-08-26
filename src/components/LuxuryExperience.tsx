@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck, Lock, Truck, Headphones, RefreshCw } from "lucide-react";
+import { ShieldCheck, Lock, Truck, Headphones } from "lucide-react";
 import { motion } from "motion/react";
 
 export const LuxuryExperience: React.FC = () => {
@@ -18,11 +18,6 @@ export const LuxuryExperience: React.FC = () => {
       icon: Truck,
       title: "Delivery Across India",
       desc: "Reliable shipping across India with fast dispatch, SMS & WhatsApp updates.",
-    },
-    {
-      icon: RefreshCw,
-      title: "7-Day Easy Returns",
-      desc: "Hassle-free replacement policy if you receive a damaged or defective item.",
     },
     {
       icon: Headphones,
@@ -46,7 +41,7 @@ export const LuxuryExperience: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {pillars.map((p, idx) => {
             const IconComp = p.icon;
             return (

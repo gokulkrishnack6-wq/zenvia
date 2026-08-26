@@ -6,7 +6,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: "Aakash Mehta",
     title: "Engineering Student",
     location: "Mumbai, Maharashtra",
-    quote: "Ordered the Mini Thermal Printer for my college exam notes. Delivered in 2 days to Andheri West. Connects instantly via Bluetooth to my Android phone!",
+    quote: "Ordered the Mini Thermal Printer for my college exam notes. Delivered promptly to Andheri West. Connects instantly via Bluetooth to my Android phone!",
     image: "https://images.unsplash.com/photo-1615109398623-88346a601842?q=80&w=300&auto=format&fit=crop",
     rating: 5,
     productPurchased: "Mini Thermal Pocket Printer",

@@ -24,7 +24,6 @@ import { CartDrawer } from "./components/CartDrawer";
 import { WishlistDrawer } from "./components/WishlistDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { AISearchModal } from "./components/AISearchModal";
-import { RecentlyPurchasedPopup } from "./components/RecentlyPurchasedPopup";
 import { PolicyModal, PolicyTab } from "./components/PolicyModal";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 
@@ -464,11 +463,6 @@ export default function App() {
           onOpenCart={() => setCartOpen(true)}
           onOpenWishlist={() => setWishlistOpen(true)}
         />
-      )}
-
-      {/* Corner Toast for Recent Orders (Suppressed on Kitchen Sink Caddy page to eliminate other-product distraction) */}
-      {(!activeProduct || activeProduct.id !== "prod-kitchen-sink-caddy") && (
-        <RecentlyPurchasedPopup onQuickView={handleSelectProduct} />
       )}
     </div>
   );

@@ -27,7 +27,7 @@ export const DiscountBanner: React.FC = () => {
               <span>USE CODE <strong className="text-[#D4AF37] font-semibold tracking-widest">ZENVIAVIP10</strong> FOR 10% WELCOME DISCOUNT</span>
             </span>
             <span className="text-neutral-500">•</span>
-            <span className="text-neutral-400">100% CERTIFIED GENUINE PRODUCTS • 7-DAY EASY RETURNS & INSTANT REFUNDS</span>
+            <span className="text-neutral-400">100% CERTIFIED GENUINE PRODUCTS • SECURE PAYMENT & FAST DISPATCH</span>
             <span className="text-neutral-500">•</span>
             <span className="inline-flex items-center space-x-2 text-[#D4AF37]">
               <Sparkles className="w-3.5 h-3.5" />

@@ -55,6 +55,7 @@ import { trackFunnelEvent } from "../lib/analytics";
 import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { SinkCaddySocialProofGallery } from "./SinkCaddySocialProofGallery";
+import { SinkCaddyCountdownAdGraphic } from "./SinkCaddyCountdownAdGraphic";
 import { ProductCard } from "./ProductCard";
 import { PromotionCountdownBadge } from "./PromotionCountdownBadge";
 import { PolicyTab } from "./PolicyModal";
@@ -1465,6 +1466,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ========================================================
+            22-HOUR LIMITED-TIME OFFER COUNTDOWN AD GRAPHIC (Sink Caddy)
+        ======================================================== */}
+        {(product.id === "p13" || product.slug?.includes("sink-caddy") || product.name.toLowerCase().includes("sink caddy")) && (
+          <div className="mb-10">
+            <SinkCaddyCountdownAdGraphic onShopNow={handleBuyNowClick} />
           </div>
         )}
 

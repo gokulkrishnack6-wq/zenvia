@@ -7,6 +7,7 @@ export type FunnelEventName =
   | "product_view"
   | "add_to_cart"
   | "begin_checkout"
+  | "add_shipping_info"
   | "payment_method_selected"
   | "razorpay_checkout_opened"
   | "purchase"

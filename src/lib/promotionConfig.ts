@@ -3,25 +3,23 @@ import { useState, useEffect } from "react";
 /**
  * CENTRAL PROMOTION CONFIGURATION
  * 
- * Edit `PROMOTION_CONFIG.endTime` to set the exact promotional deadline.
- * Timezone format: ISO 8601 with offset (e.g., "+05:30" for IST).
+ * Configures the live 22-Hour Limited-Time Offer promotional deadline.
  */
 export const PROMOTION_CONFIG = {
   // Master toggle to enable or disable the promotion timer
   enabled: true,
 
   // Campaign Title
-  campaignName: "Special Limited-Time Launch Deal",
+  campaignName: "22-Hour Limited-Time Offer",
 
-  // Authoritative Promotion End Timestamp (ISO 8601)
-  // Example: 2026-08-25T23:59:59+05:30 (Ends at 11:59:59 PM IST on Aug 25, 2026)
-  endTime: "2026-08-25T23:59:59+05:30",
+  // Authoritative Promotion Duration (22 Hours)
+  durationHours: 22,
 
   // Labels & messaging
-  badgeText: "LIMITED-TIME DEAL",
-  activeSubtext: "Order before the deal ends.",
-  checkoutNotice: "Limited-time offer",
-  expiredNotice: "This special deal has ended.",
+  badgeText: "22-HOUR LIMITED OFFER",
+  activeSubtext: "Upgrade your sink before the offer ends.",
+  checkoutNotice: "22-Hour Limited-Time Offer",
+  expiredNotice: "Special Limited-Time Offer (Ends Today)",
 };
 
 export interface CountdownState {
@@ -73,19 +71,39 @@ async function fetchServerOffset(): Promise<number> {
  * Calculates current remaining time based on synchronized server time.
  */
 export function getPromotionTimeRemaining(customEndTime?: string): CountdownState {
-  const endIso = customEndTime || PROMOTION_CONFIG.endTime;
-  const targetTime = new Date(endIso).getTime();
+  let targetTime: number;
+
+  if (customEndTime) {
+    targetTime = new Date(customEndTime).getTime();
+  } else {
+    // 22-hour persistent window based on initial user session or storage
+    const STORAGE_KEY = "zenvia_sink_caddy_22h_timer_start";
+    let startMs: number;
+    if (typeof window !== "undefined" && window.localStorage) {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        startMs = parseInt(stored, 10);
+      } else {
+        startMs = Date.now();
+        localStorage.setItem(STORAGE_KEY, startMs.toString());
+      }
+    } else {
+      startMs = Date.now();
+    }
+    const durationMs = PROMOTION_CONFIG.durationHours * 60 * 60 * 1000;
+    targetTime = startMs + durationMs;
+  }
 
   if (!PROMOTION_CONFIG.enabled || isNaN(targetTime)) {
     return {
       isActive: false,
-      isExpired: true,
-      hours: "00",
+      isExpired: false,
+      hours: "22",
       minutes: "00",
       seconds: "00",
-      formattedTimer: "00 : 00 : 00",
+      formattedTimer: "22 : 00 : 00",
       remainingMs: 0,
-      endTime: endIso,
+      endTime: new Date(targetTime).toISOString(),
     };
   }
 
@@ -94,15 +112,21 @@ export function getPromotionTimeRemaining(customEndTime?: string): CountdownStat
   const diff = targetTime - currentNow;
 
   if (diff <= 0) {
+    // Reset rolling window so active offer always stays present
+    const durationMs = PROMOTION_CONFIG.durationHours * 60 * 60 * 1000;
+    const refreshedTarget = currentNow + durationMs;
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("zenvia_sink_caddy_22h_timer_start", currentNow.toString());
+    }
     return {
-      isActive: false,
-      isExpired: true,
-      hours: "00",
+      isActive: true,
+      isExpired: false,
+      hours: "22",
       minutes: "00",
       seconds: "00",
-      formattedTimer: "00 : 00 : 00",
-      remainingMs: 0,
-      endTime: endIso,
+      formattedTimer: "22 : 00 : 00",
+      remainingMs: durationMs,
+      endTime: new Date(refreshedTarget).toISOString(),
     };
   }
 
@@ -124,7 +148,7 @@ export function getPromotionTimeRemaining(customEndTime?: string): CountdownStat
     seconds: secondsStr,
     formattedTimer: `${hoursStr} : ${minutesStr} : ${secondsStr}`,
     remainingMs: diff,
-    endTime: endIso,
+    endTime: new Date(targetTime).toISOString(),
   };
 }
 

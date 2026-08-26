@@ -77,7 +77,7 @@ export const AISearchModal: React.FC<AISearchModalProps> = ({
       setRecommendation({
         text: `Welcome to Zenvia Concierge. Based on your inquiry regarding "${searchQuery}", our ateliers recommend these masterworks.`,
         products: matched.length > 0 ? matched : PRODUCTS.slice(0, 3),
-        tip: "Each creation includes 24h white-glove climate delivery.",
+        tip: "Fast & reliable delivery across eligible locations in India.",
       });
     } finally {
       setLoading(false);

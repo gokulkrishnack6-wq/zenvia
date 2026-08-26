@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "description": "Authenticated customer accounts and profiles",
+      "fields": {
+        "id": { "type": "string", "description": "Firebase user UID" },
+        "email": { "type": "string", "description": "Verified customer email" },
+        "fullName": { "type": "string", "description": "Customer display name" },
+        "phone": { "type": "string", "description": "Contact number" },
+        "avatarUrl": { "type": "string", "description": "Profile picture URL" },
+        "authProvider": { "type": "string", "description": "Authentication method (google, email)" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "savedAddresses": { "type": "array", "description": "List of saved customer delivery addresses" }
+      }
+    },
+    "CustomerOrder": {
+      "collection": "orders",
+      "description": "Customer placed orders and tracking details",
+      "fields": {
+        "id": { "type": "string", "description": "Unique order identifier" },
+        "userId": { "type": "string", "description": "Firebase UID of customer" },
+        "userEmail": { "type": "string", "description": "Customer email" },
+        "date": { "type": "string", "description": "ISO timestamp" },
+        "items": { "type": "array", "description": "Purchased items with quantities and prices" },
+        "subtotal": { "type": "number", "description": "Cart subtotal amount" },
+        "discount": { "type": "number", "description": "Applied discount" },
+        "shipping": { "type": "number", "description": "Shipping fee" },
+        "total": { "type": "number", "description": "Total final paid/payable amount" },
+        "formattedTotal": { "type": "string", "description": "Formatted INR price" },
+        "paymentMethod": { "type": "string", "description": "Payment mode used" },
+        "paymentStatus": { "type": "string", "description": "Payment verification status" },
+        "paymentId": { "type": "string", "description": "Payment gateway reference ID" },
+        "trackingNumber": { "type": "string", "description": "Courier tracking number" },
+        "orderStatus": { "type": "string", "description": "Fulfillment status" },
+        "customerDetails": { "type": "object", "description": "Recipient address and contact" },
+        "shippingMethod": { "type": "string", "description": "Shipping speed method" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      }
+    }
+  }
+}
