@@ -97,10 +97,10 @@ export const SinkCaddySocialProofGallery: React.FC<SinkCaddySocialProofGalleryPr
             <span>Visual Gallery</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">
-            Real Product Usage Photos
+            Product in Use &amp; Customer Photos
           </h2>
           <p className="text-xs sm:text-sm text-neutral-500 font-medium mt-0.5">
-            Real product-use photos
+            See how the sink caddy installs on faucet pipes and organizes sponges &amp; soaps
           </p>
         </div>
 

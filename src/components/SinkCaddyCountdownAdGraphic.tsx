@@ -196,12 +196,12 @@ export const SinkCaddyCountdownAdGraphic: React.FC<SinkCaddyCountdownAdGraphicPr
       id="sink-caddy-direct-response-ad"
       className={`relative w-full max-w-2xl mx-auto overflow-hidden rounded-2xl bg-white border border-neutral-300/80 shadow-2xl text-neutral-900 font-sans ${className}`}
     >
-      {/* Top Meta Performance Badge & Format Switcher */}
+      {/* Top Spotlight Badge & Format Switcher */}
       <div className="bg-neutral-950 text-white px-3.5 py-2 flex items-center justify-between border-b border-neutral-800 text-xs">
         <div className="flex items-center space-x-2">
           <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="font-bold tracking-wider uppercase text-[11px] text-neutral-300">
-            HIGH-CONVERTING META AD CREATIVE
+            OFFICIAL ZENVIA PRODUCT SPOTLIGHT
           </span>
         </div>
 
@@ -216,7 +216,7 @@ export const SinkCaddyCountdownAdGraphic: React.FC<SinkCaddyCountdownAdGraphicPr
             }`}
           >
             <Layers className="w-3 h-3" />
-            <span>Feed Ad</span>
+            <span>Product Overview</span>
           </button>
           <button
             onClick={() => setActiveTab("story")}
@@ -227,7 +227,7 @@ export const SinkCaddyCountdownAdGraphic: React.FC<SinkCaddyCountdownAdGraphicPr
             }`}
           >
             <Play className="w-3 h-3" />
-            <span>0–28s Story Sequence</span>
+            <span>Step-by-Step Demo</span>
           </button>
         </div>
       </div>
@@ -537,7 +537,7 @@ export const SinkCaddyCountdownAdGraphic: React.FC<SinkCaddyCountdownAdGraphicPr
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Play 0–28s Story</span>
+                    <span>Play Demo</span>
                   </>
                 )}
               </button>

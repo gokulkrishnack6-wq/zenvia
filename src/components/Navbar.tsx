@@ -5,12 +5,14 @@ import {
   Heart,
   Menu,
   X,
-  MapPin,
-  ChevronDown,
+  User,
+  Star,
+  HelpCircle,
+  ShoppingBag as ShopIcon,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Currency, CategoryType } from "../types";
-import { CATEGORIES } from "../data/products";
 import { ZenviaLogo } from "./ZenviaLogo";
 
 interface NavbarProps {
@@ -36,11 +38,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAISearch,
   onOpenPolicy,
   onSelectCategory,
-  selectedCategory,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,141 +54,118 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const scrollToReviews = () => {
+    const el = document.getElementById("reviews-section") || document.getElementById("product-reviews-container");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const scrollToShop = () => {
+    onSelectCategory("All");
+    const el = document.getElementById("catalog-section") || document.getElementById("main-product-details-container");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
         scrolled
-          ? "bg-white/95 backdrop-blur-md border-b border-neutral-200/90 py-2 shadow-sm"
-          : "bg-white border-b border-neutral-200 py-3"
+          ? "bg-white/95 backdrop-blur-md border-b border-neutral-200/90 py-2.5 shadow-sm"
+          : "bg-white border-b border-neutral-200 py-3.5"
       }`}
     >
-      {/* Top Announcement Bar */}
-      <div className="bg-neutral-900 text-white text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center space-x-2">
-        <span>🚚 Delivery Available Across India</span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         
         {/* Mobile menu trigger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden text-neutral-800 hover:text-amber-600 p-2 transition-colors cursor-pointer"
-          aria-label="Toggle menu"
+          className="lg:hidden text-neutral-800 hover:text-amber-600 p-2 -ml-2 transition-colors cursor-pointer"
+          aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
-        {/* Brand Logo */}
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            onSelectCategory("All");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          className="flex items-center space-x-2 group shrink-0 py-0.5 hover:opacity-90 transition-opacity"
-          title="Zenvia Official Store"
-        >
-          <ZenviaLogo variant="gold" className={`w-auto transition-all duration-300 ${scrolled ? "h-9 sm:h-10" : "h-10 sm:h-11"}`} />
-        </a>
-
-        {/* Search Bar - Center Desktop */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4 relative">
+        {/* Left: Desktop Navigation: Shop, Best Sellers, About, Reviews */}
+        <nav className="hidden lg:flex items-center space-x-5 text-xs font-bold tracking-wide text-neutral-800 flex-1">
           <button
-            onClick={onOpenAISearch}
-            className="w-full flex items-center justify-between bg-neutral-100 hover:bg-neutral-100/80 border border-neutral-200 hover:border-amber-400/60 rounded-xl px-3.5 py-2 text-xs text-neutral-500 transition-all text-left cursor-pointer"
+            onClick={scrollToShop}
+            className="transition-colors hover:text-neutral-950 py-1 hover-underline-luxury cursor-pointer flex items-center space-x-1"
           >
-            <div className="flex items-center space-x-2.5">
-              <Search className="w-4 h-4 text-neutral-400" />
-              <span>What are you looking for?</span>
-            </div>
-            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
-              Search
-            </span>
-          </button>
-        </div>
-
-        {/* Desktop Navigation Category Links */}
-        <nav className="hidden lg:flex items-center space-x-6 text-xs font-semibold text-neutral-700">
-          <button
-            onClick={() => onSelectCategory("All")}
-            className={`transition-colors py-1 hover-underline-luxury cursor-pointer ${
-              selectedCategory === "All" ? "text-amber-600 font-extrabold" : "hover:text-neutral-900"
-            }`}
-          >
-            All Products
+            <span>Shop</span>
+            <span className="text-[10px] text-neutral-400 font-bold">+</span>
           </button>
 
-          {/* Categories Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-              className="flex items-center space-x-1 hover:text-neutral-900 py-1 cursor-pointer"
-            >
-              <span>Categories</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${categoryDropdownOpen ? "rotate-180 text-amber-600" : ""}`} />
-            </button>
-
-            <AnimatePresence>
-              {categoryDropdownOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute left-0 mt-2 w-52 bg-white border border-neutral-200 rounded-xl shadow-2xl py-2 z-50"
-                  onMouseLeave={() => setCategoryDropdownOpen(false)}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        onSelectCategory(cat.id);
-                        setCategoryDropdownOpen(false);
-                        const sec = document.getElementById("catalog-section");
-                        if (sec) sec.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className={`w-full text-left px-4 py-2 text-xs hover:bg-neutral-50 font-medium transition-colors cursor-pointer ${
-                        selectedCategory === cat.id ? "text-amber-600 font-extrabold bg-amber-50/60" : "text-neutral-700"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
           <button
-            onClick={() => {
-              onSelectCategory("Best Sellers");
-              const sec = document.getElementById("catalog-section");
-              if (sec) sec.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="hover:text-amber-600 transition-colors hover-underline-luxury cursor-pointer"
+            onClick={scrollToShop}
+            className="px-2.5 py-1 rounded-md bg-[#e6f4f8] text-[#136b8a] hover:bg-[#d9eff5] transition-colors font-extrabold text-[11px] cursor-pointer"
           >
             Best Sellers
           </button>
+
+          <button
+            onClick={() => onOpenPolicy()}
+            className="transition-colors hover:text-neutral-950 py-1 hover-underline-luxury cursor-pointer flex items-center space-x-1"
+          >
+            <span>Our Story</span>
+            <span className="text-[10px] text-neutral-400 font-bold">+</span>
+          </button>
+
+          <button
+            onClick={scrollToReviews}
+            className="transition-colors hover:text-neutral-950 py-1 hover-underline-luxury cursor-pointer"
+          >
+            Reviews
+          </button>
         </nav>
 
-        {/* Right Icon Actions */}
+        {/* Center: Brand Logo */}
+        <div className="flex justify-center shrink-0">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onSelectCategory("All");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center space-x-2 group py-0.5 hover:opacity-90 transition-opacity"
+            title="ZENVIA"
+          >
+            <ZenviaLogo variant="gold" className={`w-auto transition-all duration-300 ${scrolled ? "h-8 sm:h-9" : "h-9 sm:h-10"}`} />
+          </a>
+        </div>
+
+        {/* Right Actions: Search, Account, Cart */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Search Mobile Trigger */}
+          {/* Search Trigger */}
           <button
             onClick={onOpenAISearch}
-            className="md:hidden text-neutral-700 hover:text-neutral-900 p-2 cursor-pointer"
+            className="text-neutral-700 hover:text-neutral-950 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
             title="Search"
             aria-label="Search"
           >
             <Search className="w-5 h-5" />
           </button>
 
+          {/* Account */}
+          <button
+            onClick={() => onOpenPolicy()}
+            className="hidden sm:inline-flex text-neutral-700 hover:text-neutral-950 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
+            title="Account & Support"
+            aria-label="Account"
+          >
+            <User className="w-5 h-5" />
+          </button>
+
           {/* Wishlist */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onOpenWishlist}
-            className="relative text-neutral-700 hover:text-neutral-900 p-2 transition-colors cursor-pointer"
+            className="relative text-neutral-700 hover:text-neutral-950 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
             title="Wishlist"
             aria-label="Wishlist"
           >
@@ -200,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow"
+                  className="absolute top-1 right-1 w-4 h-4 bg-rose-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow"
                 >
                   {wishlistCount}
                 </motion.span>
@@ -213,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={onOpenCart}
             id="cart-bag-btn"
-            className="relative p-2 rounded-xl bg-neutral-900 hover:bg-black text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
+            className="relative p-2.5 rounded-xl bg-neutral-950 hover:bg-black text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
             title="Shopping Cart"
             aria-label="Shopping Cart"
           >
@@ -226,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 text-white text-[11px] font-extrabold rounded-full flex items-center justify-center shadow-md"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 text-white text-[11px] font-black rounded-full flex items-center justify-center shadow-md"
                 >
                   {cartCount}
                 </motion.span>
@@ -243,62 +220,65 @@ export const Navbar: React.FC<NavbarProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:hidden bg-white border-b border-neutral-200 px-6 py-5 mt-2 space-y-4 shadow-xl overflow-hidden"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:hidden bg-white border-b border-neutral-200 px-6 py-4 space-y-3 shadow-xl overflow-hidden"
           >
-            <div className="relative">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenAISearch();
+              }}
+              className="w-full flex items-center justify-between bg-neutral-100 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs text-neutral-500"
+            >
+              <div className="flex items-center space-x-2">
+                <Search className="w-4 h-4 text-neutral-400" />
+                <span>Search catalog...</span>
+              </div>
+            </button>
+
+            <div className="flex flex-col space-y-1 text-sm font-semibold text-neutral-800 pt-1">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  onOpenAISearch();
+                  scrollToShop();
                 }}
-                className="w-full flex items-center justify-between bg-neutral-100 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs text-neutral-500"
+                className="flex items-center space-x-3 py-2.5 border-b border-neutral-100 hover:text-amber-600 transition-colors text-left"
               >
-                <div className="flex items-center space-x-2">
-                  <Search className="w-4 h-4 text-neutral-400" />
-                  <span>What are you looking for?</span>
-                </div>
+                <ShopIcon className="w-4 h-4 text-neutral-400" />
+                <span>Shop</span>
               </button>
-            </div>
 
-            <div className="flex flex-col space-y-2 text-sm font-semibold text-neutral-800">
               <button
                 onClick={() => {
-                  onSelectCategory("All");
                   setMobileMenuOpen(false);
-                }}
-                className={`text-left py-2 border-b border-neutral-100 ${
-                  selectedCategory === "All" ? "text-amber-600 font-bold" : ""
-                }`}
-              >
-                All Products
-              </button>
-
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    onSelectCategory(cat.id);
-                    setMobileMenuOpen(false);
-                    const sec = document.getElementById("catalog-section");
-                    if (sec) sec.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className={`text-left py-2 border-b border-neutral-100 ${
-                    selectedCategory === cat.id ? "text-amber-600 font-bold" : ""
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-
-              <button
-                onClick={() => {
                   onOpenPolicy();
-                  setMobileMenuOpen(false);
                 }}
-                className="text-left py-2 text-neutral-500 font-normal text-xs"
+                className="flex items-center space-x-3 py-2.5 border-b border-neutral-100 hover:text-amber-600 transition-colors text-left"
               >
-                Policies & Help Center
+                <Info className="w-4 h-4 text-neutral-400" />
+                <span>About</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollToReviews();
+                }}
+                className="flex items-center space-x-3 py-2.5 border-b border-neutral-100 hover:text-amber-600 transition-colors text-left"
+              >
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <span>Reviews</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenPolicy();
+                }}
+                className="flex items-center space-x-3 py-2.5 hover:text-amber-600 transition-colors text-left"
+              >
+                <HelpCircle className="w-4 h-4 text-neutral-400" />
+                <span>Contact &amp; Policies</span>
               </button>
             </div>
           </motion.div>
@@ -307,4 +287,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
 

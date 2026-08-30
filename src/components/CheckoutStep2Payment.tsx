@@ -76,24 +76,28 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
       ======================================================== */}
       <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs overflow-hidden">
         {/* Toggle Bar / Header */}
-        <div className="p-4 sm:p-5 border-b border-neutral-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-neutral-400 block">
-                ORDER REVIEW
+        <div className="p-4 sm:p-5 border-b border-neutral-100 bg-neutral-900 text-white flex items-center justify-between">
+          <div>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                ZENVIA
               </span>
-              <h3 className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
-                Order Summary ({totalItemCount} {totalItemCount === 1 ? "item" : "items"})
-              </h3>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] text-neutral-400 font-bold block uppercase">
-                {isCOD ? "COD TOTAL" : "FINAL TOTAL"}
-              </span>
-              <span className="text-lg sm:text-xl font-black text-amber-700 font-mono">
-                {formattedTotal}
+              <span className="text-[10px] text-neutral-400 font-bold">•</span>
+              <span className="text-[10px] text-neutral-300 font-bold uppercase tracking-wider">
+                SECURE CHECKOUT
               </span>
             </div>
+            <h3 className="text-base sm:text-lg font-black text-white tracking-tight mt-0.5">
+              Order Summary ({totalItemCount} {totalItemCount === 1 ? "item" : "items"})
+            </h3>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] text-neutral-400 font-bold block uppercase">
+              {isCOD ? "COD TOTAL" : "PAYABLE TOTAL"}
+            </span>
+            <span className="text-lg sm:text-xl font-black text-amber-400 font-mono">
+              {formattedTotal}
+            </span>
           </div>
         </div>
 
@@ -187,7 +191,7 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
             </div>
           </div>
 
-          {/* Delivery To Address Preview (Customer can click to edit) */}
+          {/* Delivery To Address Preview */}
           <div className="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3 flex items-center justify-between text-xs">
             <div className="min-w-0 pr-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900/80 block">
@@ -217,16 +221,16 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
       <div className="bg-white border border-neutral-200/90 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
         <div>
           <h3 className="text-lg sm:text-xl font-black text-neutral-950 tracking-tight">
-            Choose Your Payment Method
+            Choose Payment Method
           </h3>
           <p className="text-xs text-neutral-500 font-medium mt-0.5">
-            Select how you would like to complete your order.
+            Select your preferred payment method below.
           </p>
         </div>
 
         {/* Payment Options */}
         <div className="space-y-3">
-          {/* OPTION 1: PAY ONLINE (RECOMMENDED) */}
+          {/* OPTION 1: GOOGLE PAY / UPI / CARDS / NET BANKING */}
           <div
             onClick={() => onPaymentMethodChange("razorpay")}
             id="payment-option-prepaid"
@@ -239,7 +243,7 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
             {/* Tag */}
             <div className="absolute -top-2.5 right-4 bg-amber-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs flex items-center space-x-1">
               <Sparkles className="w-2.5 h-2.5" />
-              <span>RECOMMENDED • FAST & SECURE</span>
+              <span>RECOMMENDED • INSTANT CONFIRMATION</span>
             </div>
 
             {/* Radio circle */}
@@ -258,7 +262,7 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <span className="text-sm sm:text-base font-black text-neutral-950 block">
-                  💳 Pay Online (UPI, Cards, Net Banking)
+                  💳 Online Payment (Google Pay / UPI / Cards)
                 </span>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm sm:text-base font-black text-neutral-950 font-mono">
@@ -271,26 +275,27 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
               </div>
 
               <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
-                Pay securely online with instant payment confirmation.
+                Pay securely to <strong>ZENVIA</strong> via Merchant Payment Gateway.
               </p>
 
               {/* Supported payment badges */}
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-2 border-t border-amber-200/50">
-                <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                  Google Pay
-                </span>
-                <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                  PhonePe
-                </span>
-                <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                  Paytm / UPI
-                </span>
-                <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                  Credit & Debit Cards
-                </span>
-                <span className="text-[10px] bg-white border border-neutral-200 font-bold px-2 py-0.5 rounded text-neutral-800">
-                  Net Banking
-                </span>
+              <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-2 border-t border-amber-200/50">
+                <div className="flex items-center space-x-1 bg-white border border-neutral-200 rounded-md px-2 py-1 text-[11px] font-bold text-neutral-800">
+                  <span>●</span>
+                  <span>Google Pay / UPI</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-white border border-neutral-200 rounded-md px-2 py-1 text-[11px] font-bold text-neutral-800">
+                  <span>●</span>
+                  <span>Credit / Debit Card</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-white border border-neutral-200 rounded-md px-2 py-1 text-[11px] font-bold text-neutral-800">
+                  <span>●</span>
+                  <span>Net Banking</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-white border border-neutral-200 rounded-md px-2 py-1 text-[11px] font-bold text-neutral-800">
+                  <span>●</span>
+                  <span>Paytm / PhonePe</span>
+                </div>
               </div>
             </div>
           </div>
@@ -342,16 +347,16 @@ export const CheckoutStep2Payment: React.FC<CheckoutStep2PaymentProps> = ({
           </div>
         </div>
 
-        {/* TRUST ELEMENTS */}
+        {/* TRUST REASSURANCE AREA */}
         <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-start space-x-3 text-xs text-neutral-600">
           <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold text-neutral-900 block flex items-center space-x-1">
+            <span className="font-bold text-neutral-900 block flex items-center space-x-1.5">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              <span>🔒 Secure Checkout</span>
+              <span>🔒 Secure Payment</span>
             </span>
-            <p className="text-[11px] text-neutral-500 leading-relaxed">
-              Your payment information is securely processed via 256-bit SSL encryption.
+            <p className="text-[11px] text-neutral-600 leading-relaxed">
+              Your payment is securely processed through our payment partner.
             </p>
           </div>
         </div>

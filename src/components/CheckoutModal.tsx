@@ -561,14 +561,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency || "INR",
-        name: "Zenvia",
+        name: "ZENVIA",
         description: directBuyItem
-          ? `Purchase: ${directBuyItem.product.name}`
-          : `Zenvia Order (${activeItems.length} items)`,
+          ? `Purchase: ${directBuyItem.product.name} | ZENVIA Official Store`
+          : `ZENVIA Luxury Order (${activeItems.length} items)`,
         image:
           activeItems[0]?.product.image ||
           "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=300&auto=format&fit=crop",
         order_id: orderData.orderId,
+        notes: {
+          merchant: "ZENVIA",
+          store: "ZENVIA Official Store",
+          business_name: "ZENVIA",
+        },
         handler: async function (response: any) {
           setIsProcessing(true);
           setProcessingMessage("Verifying secure transaction...");

@@ -304,7 +304,9 @@ app.post("/api/razorpay/create-order", async (req, res) => {
       currency: "INR",
       receipt,
       notes: {
-        store: "Zenvia India",
+        store: "ZENVIA",
+        merchant_name: "ZENVIA",
+        business_name: "ZENVIA",
         itemsCount: validatedItems.length.toString(),
       },
     });
@@ -628,6 +630,50 @@ app.post("/api/razorpay/verify-payment", async (req, res) => {
       verified: false,
       error: error.message || "Internal server error during payment verification",
     });
+  }
+});
+
+// Razorpay Webhook Endpoint for background order reconciliation & async events
+app.post("/api/razorpay/webhook", async (req, res) => {
+  try {
+    const webhookSecret = cleanKey(process.env.RAZORPAY_WEBHOOK_SECRET);
+    const signature = req.headers["x-razorpay-signature"] as string;
+
+    if (webhookSecret && signature) {
+      const shasum = crypto.createHmac("sha256", webhookSecret);
+      shasum.update(JSON.stringify(req.body));
+      const digest = shasum.digest("hex");
+
+      if (digest !== signature) {
+        console.warn("[Razorpay Webhook] Invalid webhook signature mismatch");
+        return res.status(400).json({ status: "invalid_signature" });
+      }
+    }
+
+    const event = req.body?.event;
+    console.log(`[Razorpay Webhook] Received verified event: ${event}`);
+
+    if (event === "payment.captured" || event === "order.paid") {
+      const paymentEntity = req.body?.payload?.payment?.entity;
+      const orderEntity = req.body?.payload?.order?.entity;
+      const paymentId = paymentEntity?.id;
+      const orderId = paymentEntity?.order_id || orderEntity?.id;
+
+      if (orderId && paymentId) {
+        const existing = getOrderById(orderId) || getOrderByPaymentId(paymentId);
+        if (existing && existing.paymentStatus !== "PAID") {
+          existing.paymentStatus = "PAID";
+          existing.paymentId = paymentId;
+          saveOrder(existing);
+          console.log(`[Razorpay Webhook] Reconciled order ${orderId} as PAID via payment ${paymentId}`);
+        }
+      }
+    }
+
+    return res.json({ status: "ok" });
+  } catch (err: any) {
+    console.error("[Razorpay Webhook] Handler error:", err);
+    return res.status(500).json({ status: "error" });
   }
 });
 
