@@ -385,7 +385,55 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </div>
       )}
 
+      {/* Customer Uploaded Photos Gallery */}
+      {customerPhotos.length > 0 && (
+        <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200/80 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Camera className="w-4 h-4 text-amber-600" />
+              <span className="text-xs font-extrabold uppercase tracking-wider text-neutral-900">
+                Customer Photos ({customerPhotos.length})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFilterWithPhotos(!filterWithPhotos)}
+              className="text-xs font-bold text-amber-700 hover:text-amber-800 cursor-pointer"
+            >
+              {filterWithPhotos ? "Show All Reviews" : "Filter Reviews with Photos"}
+            </button>
+          </div>
 
+          <div className="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none">
+            {customerPhotos.map((photo, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() =>
+                  setSelectedImageModal({
+                    url: photo.url,
+                    author: photo.author,
+                    caption: photo.caption,
+                  })
+                }
+                className="relative group shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-neutral-200 hover:ring-2 hover:ring-amber-500 transition-all cursor-pointer bg-white"
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.caption}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded transition-opacity">
+                    View
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter and Sort Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-2 border-y border-neutral-200">

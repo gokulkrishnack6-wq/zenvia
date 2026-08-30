@@ -108,12 +108,67 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+// Persistent Active Campaign State (One authoritative offer deadline for all visitors)
+const CAMPAIGN_FILE_PATH = path.join(process.cwd(), ".zenvia_campaign.json");
+const CAMPAIGN_DURATION_MS = 22 * 60 * 60 * 1000; // 22 Hours
+
+function getAuthoritativeCampaignEndTime(): number {
+  try {
+    if (fs.existsSync(CAMPAIGN_FILE_PATH)) {
+      const data = JSON.parse(fs.readFileSync(CAMPAIGN_FILE_PATH, "utf-8"));
+      if (typeof data.campaignEndTime === "number" && !isNaN(data.campaignEndTime)) {
+        return data.campaignEndTime;
+      }
+    }
+  } catch (err) {
+    console.warn("[Campaign] Error reading campaign file, generating new deadline:", err);
+  }
+
+  // Create initial 22-hour campaign end time and persist to disk
+  const newEndTime = Date.now() + CAMPAIGN_DURATION_MS;
+  try {
+    fs.writeFileSync(
+      CAMPAIGN_FILE_PATH,
+      JSON.stringify({
+        campaignName: "22-Hour Limited-Time Offer",
+        durationHours: 22,
+        createdAt: new Date().toISOString(),
+        campaignEndTime: newEndTime,
+      }, null, 2),
+      "utf-8"
+    );
+  } catch (writeErr) {
+    console.warn("[Campaign] Error writing campaign file:", writeErr);
+  }
+  return newEndTime;
+}
+
+const authoritativeCampaignEndTime = getAuthoritativeCampaignEndTime();
+
 // Authoritative Server Time & Promotion Sync
 app.get("/api/time", (_req, res) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  const now = Date.now();
   res.json({
-    serverTime: Date.now(),
+    serverTime: now,
     iso: new Date().toISOString(),
+    campaignEndTime: authoritativeCampaignEndTime,
+    durationHours: 22,
+    isExpired: now >= authoritativeCampaignEndTime,
+  });
+});
+
+app.get("/api/promotion", (_req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  const now = Date.now();
+  res.json({
+    enabled: true,
+    campaignName: "22-Hour Limited-Time Offer",
+    serverTime: now,
+    campaignEndTime: authoritativeCampaignEndTime,
+    durationHours: 22,
+    remainingMs: Math.max(0, authoritativeCampaignEndTime - now),
+    isExpired: now >= authoritativeCampaignEndTime,
   });
 });
 

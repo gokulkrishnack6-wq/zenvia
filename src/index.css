@@ -20,6 +20,14 @@
   h1, h2, h3, h4, .font-serif-luxury {
     font-family: 'Cormorant Garamond', serif;
   }
+
+  .font-montserrat {
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .font-inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
 }
 
 /* Custom Luxury Scrollbar */

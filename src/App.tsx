@@ -257,10 +257,7 @@ export default function App() {
       {/* Subtle cursor spotlight */}
       <CursorSpotlight />
 
-      {/* Top Shipping & Discount Banner */}
-      <DiscountBanner />
-
-      {/* Navbar */}
+      {/* Top Navbar with integrated Announcement Bar */}
       <Navbar
         cartCount={cartCount}
         wishlistCount={wishlistIds.length}
@@ -277,7 +274,7 @@ export default function App() {
       />
 
       {/* Main Sections */}
-      <main className="pt-24 sm:pt-28">
+      <main className="pt-0">
         {activeProduct ? (
           <ProductDetailsPage
             product={activeProduct}

@@ -56,7 +56,9 @@ import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { SinkCaddySocialProofGallery } from "./SinkCaddySocialProofGallery";
 import { PromotionCountdownBadge } from "./PromotionCountdownBadge";
+import { usePromotionCountdown, PROMOTION_CONFIG } from "../lib/promotionConfig";
 import { PolicyTab } from "./PolicyModal";
+import { MobileProductView } from "./MobileProductView";
 
 declare global {
   interface Window {
@@ -257,6 +259,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [pincodeInput, setPincodeInput] = useState("");
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
   const [pincodeResult, setPincodeResult] = useState<PincodeValidationResult | null>(null);
+
+  // Authoritative live promotion countdown
+  const { hours, minutes, seconds, isExpired } = usePromotionCountdown();
 
   const handleCheckPincode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -492,9 +497,49 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   ).slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-28 md:pb-16 pt-4">
-      {/* Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-neutral-50 pb-28 md:pb-16 pt-0 lg:pt-4">
+      {/* ========================================================
+          MOBILE VIEW (lg:hidden) — STREAMLINED HIGH-CONVERSION FLOW
+      ======================================================== */}
+      <MobileProductView
+        product={product}
+        currency={currency}
+        mediaList={mediaList}
+        selectedMediaIndex={selectedMediaIndex}
+        setSelectedMediaIndex={setSelectedMediaIndex}
+        selectedColor={selectedColor}
+        setSelectedColor={setSelectedColor}
+        selectedSize={selectedSize}
+        setSelectedSize={setSelectedSize}
+        quantity={quantity}
+        setQuantity={setQuantity}
+        formattedPrice={formattedPrice}
+        formattedOriginalPrice={formattedOriginalPrice}
+        discountPercent={discountPercent}
+        savingsAmount={savingsAmount}
+        bundleSavings={bundleSavings}
+        addedSuccess={addedSuccess}
+        variantError={variantError}
+        handleBuyNowClick={handleBuyNowClick}
+        handleAddToCartClick={handleAddToCartClick}
+        onGoHome={onGoHome}
+        onSelectCategory={onSelectCategory}
+        handleShare={handleShare}
+        copiedLink={copiedLink}
+        scrollToReviews={scrollToReviews}
+        pincodeInput={pincodeInput}
+        setPincodeInput={setPincodeInput}
+        handleCheckPincode={handleCheckPincode}
+        isCheckingPincode={isCheckingPincode}
+        pincodeResult={pincodeResult}
+        onOpenPolicy={onOpenPolicy}
+        setIsZoomOpen={setIsZoomOpen}
+      />
+
+      {/* ========================================================
+          DESKTOP VIEW (hidden lg:block) — FULL RICH 2-COLUMN EXPERIENCE
+      ======================================================== */}
+      <div className="hidden lg:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Breadcrumb & Navigation */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-3 mb-4 text-xs text-neutral-600 border-b border-neutral-200">
           <nav className="flex items-center space-x-2 flex-wrap">
@@ -896,71 +941,87 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                           {discountPercent}% OFF
                         </span>
                       </div>
+
+                      {/* Live Deal Countdown Timer */}
+                      {isExpired ? (
+                        <div className="flex items-center space-x-1.5 text-xs text-neutral-500 bg-neutral-200/70 border border-neutral-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
+                          <Clock className="w-3 h-3 text-neutral-400" />
+                          <span>{PROMOTION_CONFIG.expiredNotice}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1.5 text-xs text-amber-950 bg-amber-100/80 border border-amber-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
+                          <Clock className="w-3 h-3 text-amber-700" />
+                          <span className="text-[11px] font-sans font-bold text-amber-900 uppercase tracking-tight mr-0.5">ENDS IN</span>
+                          <span>{hours}:{minutes}:{seconds}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Price display */}
-                    <div className="flex items-baseline space-x-2 my-2 pl-6">
+                    <div className="flex items-baseline space-x-3 my-2.5 pl-6">
+                      <span className="text-2xl sm:text-3xl font-montserrat font-bold text-neutral-900 tracking-tight">
+                        {formattedPrice}
+                      </span>
                       {formattedOriginalPrice && (
-                        <span className="text-sm font-semibold text-neutral-400 line-through">
+                        <span className="text-sm sm:text-base font-montserrat font-normal text-neutral-400 line-through">
                           {formattedOriginalPrice}
                         </span>
                       )}
-                      <span className="text-xl sm:text-2xl font-black text-neutral-900">
-                        {formattedPrice}
+                      <span className="text-xs font-montserrat font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded">
+                        SAVE {discountPercent}%
                       </span>
                     </div>
 
                     {/* Inner Benefits */}
                     <div className="pl-6 pt-2 border-t border-neutral-200/80 space-y-1.5 text-xs text-neutral-700 font-medium">
                       <div className="flex items-center space-x-2">
-                        <span className="text-[#38b2ac] font-bold">✓</span>
+                        <span className="text-emerald-700 font-bold">✓</span>
                         <span>Save {savingsAmount || "50%"} with today's direct factory price</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[#38b2ac] font-bold">✓</span>
+                        <span className="text-emerald-700 font-bold">✓</span>
                         <span>Free Doorstep Delivery across India included</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[#38b2ac] font-bold">✓</span>
+                        <span className="text-emerald-700 font-bold">✓</span>
                         <span>Cash on Delivery (COD) &amp; UPI available at checkout</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[#38b2ac] font-bold">✓</span>
+                        <span className="text-emerald-700 font-bold">✓</span>
                         <span>Dispatched within 24 hours with live SMS tracking</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* MAIN CALL TO ACTION BUTTON (Inspired by Happy Mammoth's Mint Green Button) */}
-                <div className="space-y-3 mb-4">
+                {/* PRIMARY PURCHASE ACTIONS */}
+                <div className="space-y-2.5 mb-4">
+                  {/* BUY NOW BUTTON - Clean, Premium, Trustworthy */}
                   <button
+                    type="button"
+                    onClick={handleBuyNowClick}
+                    className="w-full h-12 py-3 px-6 rounded-lg bg-neutral-900 hover:bg-black text-white font-montserrat font-bold text-sm uppercase tracking-wider shadow-xs hover:shadow-sm transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-2"
+                  >
+                    <span>BUY NOW — {formattedPrice}</span>
+                  </button>
+
+                  {/* SECONDARY ADD TO CART */}
+                  <button
+                    type="button"
                     onClick={handleAddToCartClick}
-                    className="w-full py-4 px-6 rounded-xl bg-[#5ac4a2] hover:bg-[#4eb392] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-2"
+                    className="w-full h-11 py-2.5 px-6 rounded-lg bg-white border border-neutral-300 hover:border-neutral-900 text-neutral-900 font-montserrat font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-2"
                   >
                     {addedSuccess ? (
                       <>
-                        <Check className="w-5 h-5 text-white" />
+                        <Check className="w-4 h-4 text-emerald-600" />
                         <span>ADDED TO CART!</span>
                       </>
                     ) : (
                       <>
-                        <ShoppingBag className="w-5 h-5 text-white" />
-                        <span>
-                          ADD TO CART — {formattedOriginalPrice ? <span className="line-through opacity-70 mr-1">{formattedOriginalPrice}</span> : null}
-                          {formattedPrice}
-                        </span>
+                        <ShoppingBag className="w-4 h-4 text-neutral-700" />
+                        <span>ADD TO CART</span>
                       </>
                     )}
-                  </button>
-
-                  {/* BUY NOW BUTTON FOR FAST COD / UPI CHECKOUT */}
-                  <button
-                    onClick={handleBuyNowClick}
-                    className="w-full py-3.5 px-6 rounded-xl bg-neutral-900 hover:bg-black text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-sm transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-2"
-                  >
-                    <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-                    <span>Buy Now – Cash on Delivery Available</span>
                   </button>
                 </div>
 
@@ -1089,176 +1150,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ========================================================
-            "WHY YOU'LL LOVE YOUR ZENVIA SINK CADDY" - PRODUCT BENEFITS
-        ======================================================== */}
-        <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-6 sm:p-8 mb-8">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-xs font-extrabold text-amber-800 uppercase tracking-widest bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-md">
-              Product Highlights
-            </span>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-900 mt-2 tracking-tight">
-              {product.id === "p13" || product.slug?.includes("sink-caddy")
-                ? "Why You'll Love Your ZENVIA Sink Caddy"
-                : `Why You'll Love Your ${product.name}`}
-            </h2>
-            <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 font-medium">
-              Thoughtfully engineered for convenience, durability, and a clean countertop.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Benefit 1 */}
-            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 hover:border-amber-400/80 hover:bg-white transition-all shadow-xs">
-              <div className="text-2xl mb-2.5">🧽</div>
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Keep Your Sponge Organized
-              </h3>
-              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                Keep your everyday cleaning tools in one convenient, elevated place without cluttering your basin.
-              </p>
-            </div>
-
-            {/* Benefit 2 */}
-            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 hover:border-amber-400/80 hover:bg-white transition-all shadow-xs">
-              <div className="text-2xl mb-2.5">💧</div>
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Less Sink Clutter
-              </h3>
-              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                Create a cleaner-looking and more organized sink area with excess water draining straight into the basin.
-              </p>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 hover:border-amber-400/80 hover:bg-white transition-all shadow-xs">
-              <div className="text-2xl mb-2.5">🔧</div>
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Adjustable Design
-              </h3>
-              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                Designed to adapt easily to different sink and faucet setups with an adjustable tool-free clamp.
-              </p>
-            </div>
-
-            {/* Benefit 4 */}
-            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 hover:border-amber-400/80 hover:bg-white transition-all shadow-xs">
-              <div className="text-2xl mb-2.5">✨</div>
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Durable Material
-              </h3>
-              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                Thickened stainless-steel construction built for daily kitchen moisture and long-lasting use.
-              </p>
-            </div>
-
-            {/* Benefit 5 */}
-            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 hover:border-amber-400/80 hover:bg-white transition-all shadow-xs sm:col-span-2 lg:col-span-2">
-              <div className="text-2xl mb-2.5">🧼</div>
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Everything Within Reach
-              </h3>
-              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                Keep frequently used cleaning accessories, scrubbers, and soaps easily accessible right where you wash dishes.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================
-            "WHY YOU NEED THIS" & PROBLEM-SOLUTION CALLOUT
-        ======================================================== */}
-        {product.whyYouNeedThis && (
-          <div className="bg-gradient-to-br from-amber-950 via-neutral-900 to-black text-white rounded-2xl border border-amber-500/30 p-6 sm:p-10 mb-8 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 max-w-3xl">
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-extrabold uppercase tracking-widest border border-amber-400/30 mb-4">
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span>Why You Need This</span>
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
-                {product.whyYouNeedThis.headline}
-              </h2>
-              <p className="text-sm sm:text-base text-neutral-300 leading-relaxed mb-6 font-medium">
-                {product.whyYouNeedThis.description}
-              </p>
-              {product.whyYouNeedThis.callout && (
-                <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-amber-500 text-neutral-950 shrink-0 font-bold">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold text-amber-200">
-                    {product.whyYouNeedThis.callout}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================
-            BEFORE vs AFTER VISUAL COMPARISON
-        ======================================================== */}
-        {product.beforeAfterStory && (
-          <div className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm p-6 sm:p-8 mb-8">
-            <div className="text-center max-w-xl mx-auto mb-6">
-              <span className="text-xs font-extrabold text-amber-800 uppercase tracking-widest bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-md">
-                Proven Difference
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-neutral-900 mt-2">
-                {product.id === "p12" ? "Before & After Solar Shield Protection" : `Before & After with ${product.name}`}
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* WITHOUT */}
-              <div className="p-5 sm:p-6 rounded-xl bg-rose-50/70 border border-rose-200 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 text-rose-700 font-extrabold text-xs uppercase tracking-wider mb-2">
-                    <Flame className="w-4 h-4 text-rose-600" />
-                    <span>{product.beforeAfterStory.beforeTitle}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-neutral-800 font-medium leading-relaxed">
-                    {product.beforeAfterStory.beforeText}
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-rose-200/80 flex items-center space-x-2 text-[11px] font-extrabold text-rose-800">
-                  <ShieldAlert className="w-4 h-4 text-rose-600" />
-                  <span>
-                    {product.beforeAfterStory.beforeNote ||
-                      (product.id === "p12"
-                        ? "Cabin Temperature can reach 60°C+ under direct sun"
-                        : "Inefficient and prone to daily friction")}
-                  </span>
-                </div>
-              </div>
-
-              {/* WITH ZENVIA */}
-              <div className="p-5 sm:p-6 rounded-xl bg-emerald-50/70 border border-emerald-200 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 text-emerald-800 font-extrabold text-xs uppercase tracking-wider mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>{product.beforeAfterStory.afterTitle}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-neutral-800 font-medium leading-relaxed">
-                    {product.beforeAfterStory.afterText}
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-emerald-200/80 flex items-center space-x-2 text-[11px] font-extrabold text-emerald-800">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>
-                    {product.beforeAfterStory.afterNote ||
-                      (product.id === "p12"
-                        ? "Protects dashboard, steering wheel & seats from heat damage"
-                        : "Streamlined, effortless, and reliably protected")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+      {/* ========================================================
+          SHARED CONTENT FOR BOTH MOBILE & DESKTOP
+          (How To Use, Feature Spotlights, Customer In-Use Gallery,
+           884 Customer Reviews, FAQs, Specs & Info Tabs, Brand Trust,
+           Customer Support, Final Banner)
+      ======================================================== */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* ========================================================
             HOW TO USE STEP-BY-STEP GUIDE
         ======================================================== */}
@@ -1657,7 +1557,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         ======================================================== */}
         <div className="bg-neutral-950 text-white rounded-2xl border border-neutral-800 p-6 sm:p-10 mb-8 text-center shadow-xl">
           <div className="max-w-xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-300 text-xs font-montserrat font-semibold tracking-wider border border-neutral-700">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Clean &amp; Organized Sink in Seconds</span>
             </div>
@@ -1667,17 +1567,17 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             <p className="text-xs sm:text-sm text-neutral-300 font-medium">
               No more soggy sponges or countertop water rings. Fast tool-free installation with open-grid drainage.
             </p>
-            <div className="flex items-center justify-center space-x-3 py-1">
-              <span className="text-2xl sm:text-3xl font-black text-amber-400">
+            <div className="flex items-baseline justify-center space-x-3 py-1">
+              <span className="text-2xl sm:text-3xl font-montserrat font-bold text-white tracking-tight">
                 {formattedPrice}
               </span>
               {formattedOriginalPrice && (
-                <span className="text-base text-neutral-500 line-through font-semibold">
+                <span className="text-sm sm:text-base font-montserrat font-normal text-neutral-400 line-through">
                   {formattedOriginalPrice}
                 </span>
               )}
-              <span className="px-2.5 py-0.5 rounded-md bg-rose-600 text-white text-xs font-black">
-                50% OFF
+              <span className="text-xs font-montserrat font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded">
+                SAVE 50%
               </span>
             </div>
             <div className="pt-2 max-w-md mx-auto">
@@ -1685,14 +1585,13 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 type="button"
                 id="bottom-final-buy-now-btn"
                 onClick={handleBuyNowClick}
-                className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-neutral-950 text-sm sm:text-base font-black uppercase tracking-wider transition-all transform active:scale-[0.99] shadow-lg flex items-center justify-center space-x-2 cursor-pointer"
+                className="w-full h-12 py-3 px-6 rounded-lg bg-white hover:bg-neutral-100 text-neutral-950 text-sm sm:text-base font-montserrat font-bold uppercase tracking-wider transition-all duration-200 active:scale-[0.99] shadow-md flex items-center justify-center space-x-2 cursor-pointer"
               >
-                <Zap className="w-5 h-5 fill-neutral-950" />
-                <span>BUY NOW – {formattedPrice}</span>
+                <span>BUY NOW — {formattedPrice}</span>
               </button>
-              <div className="flex items-center justify-center space-x-3 mt-3 text-[11px] sm:text-xs text-neutral-400">
+              <div className="flex items-center justify-center space-x-3 mt-3 text-[11px] sm:text-xs text-neutral-400 font-montserrat">
                 <span className="flex items-center space-x-1">
-                  <Truck className="w-3.5 h-3.5 text-amber-400" />
+                  <Truck className="w-3.5 h-3.5 text-neutral-300" />
                   <span>Free Delivery Across India</span>
                 </span>
                 <span>•</span>
@@ -1707,58 +1606,35 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       </div>
 
       {/* ========================================================
-          STICKY MOBILE BOTTOM "BUY NOW" PURCHASE BAR
+          MOBILE STICKY BOTTOM PURCHASE BAR (lg:hidden)
       ======================================================== */}
-      <div
-        id="sticky-mobile-buy-bar"
-        className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-      >
-        <div className="flex items-center justify-between gap-3.5 max-w-lg mx-auto">
-          {/* Left: Dynamic Price & Delivery Indicator */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
           <div className="flex flex-col justify-center shrink-0">
             <div className="flex items-baseline space-x-1.5">
-              <span className="text-xl font-black text-neutral-900 tracking-tight leading-none">
+              <span className="text-lg font-montserrat font-bold text-neutral-950 leading-none">
                 {formattedPrice}
               </span>
               {formattedOriginalPrice && (
-                <span className="text-xs text-neutral-400 line-through font-semibold">
+                <span className="text-xs font-montserrat font-normal text-neutral-400 line-through">
                   {formattedOriginalPrice}
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-1 mt-0.5">
-              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center space-x-0.5">
-                <span>Free Delivery Across India 🚚</span>
-              </span>
-              {bundleSavings > 0 && (
-                <>
-                  <span className="text-neutral-300 text-[10px]">•</span>
-                  <span className="text-[9px] font-extrabold text-amber-800 bg-amber-100 px-1 rounded">
-                    Save ₹{bundleSavings}
-                  </span>
-                </>
-              )}
-            </div>
+            <span className="text-[10px] font-montserrat font-semibold text-emerald-800 mt-0.5">
+              Free Delivery 🚚
+            </span>
           </div>
 
-          {/* Right: High-Visibility BUY NOW CTA Button */}
           <button
             type="button"
             id="mobile-sticky-buy-now-btn"
             onClick={handleBuyNowClick}
-            className="flex-1 min-h-[48px] h-[48px] py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer"
+            className="flex-1 h-11 py-2.5 px-5 rounded-lg bg-neutral-900 hover:bg-black text-white font-montserrat font-bold text-xs sm:text-sm uppercase tracking-wider shadow-xs hover:shadow-sm active:scale-[0.99] transition-all duration-200 flex items-center justify-center space-x-1.5 cursor-pointer"
           >
-            <Zap className="w-4 h-4 fill-neutral-950 text-neutral-950 shrink-0" />
-            <span className="font-black">BUY NOW</span>
+            <span>BUY NOW</span>
           </button>
         </div>
-
-        {/* Variant selection error notice if missing selection */}
-        {variantError && (
-          <div className="mt-1 text-[11px] font-bold text-rose-600 text-center animate-fadeIn">
-            {variantError}
-          </div>
-        )}
       </div>
 
       {/* ========================================================

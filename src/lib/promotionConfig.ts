@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * CENTRAL PROMOTION CONFIGURATION
@@ -19,7 +19,7 @@ export const PROMOTION_CONFIG = {
   badgeText: "22-HOUR LIMITED OFFER",
   activeSubtext: "Upgrade your sink before the offer ends.",
   checkoutNotice: "22-Hour Limited-Time Offer",
-  expiredNotice: "Special Limited-Time Offer (Ends Today)",
+  expiredNotice: "OFFER ENDED",
 };
 
 export interface CountdownState {
@@ -33,17 +33,20 @@ export interface CountdownState {
   endTime: string;
 }
 
-let cachedServerOffsetMs: number | null = null;
-let serverOffsetPromise: Promise<number> | null = null;
+const STORAGE_CAMPAIGN_END_KEY = "zenvia_active_campaign_end_time";
+const DEFAULT_CAMPAIGN_DURATION_MS = 22 * 60 * 60 * 1000; // 22 Hours
+
+let cachedServerOffsetMs: number = 0;
+let cachedAuthoritativeEndTime: number | null = null;
+let serverSyncPromise: Promise<{ offset: number; endTime: number | null }> | null = null;
 
 /**
- * Synchronizes client time with server time to avoid device clock discrepancies.
+ * Synchronizes client time and campaign end time with the server.
  */
-async function fetchServerOffset(): Promise<number> {
-  if (cachedServerOffsetMs !== null) return cachedServerOffsetMs;
-  if (serverOffsetPromise) return serverOffsetPromise;
+async function syncWithServer(): Promise<{ offset: number; endTime: number | null }> {
+  if (serverSyncPromise) return serverSyncPromise;
 
-  serverOffsetPromise = (async () => {
+  serverSyncPromise = (async () => {
     try {
       const clientReqTime = Date.now();
       const res = await fetch("/api/time", { cache: "no-store" });
@@ -54,44 +57,66 @@ async function fetchServerOffset(): Promise<number> {
         const serverTime = Number(data.serverTime);
         if (!isNaN(serverTime)) {
           cachedServerOffsetMs = serverTime - (clientRespTime - roundTrip);
-          return cachedServerOffsetMs;
         }
+        if (typeof data.campaignEndTime === "number" && !isNaN(data.campaignEndTime)) {
+          cachedAuthoritativeEndTime = data.campaignEndTime;
+          if (typeof window !== "undefined" && window.localStorage) {
+            localStorage.setItem(STORAGE_CAMPAIGN_END_KEY, data.campaignEndTime.toString());
+          }
+        }
+        return { offset: cachedServerOffsetMs, endTime: cachedAuthoritativeEndTime };
       }
     } catch {
-      // Fallback: zero offset if offline or request fails
+      // Fallback: use client clock and local storage if offline or request fails
     }
-    cachedServerOffsetMs = 0;
-    return 0;
+    return { offset: cachedServerOffsetMs, endTime: cachedAuthoritativeEndTime };
   })();
 
-  return serverOffsetPromise;
+  return serverSyncPromise;
 }
 
 /**
- * Calculates current remaining time based on synchronized server time.
+ * Gets or initializes the campaign end timestamp.
  */
-export function getPromotionTimeRemaining(customEndTime?: string): CountdownState {
+export function getStoredCampaignEndTime(): number {
+  if (cachedAuthoritativeEndTime !== null) {
+    return cachedAuthoritativeEndTime;
+  }
+
+  if (typeof window !== "undefined" && window.localStorage) {
+    const stored = localStorage.getItem(STORAGE_CAMPAIGN_END_KEY);
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        cachedAuthoritativeEndTime = parsed;
+        return parsed;
+      }
+    }
+
+    // Initialize initial 22-hour deadline if none exists
+    const initialEndTime = Date.now() + DEFAULT_CAMPAIGN_DURATION_MS;
+    try {
+      localStorage.setItem(STORAGE_CAMPAIGN_END_KEY, initialEndTime.toString());
+    } catch {
+      // Storage access error handling
+    }
+    cachedAuthoritativeEndTime = initialEndTime;
+    return initialEndTime;
+  }
+
+  return Date.now() + DEFAULT_CAMPAIGN_DURATION_MS;
+}
+
+/**
+ * Calculates current remaining time based on absolute timestamp.
+ */
+export function getPromotionTimeRemaining(customEndTime?: string | number): CountdownState {
   let targetTime: number;
 
   if (customEndTime) {
-    targetTime = new Date(customEndTime).getTime();
+    targetTime = typeof customEndTime === "number" ? customEndTime : new Date(customEndTime).getTime();
   } else {
-    // 22-hour persistent window based on initial user session or storage
-    const STORAGE_KEY = "zenvia_sink_caddy_22h_timer_start";
-    let startMs: number;
-    if (typeof window !== "undefined" && window.localStorage) {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        startMs = parseInt(stored, 10);
-      } else {
-        startMs = Date.now();
-        localStorage.setItem(STORAGE_KEY, startMs.toString());
-      }
-    } else {
-      startMs = Date.now();
-    }
-    const durationMs = PROMOTION_CONFIG.durationHours * 60 * 60 * 1000;
-    targetTime = startMs + durationMs;
+    targetTime = getStoredCampaignEndTime();
   }
 
   if (!PROMOTION_CONFIG.enabled || isNaN(targetTime)) {
@@ -103,30 +128,23 @@ export function getPromotionTimeRemaining(customEndTime?: string): CountdownStat
       seconds: "00",
       formattedTimer: "22 : 00 : 00",
       remainingMs: 0,
-      endTime: new Date(targetTime).toISOString(),
+      endTime: new Date(targetTime || Date.now()).toISOString(),
     };
   }
 
-  const offset = cachedServerOffsetMs ?? 0;
-  const currentNow = Date.now() + offset;
+  const currentNow = Date.now() + cachedServerOffsetMs;
   const diff = targetTime - currentNow;
 
   if (diff <= 0) {
-    // Reset rolling window so active offer always stays present
-    const durationMs = PROMOTION_CONFIG.durationHours * 60 * 60 * 1000;
-    const refreshedTarget = currentNow + durationMs;
-    if (typeof window !== "undefined" && window.localStorage) {
-      localStorage.setItem("zenvia_sink_caddy_22h_timer_start", currentNow.toString());
-    }
     return {
-      isActive: true,
-      isExpired: false,
-      hours: "22",
+      isActive: false,
+      isExpired: true,
+      hours: "00",
       minutes: "00",
       seconds: "00",
-      formattedTimer: "22 : 00 : 00",
-      remainingMs: durationMs,
-      endTime: new Date(refreshedTarget).toISOString(),
+      formattedTimer: "00 : 00 : 00",
+      remainingMs: 0,
+      endTime: new Date(targetTime).toISOString(),
     };
   }
 
@@ -154,30 +172,66 @@ export function getPromotionTimeRemaining(customEndTime?: string): CountdownStat
 
 /**
  * React Hook for Real-time Promotion Countdown
- * Automatically updates every 1,000ms and remains synchronized across page reloads.
+ * Automatically updates every second and accurately calculates from absolute timestamp.
  */
-export function usePromotionCountdown(customEndTime?: string): CountdownState {
-  const [state, setState] = useState<CountdownState>(() =>
-    getPromotionTimeRemaining(customEndTime)
-  );
+export function usePromotionCountdown(customEndTime?: string | number): CountdownState {
+  const calculateRemaining = useCallback(() => {
+    return getPromotionTimeRemaining(customEndTime);
+  }, [customEndTime]);
+
+  const [state, setState] = useState<CountdownState>(() => calculateRemaining());
 
   useEffect(() => {
     // 1. Initial server synchronization
-    fetchServerOffset().then(() => {
-      setState(getPromotionTimeRemaining(customEndTime));
+    syncWithServer().then(() => {
+      setState(calculateRemaining());
     });
 
     // 2. 1-second interval ticking
-    const interval = setInterval(() => {
-      const current = getPromotionTimeRemaining(customEndTime);
+    const intervalId = window.setInterval(() => {
+      const current = calculateRemaining();
       setState(current);
       if (current.isExpired) {
-        clearInterval(interval);
+        window.clearInterval(intervalId);
       }
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [customEndTime]);
+    // 3. Immediately re-calculate when tab becomes visible or focused (prevents background throttle drift)
+    const handleVisibilityOrFocus = () => {
+      setState(calculateRemaining());
+    };
+
+    // 4. Cross-tab synchronization
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_CAMPAIGN_END_KEY && e.newValue) {
+        const parsed = parseInt(e.newValue, 10);
+        if (!isNaN(parsed)) {
+          cachedAuthoritativeEndTime = parsed;
+          setState(calculateRemaining());
+        }
+      }
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", handleVisibilityOrFocus);
+      window.addEventListener("storage", handleStorageChange);
+    }
+
+    return () => {
+      window.clearInterval(intervalId);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", handleVisibilityOrFocus);
+        window.removeEventListener("storage", handleStorageChange);
+      }
+    };
+  }, [calculateRemaining]);
 
   return state;
 }
+

@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Currency, CategoryType } from "../types";
 import { ZenviaLogo } from "./ZenviaLogo";
+import { DiscountBanner } from "./DiscountBanner";
 
 interface NavbarProps {
   cartCount: number;
@@ -73,13 +74,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+      className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-white ${
         scrolled
-          ? "bg-white/95 backdrop-blur-md border-b border-neutral-200/90 py-2.5 shadow-sm"
-          : "bg-white border-b border-neutral-200 py-3.5"
+          ? "border-b border-neutral-200/90 shadow-xs"
+          : "border-b border-neutral-200"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+      {/* Top Announcement & Trust Bar */}
+      <DiscountBanner />
+
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 transition-all duration-300 ${
+        scrolled ? "py-2.5" : "py-3 sm:py-3.5"
+      }`}>
         
         {/* Mobile menu trigger */}
         <button
