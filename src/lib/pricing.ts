@@ -53,6 +53,7 @@ export function getProductQuantityOffers(product: Product): QuantityPricingTier[
       badge,
       isPopular,
       isBestValue,
+      image: tier.image,
     };
   });
 }

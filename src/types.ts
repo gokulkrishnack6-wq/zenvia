@@ -45,6 +45,7 @@ export interface QuantityPricingTier {
   badge?: string; // e.g. "MOST POPULAR", "BEST VALUE"
   isPopular?: boolean;
   isBestValue?: boolean;
+  image?: string;
 }
 
 // Reusable alias for quantity offers

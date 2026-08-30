@@ -486,18 +486,26 @@ export const MobileProductView: React.FC<MobileProductViewProps> = ({
             {bundleTiers.map((tier) => {
               const isSelected = quantity === tier.quantity;
               const priceDisplay = formatRupee(tier.totalPrice);
+              const tierImage =
+                tier.image ||
+                (tier.quantity === 2
+                  ? "https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_00_58_PM.png"
+                  : tier.quantity === 4
+                  ? "https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_01_03_PM.png"
+                  : "https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_00_52_PM.png");
+
               return (
                 <div
                   key={tier.quantity}
                   onClick={() => setQuantity(tier.quantity)}
-                  className={`relative p-3 rounded-lg border-2 transition-all cursor-pointer flex flex-col items-center justify-between text-center select-none ${
+                  className={`relative p-2.5 rounded-lg border-2 transition-all cursor-pointer flex flex-col items-center justify-between text-center select-none ${
                     isSelected
                       ? "border-neutral-900 bg-[#fbf9f6] shadow-xs ring-1 ring-neutral-900/10"
                       : "border-neutral-200 bg-white hover:border-neutral-300"
                   }`}
                 >
                   {tier.badge && (
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                       <span
                         className={`text-[8px] font-montserrat font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap ${
                           tier.badge.includes("VALUE")
@@ -509,13 +517,20 @@ export const MobileProductView: React.FC<MobileProductViewProps> = ({
                       </span>
                     </div>
                   )}
+
+                  <div className="w-12 h-12 mb-1 flex items-center justify-center">
+                    <img
+                      src={tierImage}
+                      alt={`${tier.quantity} Unit${tier.quantity > 1 ? "s" : ""}`}
+                      className="max-h-full max-w-full object-contain"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+
                   <span className="text-xs font-montserrat font-bold text-neutral-950">
-                    {tier.quantity} ×
+                    {tier.quantity === 1 ? "1 Unit" : `${tier.quantity} Units`}
                   </span>
-                  <span className="text-[11px] font-montserrat font-medium text-neutral-600 mt-0.5">
-                    {tier.label || `${tier.quantity} Units`}
-                  </span>
-                  <span className="text-xs font-montserrat font-bold text-neutral-950 mt-1">
+                  <span className="text-xs font-montserrat font-bold text-neutral-950 mt-0.5">
                     {priceDisplay}
                   </span>
                 </div>

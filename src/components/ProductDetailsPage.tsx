@@ -54,7 +54,6 @@ import { checkPincodeServiceability, PincodeValidationResult } from "../lib/pinc
 import { trackFunnelEvent } from "../lib/analytics";
 import { PRODUCTS } from "../data/products";
 import { ProductReviewsSection } from "./ProductReviewsSection";
-import { SinkCaddySocialProofGallery } from "./SinkCaddySocialProofGallery";
 import { PromotionCountdownBadge } from "./PromotionCountdownBadge";
 import { usePromotionCountdown, PROMOTION_CONFIG } from "../lib/promotionConfig";
 import { PolicyTab } from "./PolicyModal";
@@ -856,16 +855,17 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     >
                       <div className="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                         <img
-                          src={product.image}
-                          alt="1 Caddy"
+                          src="https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_00_52_PM.png"
+                          alt="1 Unit - 1 Organizer"
                           className="max-h-full max-w-full object-contain"
+                          referrerPolicy="no-referrer"
                         />
                       </div>
                       <span className="text-xs font-black text-neutral-900 mb-0.5">1 Unit</span>
                       <span className="text-xs font-bold text-neutral-600">₹299</span>
                     </div>
 
-                    {/* 2 Units (BEST SELLER) */}
+                    {/* 2 Units (MOST POPULAR) */}
                     <div
                       onClick={() => setQuantity(2)}
                       className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-between text-center select-none bg-white ${
@@ -874,18 +874,19 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                           : "border-neutral-200 hover:border-neutral-400"
                       }`}
                     >
-                      {/* BEST SELLER BADGE */}
+                      {/* MOST POPULAR BADGE */}
                       <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                         <span className="bg-neutral-900 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs whitespace-nowrap">
-                          BEST SELLER
+                          MOST POPULAR
                         </span>
                       </div>
 
                       <div className="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                         <img
-                          src={product.alternateImage || product.image}
-                          alt="2 Caddies"
+                          src="https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_00_58_PM.png"
+                          alt="2 Units - 2 Organizers"
                           className="max-h-full max-w-full object-contain"
+                          referrerPolicy="no-referrer"
                         />
                       </div>
                       <span className="text-xs font-black text-neutral-900 mb-0.5">2 Units</span>
@@ -910,9 +911,10 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
                       <div className="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                         <img
-                          src={product.image}
-                          alt="4 Caddies"
+                          src="https://res.cloudinary.com/vgl84jqo/image/upload/v1788096728/ChatGPT_Image_Aug_30_2026_07_01_03_PM.png"
+                          alt="4 Units - 4 Organizers"
                           className="max-h-full max-w-full object-contain"
+                          referrerPolicy="no-referrer"
                         />
                       </div>
                       <span className="text-xs font-black text-neutral-900 mb-0.5">4 Units</span>
@@ -1267,15 +1269,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* ========================================================
-            VISUAL PRODUCT GALLERY (Kitchen Sink Caddy Only)
-        ======================================================== */}
-        {(product.id === "p13" || product.slug?.includes("sink-caddy") || product.name.toLowerCase().includes("sink caddy")) && (
-          <div className="mb-8">
-            <SinkCaddySocialProofGallery />
           </div>
         )}
 
